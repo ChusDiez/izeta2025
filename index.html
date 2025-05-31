@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <title>IZETA 2025 - Sistema de Preparación Fase Avanzada</title>
+    <style>
+        /* Variables de diseño - FÁCIL DE CAMBIAR COLORES AQUÍ */
+        :root {
+            --color-primario: #1e40af;  /* Azul institucional */
+            --color-secundario: #475569; /* Gris azulado */
+            --color-alerta: #64748b;     /* Gris medio */
+            --color-peligro: #ef4444;
+            --color-texto: #0f172a;      /* Negro azulado */
+            --color-fondo: #f8fafc;
+            --color-tarjeta: #ffffff;
+            --sombra: 0 2px 8px rgba(0,0,0,0.1);
+            --color-20h: #1e40af;        /* Azul para cohorte base */
+            --color-36h: #1f2937;        /* Negro para cohorte intensiva */
+            --color-48h: #475569;        /* Gris oscuro para cohorte élite */
+        }
+        
+        /* Estilos base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--color-texto);
+            background: var(--color-fondo);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Encabezado principal */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+            color: white;
+            border-radius: 1rem;
+            box-shadow: var(--sombra);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+        
+        /* Secciones */
+        .section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--color-primario);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+        
+        /* Tarjetas */
+        .card {
+            background: var(--color-tarjeta);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--sombra);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Grid de cohortes */
+        .cohorts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .cohort-card {
+            background: var(--color-tarjeta);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: var(--sombra);
+            transition: all 0.3s;
+        }
+        
+        .cohort-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+        
+        .cohort-header {
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .cohort-20h .cohort-header { background: #1e40af; }
+        .cohort-36h .cohort-header { background: #1f2937; }
+        .cohort-48h .cohort-header { background: #475569; }
+        
+        .cohort-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .cohort-hours {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .cohort-body {
+            padding: 1.5rem;
+        }
+        
+        /* Lista de tareas interactivas */
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            margin-bottom: 0.75rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--color-primario);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .task-item:hover {
+            background: #e5e7eb;
+            transform: translateX(2px);
+        }
+        
+        .task-header {
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .task-title {
+            flex: 1;
+        }
+        
+        .task-arrow {
+            font-size: 1.2rem;
+            color: #6b7280;
+            transition: transform 0.3s ease;
+            margin-left: 1rem;
+        }
+        
+        .task-item.expanded .task-arrow {
+            transform: rotate(180deg);
+        }
+        
+        .task-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .task-item.expanded .task-detail {
+            max-height: 500px;
+        }
+        
+        .task-detail-content {
+            padding: 1.25rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .task-detail h5 {
+            margin-bottom: 0.5rem;
+            color: var(--color-texto);
+            font-size: 1rem;
+        }
+        
+        .task-detail p {
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+        }
+        
+        .task-detail ul {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+        }
+        
+        .task-20h {
+            border-left-color: var(--color-20h);
+        }
+        
+        .task-36h {
+            border-left-color: var(--color-36h);
+        }
+        
+        .task-48h {
+            border-left-color: var(--color-48h);
+        }
+        
+        /* Estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--color-primario);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        /* Timeline semanal */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            overflow-x: auto;
+            gap: 1rem;
+        }
+        
+        .day {
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            padding: 1rem;
+            background: var(--color-tarjeta);
+            border-radius: 0.5rem;
+            box-shadow: var(--sombra);
+        }
+        
+        .day-name {
+            font-weight: bold;
+            color: var(--color-primario);
+            margin-bottom: 0.5rem;
+        }
+        
+        .day-task {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .day.highlight {
+            background: var(--color-primario);
+            color: white;
+        }
+        
+        .day.highlight .day-name,
+        .day.highlight .day-task {
+            color: white;
+        }
+        
+        /* Leaderboard mockup */
+        .leaderboard {
+            background: var(--color-tarjeta);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: var(--sombra);
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: #f9fafb;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .leaderboard-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .leaderboard-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .leaderboard-position {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #6b7280;
+            min-width: 30px;
+        }
+        
+        .position-1 { color: #fbbf24; }
+        .position-2 { color: #9ca3af; }
+        .position-3 { color: #f59e0b; }
+        
+        .leaderboard-user {
+            font-weight: 600;
+        }
+        
+        .leaderboard-stats {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .elo-delta {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .delta-positive { color: var(--color-secundario); }
+        .delta-negative { color: var(--color-peligro); }
+        .delta-neutral { color: #6b7280; }
+        
+        .streak {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 600;
+        }
+        
+        .streak-fire { color: #ef4444; }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-elo {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        
+        .badge-star {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        /* Sistema de puntos */
+        .points-system {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .point-rule {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--color-primario);
+        }
+        
+        .point-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--color-primario);
+        }
+        
+        .point-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        /* Alerta informativa */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .info-box h3 {
+            color: #1d4ed8;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .cohorts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline {
+                flex-direction: column;
+            }
+            
+            .day {
+                width: 100%;
+            }
+            
+            .leaderboard-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-end;
+            }
+        }
+        
+        /* Animaciones */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Iconos usando Unicode */
+        .icon-clock::before { content: "⏰ "; }
+        .icon-book::before { content: "📚 "; }
+        .icon-chart::before { content: "📊 "; }
+        .icon-trophy::before { content: "🏆 "; }
+        .icon-target::before { content: "🎯 "; }
+        .icon-fire::before { content: "🔥 "; }
+        .icon-star::before { content: "⭐ "; }
+        .icon-check::before { content: "✅ "; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ENCABEZADO PRINCIPAL -->
+        <div class="header fade-in">
+            <h1>IZETA 2025 - Fase Avanzada</h1>
+            <p>Sistema Integral de Preparación para Oposiciones</p>
+            <p style="margin-top: 1rem; font-size: 1rem;">📅 Válido hasta el 25 de octubre | 🎯 Objetivo: ≥85% superen 78/100</p>
+        </div>
+        
+        <!-- RESUMEN EJECUTIVO -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-target"></span>Visión General del Sistema</h2>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">¿Qué es IZETA 2025?</h3>
+                <p>Un sistema de preparación adaptativo que combina <strong>práctica intensiva</strong>, <strong>gamificación inteligente</strong> y <strong>seguimiento personalizado</strong> para maximizar las probabilidades.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span class="stat-number">12,000</span>
+                        <span class="stat-label">Preguntas en el banco</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">Niveles de dedicación</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">20</span>
+                        <span class="stat-label">Semanas de programa</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">85%</span>
+                        <span class="stat-label">Objetivo de aprobados</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ESTRUCTURA POR COHORTES -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-book"></span>Estructura por Niveles de Dedicación</h2>
+            <p class="section-subtitle">Cada alumno elige su intensidad según tiempo disponible</p>
+            
+            <div class="cohorts-grid">
+                <!-- COHORTE 20H -->
+                <div class="cohort-card cohort-20h fade-in">
+                    <div class="cohort-header">
+                        <div class="cohort-title">Cohorte Base</div>
+                        <div class="cohort-hours">20h/sem</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.5rem;">Para opositores con trabajo</div>
+                    </div>
+                    <div class="cohort-body">
+                        <h4 style="margin-bottom: 0.75rem; color: #1e40af;">Tareas semanales:</h4>
+                        <ul class="task-list">
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Test diario mixto</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">225 preguntas/semana del banco completo</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Bloque de 35-40 preguntas diarias extraídas aleatoriamente de todo el banco de 9,000 preguntas. Es la piedra angular del sistema de repaso.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener activos todos los conocimientos mediante exposición continua. Evita el olvido selectivo y detecta lagunas temáticas antes de que se conviertan en problema.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Realizar preferentemente por la mañana (mente fresca)</li>
+                                            <li>Tiempo máximo: 45 minutos incluyendo revisión</li>
+                                            <li>Anotar TODOS los fallos en flashcards</li>
+                                            <li>No revisar aciertos (optimización del tiempo)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Meta semanal: mantener >85% acierto global. Si baja, el sistema activa automáticamente mini-tests dirigidos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Mini-test dirigido</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Solo si algún tema < 80% acierto</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Test de refuerzo automático de 20-25 preguntas que se activa cuando el sistema detecta que un tema específico cae por debajo del 80% de acierto.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Intervención temprana para evitar que las lagunas se cronifiquen. Actúa como un "cortafuegos" que impide que los temas débiles contaminen el rendimiento global.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Se genera automáticamente al detectar el umbral</li>
+                                            <li>Preguntas 100% del tema problemático</li>
+                                            <li>Incluye preguntas falladas + nuevas del mismo tema</li>
+                                            <li>Repetir hasta conseguir >85% en el tema</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Indicador de éxito: no necesitar más de 2 mini-tests por tema/mes. Si se requieren más, revisar material de estudio base.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>2 Simulacros RF</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Sábado oficial + Domingo test de entrenamiento</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Dos simulacros de 100 preguntas cada fin de semana: el oficial del sábado (con 100% preguntas inéditas) y el test de entrenamiento del domingo.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Entrenar la resistencia mental, gestión del tiempo y preparar psicológicamente para el día del examen. El doble simulacro crea "memoria muscular" del proceso.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Sábado 10:00h - Simulacro oficial en directo</li>
+                                            <li>Condiciones de examen real (sin pausas)</li>
+                                            <li>Domingo: simulacro individual a tu ritmo</li>
+                                            <li>Enviar resultados antes de las 23:59 domingo</li>
+                                            <li>Revisión profunda de fallos el lunes</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Progresión esperada: comenzar en 65-70/100 y llegar a 85-90/100 en la semana 20. La constancia es más importante que los picos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Sistema Leitner básico</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">15 min/día revisión espaciada de flashcards</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sistema de repaso espaciado con 3 cajas básicas. Las tarjetas "viajan" entre cajas según tu dominio: Caja 1 (diaria), Caja 2 (cada 3 días), Caja 3 (semanal).</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Optimizar el tiempo de repaso revisando más frecuentemente lo difícil y espaciando lo dominado. Convierte el caos de cientos de tarjetas en un sistema manejable de 20-30 tarjetas diarias.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Crear tarjeta inmediata de cada fallo</li>
+                                            <li>Todas empiezan en Caja 1 (revisión diaria)</li>
+                                            <li>Si aciertas → sube a siguiente caja</li>
+                                            <li>Si fallas → vuelve a Caja 1</li>
+                                            <li>Usar app móvil (Anki) o físico con 3 sobres</li>
+                                            <li>Máximo 15 minutos diarios (timer estricto)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Objetivo: 70% de tarjetas en Caja 3 (dominio semanal). Si más del 50% están en Caja 1, dedica una sesión extra para procesarlas.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Vuelta distribuida semanal</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">1/4 del temario repartido en 5 días (45 min/día)</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Revisión sistemática del temario dividida en dosis diarias manejables. Cada semana cubres 1/4 del temario completo, completando una vuelta entera cada mes.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener frescos TODOS los temas mediante exposición frecuente y regular. Evita el "olvido catastrófico" de temas no repasados y detecta lagunas antes de los simulacros.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>45 minutos tras el test matutino</li>
+                                            <li>Lunes: Temas 1-10 (ejemplo)</li>
+                                            <li>Martes: Temas 11-20</li>
+                                            <li>Miércoles: Temas 21-30</li>
+                                            <li>Jueves: Temas 31-40</li>
+                                            <li>Viernes: Temas 41-44 + legislación</li>
+                                            <li>Lectura activa: subrayar dudas</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Velocidad objetivo: 1 tema cada 6-7 minutos. Si necesitas más tiempo, tus esquemas son demasiado densos - sintetiza más.</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #eff6ff; border-radius: 0.5rem;">
+                            <strong>Resultado:</strong> ~9,200 preguntas con corrección profunda y sistema Leitner optimizado
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- COHORTE 36H -->
+                <div class="cohort-card cohort-36h fade-in" style="animation-delay: 0.1s;">
+                    <div class="cohort-header">
+                        <div class="cohort-title">Cohorte Intensiva</div>
+                        <div class="cohort-hours">36h/sem</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.5rem;">Para dedicación parcial</div>
+                    </div>
+                    <div class="cohort-body">
+                        <h4 style="margin-bottom: 0.75rem; color: #1f2937;">Tareas semanales completas:</h4>
+                        <ul class="task-list">
+                            <!-- Tareas heredadas de 20h -->
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Test diario mixto</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">225 preguntas/semana del banco completo</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Bloque de 35-40 preguntas diarias extraídas aleatoriamente de todo el banco de 9,000 preguntas. Es la piedra angular del sistema de repaso.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener activos todos los conocimientos mediante exposición continua. Evita el olvido selectivo y detecta lagunas temáticas antes de que se conviertan en problema.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Realizar preferentemente por la mañana (mente fresca)</li>
+                                            <li>Tiempo máximo: 45 minutos incluyendo revisión</li>
+                                            <li>Anotar TODOS los fallos en flashcards</li>
+                                            <li>No revisar aciertos (optimización del tiempo)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Meta semanal: mantener >85% acierto global. Si baja, el sistema activa automáticamente mini-tests dirigidos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Mini-test dirigido</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Solo si algún tema < 80% acierto</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Test de refuerzo automático de 20-25 preguntas que se activa cuando el sistema detecta que un tema específico cae por debajo del 80% de acierto.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Intervención temprana para evitar que las lagunas se cronifiquen. Actúa como un "cortafuegos" que impide que los temas débiles contaminen el rendimiento global.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Se genera automáticamente al detectar el umbral</li>
+                                            <li>Preguntas 100% del tema problemático</li>
+                                            <li>Incluye preguntas falladas + nuevas del mismo tema</li>
+                                            <li>Repetir hasta conseguir >85% en el tema</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Indicador de éxito: no necesitar más de 2 mini-tests por tema/mes. Si se requieren más, revisar material de estudio base.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>2 Simulacros RF</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Sábado oficial + Domingo test entrenamiento</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Dos simulacros de 100 preguntas cada fin de semana: el oficial del sábado (con 100% preguntas inéditas) y el test de entrenamiento del domingo (dificultad ajustada).</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Entrenar la resistencia mental, gestión del tiempo y preparar psicológicamente para el día del examen. El doble simulacro crea "memoria muscular" del proceso.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Sábado 10:00h - Simulacro oficial en directo</li>
+                                            <li>Condiciones de examen real (sin pausas)</li>
+                                            <li>Domingo: simulacro individual a tu ritmo</li>
+                                            <li>Enviar resultados antes de las 23:59 domingo</li>
+                                            <li>Revisión profunda de fallos el lunes</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Progresión esperada: comenzar en 65-70/100 y llegar a 85-90/100 en la semana 20. La constancia es más importante que los picos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Sistema Leitner básico</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">15 min/día revisión espaciada de flashcards</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sistema de repaso espaciado con 3 cajas básicas. Las tarjetas "viajan" entre cajas según tu dominio: Caja 1 (diaria), Caja 2 (cada 3 días), Caja 3 (semanal).</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Optimizar el tiempo de repaso revisando más frecuentemente lo difícil y espaciando lo dominado. Convierte el caos de cientos de tarjetas en un sistema manejable de 20-30 tarjetas diarias.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Crear tarjeta inmediata de cada fallo</li>
+                                            <li>Todas empiezan en Caja 1 (revisión diaria)</li>
+                                            <li>Si aciertas → sube a siguiente caja</li>
+                                            <li>Si fallas → vuelve a Caja 1</li>
+                                            <li>Usar app móvil (Anki) o físico con 3 sobres</li>
+                                            <li>Máximo 15 minutos diarios (timer estricto)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Objetivo: 70% de tarjetas en Caja 3 (dominio semanal). Si más del 50% están en Caja 1, dedica una sesión extra para procesarlas.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Vuelta distribuida semanal</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">1/4 del temario repartido en 5 días (45 min/día)</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Revisión sistemática del temario dividida en dosis diarias manejables. Cada semana cubres 1/4 del temario completo, completando una vuelta entera cada mes.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener frescos TODOS los temas mediante exposición frecuente y regular. Evita el "olvido catastrófico" de temas no repasados y detecta lagunas antes de los simulacros.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>45 minutos tras el test matutino</li>
+                                            <li>Lunes: Temas 1-10 (ejemplo)</li>
+                                            <li>Martes: Temas 11-20</li>
+                                            <li>Miércoles: Temas 21-30</li>
+                                            <li>Jueves: Temas 31-40</li>
+                                            <li>Viernes: Temas 41-44 + legislación</li>
+                                            <li>Lectura activa: subrayar dudas</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Velocidad objetivo: 1 tema cada 6-7 minutos. Si necesitas más tiempo, tus esquemas son demasiado densos - sintetiza más.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Tareas nuevas de 36h -->
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>2º bloque test diario</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">+30-40 preguntas tras la comida</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Segundo bloque de práctica diaria, estratégicamente ubicado después de la comida para aprovechar el "valle de atención" post-prandial de forma productiva.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Duplicar la exposición diaria sin saturar. El espaciado temporal (mañana/tarde) mejora la consolidación y permite detectar patrones de error según el momento del día.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Horario ideal: 15:00-16:00h</li>
+                                            <li>Mezclar temas diferentes al bloque matutino</li>
+                                            <li>Permitir café/té durante la realización</li>
+                                            <li>Usar timer estricto: 35 minutos máximo</li>
+                                            <li>Comparar rendimiento AM vs PM semanalmente</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>El rendimiento PM suele ser 5-8% inferior al AM. Si la diferencia supera el 15%, revisar hábitos de descanso y alimentación.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Sistema Leitner completo</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">5 cajas, 20 min/día optimización avanzada</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sistema profesional de 5 cajas con algoritmo optimizado: Caja 1 (diaria), Caja 2 (cada 3 días), Caja 3 (semanal), Caja 4 (quincenal), Caja 5 (mensual). Gestiona eficientemente 500+ tarjetas.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Maximizar retención a largo plazo con mínimo tiempo invertido. El algoritmo garantiza que revises cada concepto justo antes de olvidarlo, creando memoria duradera.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Usar Anki con configuración personalizada</li>
+                                            <li>Crear tarjetas de alta calidad (pregunta + contexto)</li>
+                                            <li>Incluir imágenes cuando sea posible</li>
+                                            <li>Sesión matutina: cajas 1-2 (10 min)</li>
+                                            <li>Sesión vespertina: cajas 3-5 (10 min)</li>
+                                            <li>Sincronizar móvil para repasos en tránsito</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Distribución ideal: 10% Caja 1, 15% Caja 2, 25% Caja 3, 30% Caja 4, 20% Caja 5. Tasa de retención objetivo: >90% en cajas 4-5.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Revisión Top-10 fallos</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Lunes: análisis errores frecuentes</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sesión semanal dedicada a analizar en profundidad las 10 preguntas más falladas por el grupo en los simulacros del fin de semana.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Aprender de los errores colectivos. Si muchos fallan lo mismo, hay un patrón que merece atención especial. Previene "puntos ciegos" compartidos.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Lunes 17:00h (tras procesar simulacros)</li>
+                                            <li>Sistema proporciona las 10 preguntas</li>
+                                            <li>Resolver primero sin mirar respuesta</li>
+                                            <li>Estudiar explicación extendida</li>
+                                            <li>Crear mnemotecnia grupal si procede</li>
+                                            <li>Re-test rápido de esas 10 al final</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Si una pregunta aparece en el Top-10 más de 2 semanas seguidas, requiere intervención docente específica.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Técnica Feynman opcional</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Viernes: 30 min explicación activa</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sesión semanal donde explicas en voz alta conceptos complejos como si enseñaras a un compañero novato. Detecta y elimina el "conocimiento ilusorio".</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Transformar comprensión pasiva en dominio activo. Si no puedes explicarlo simple, no lo entiendes realmente. Consolida el aprendizaje profundo.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Elegir tema/artículo más confuso de la semana</li>
+                                            <li>Explicarlo sin consultar apuntes</li>
+                                            <li>Usar lenguaje simple, evitar jerga</li>
+                                            <li>Grabar audio (5-10 min máximo)</li>
+                                            <li>Escuchar y detectar vacilaciones</li>
+                                            <li>Reestudiar puntos débiles detectados</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Indicador de éxito: poder explicar cualquier tema en 5 minutos sin pausas largas. Si tardas más o dudas, necesitas más estudio base.</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #e5e7eb; border-radius: 0.5rem;">
+                            <strong>Resultado:</strong> ~11,200 preguntas totales (+2,000) con sistema Leitner completo
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- COHORTE 48H -->
+                <div class="cohort-card cohort-48h fade-in" style="animation-delay: 0.2s;">
+                    <div class="cohort-header">
+                        <div class="cohort-title">Cohorte Élite</div>
+                        <div class="cohort-hours">48h/sem</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.5rem;">Dedicación completa</div>
+                    </div>
+                    <div class="cohort-body">
+                        <h4 style="margin-bottom: 0.75rem; color: #475569;">Tareas semanales completas:</h4>
+                        <ul class="task-list">
+                            <!-- Tareas heredadas de 20h -->
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Test diario mixto</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">225 preguntas/semana del banco completo</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Bloque de 35-40 preguntas diarias extraídas aleatoriamente de todo el banco de 9,000 preguntas. Es la piedra angular del sistema de repaso.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener activos todos los conocimientos mediante exposición continua. Evita el olvido selectivo y detecta lagunas temáticas antes de que se conviertan en problema.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Realizar preferentemente por la mañana (mente fresca)</li>
+                                            <li>Tiempo máximo: 45 minutos incluyendo revisión</li>
+                                            <li>Anotar TODOS los fallos en flashcards</li>
+                                            <li>No revisar aciertos (optimización del tiempo)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Meta semanal: mantener >85% acierto global. Si baja, el sistema activa automáticamente mini-tests dirigidos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Mini-test dirigido</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Solo si algún tema < 80% acierto</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Test de refuerzo automático de 20-25 preguntas que se activa cuando el sistema detecta que un tema específico cae por debajo del 80% de acierto.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Intervención temprana para evitar que las lagunas se cronifiquen. Actúa como un "cortafuegos" que impide que los temas débiles contaminen el rendimiento global.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Se genera automáticamente al detectar el umbral</li>
+                                            <li>Preguntas 100% del tema problemático</li>
+                                            <li>Incluye preguntas falladas + nuevas del mismo tema</li>
+                                            <li>Repetir hasta conseguir >85% en el tema</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Indicador de éxito: no necesitar más de 2 mini-tests por tema/mes. Si se requieren más, revisar material de estudio base.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>2 Simulacros RF</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Sábado oficial + Domingo test de entrenamiento</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Dos simulacros de 100 preguntas cada fin de semana: el oficial del sábado (con 100% preguntas inéditas) y el test de entrenamiento del domingo (dificultad ajustada).</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Entrenar la resistencia mental, gestión del tiempo y preparar psicológicamente para el día del examen. El doble simulacro crea "memoria muscular" del proceso.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Sábado 10:00h - Simulacro oficial en directo</li>
+                                            <li>Condiciones de examen real (sin pausas)</li>
+                                            <li>Domingo: simulacro individual a tu ritmo</li>
+                                            <li>Enviar resultados antes de las 23:59 domingo</li>
+                                            <li>Revisión profunda de fallos el lunes</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Progresión esperada: comenzar en 65-70/100 y llegar a 85-90/100 en la semana 20. La constancia es más importante que los picos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Flashcards diarias</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">10-15 min revisión de fallos</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sistema de repaso espaciado usando tarjetas creadas a partir de TODOS los fallos. Cada tarjeta contiene: pregunta, respuesta correcta y explicación del error.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Convertir errores en aprendizaje duradero mediante repetición espaciada. El cerebro retiene mejor lo que revisa en intervalos crecientes.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Crear tarjeta inmediatamente tras cada fallo</li>
+                                            <li>Revisar: día 1, día 3, día 7, día 15</li>
+                                            <li>Archivar tras 3 aciertos consecutivos</li>
+                                            <li>Usar app móvil para aprovechar tiempos muertos</li>
+                                            <li>Incluir mnemotecnias cuando sea posible</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Objetivo: <100 tarjetas activas. Si superas 150, dedica una sesión extra para reducir el backlog.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-20h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Vuelta Express mensual</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">4h lectura esquemas en voz alta</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sesión intensiva mensual de 4 horas para leer en voz alta TODOS los esquemas-resumen del temario completo.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener la visión global del temario y reforzar conexiones entre temas. La lectura en voz alta activa múltiples canales de memoria.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Último domingo de cada mes</li>
+                                            <li>Dividir en 2 bloques de 2h con descanso</li>
+                                            <li>Leer de pie o caminando (mejora retención)</li>
+                                            <li>Grabar audio para repaso posterior</li>
+                                            <li>Marcar conceptos que no fluyan naturalmente</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Velocidad objetivo: completar todo el temario en 4h. Si necesitas más tiempo, tus esquemas son demasiado extensos.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Tareas heredadas de 36h -->
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>2º bloque test diario</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">+30-40 preguntas tras la comida</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Segundo bloque de práctica diaria, estratégicamente ubicado después de la comida para aprovechar el "valle de atención" post-prandial de forma productiva.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Duplicar la exposición diaria sin saturar. El espaciado temporal (mañana/tarde) mejora la consolidación y permite detectar patrones de error según el momento del día.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Horario ideal: 15:00-16:00h</li>
+                                            <li>Mezclar temas diferentes al bloque matutino</li>
+                                            <li>Permitir café/té durante la realización</li>
+                                            <li>Usar timer estricto: 35 minutos máximo</li>
+                                            <li>Comparar rendimiento AM vs PM semanalmente</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>El rendimiento PM suele ser 5-8% inferior al AM. Si la diferencia supera el 15%, revisar hábitos de descanso y alimentación.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Caso práctico semanal</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Supuesto policial con artículos</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Resolución de un supuesto práctico policial completo: desde la recepción de la denuncia hasta la puesta a disposición judicial, identificando todos los artículos aplicables.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Conectar conocimiento teórico con aplicación real. Desarrolla el pensamiento procedimental y la capacidad de relacionar múltiples áreas legales en un caso concreto.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Miércoles por la tarde (2h dedicadas)</li>
+                                            <li>Leer el caso completo sin consultar</li>
+                                            <li>Identificar: delitos, procedimiento, derechos</li>
+                                            <li>Redactar atestado básico o informe</li>
+                                            <li>Comparar con solución oficial el jueves</li>
+                                            <li>Anotar artículos que no recordaste</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Progresión: semana 1-5 identificar 60% de artículos → semana 20 identificar 95%. La redacción mejora naturalmente con la práctica.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-36h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Revisión Top-10 fallos</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">Lunes: análisis errores frecuentes</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sesión semanal dedicada a analizar en profundidad las 10 preguntas más falladas por el grupo en los simulacros del fin de semana.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Aprender de los errores colectivos. Si muchos fallan lo mismo, hay un patrón que merece atención especial. Previene "puntos ciegos" compartidos.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Lunes 17:00h (tras procesar simulacros)</li>
+                                            <li>Sistema proporciona las 10 preguntas</li>
+                                            <li>Resolver primero sin mirar respuesta</li>
+                                            <li>Estudiar explicación extendida</li>
+                                            <li>Crear mnemotecnia grupal si procede</li>
+                                            <li>Re-test rápido de esas 10 al final</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Si una pregunta aparece en el Top-10 más de 2 semanas seguidas, requiere intervención docente específica.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <!-- Tareas nuevas de 48h -->
+                            <li class="task-item task-48h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>3er bloque (Ma-Ju)</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">+30-40 preguntas nuevas/semana</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Tercer bloque de práctica selectivo, solo martes y jueves, centrado exclusivamente en preguntas nuevas o recientemente añadidas al banco.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Mantener frescura mental enfrentándose a material novedoso. Evita la "memorización mecánica" y entrena la capacidad de razonamiento ante preguntas desconocidas.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Martes y jueves 19:00-20:00h</li>
+                                            <li>100% preguntas no vistas antes</li>
+                                            <li>Permitir consulta de esquemas DESPUÉS</li>
+                                            <li>Analizar por qué fallaste: ¿concepto nuevo o mala interpretación?</li>
+                                            <li>Crear flashcard inmediata de TODOS los fallos</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Es normal tener 60-70% acierto en preguntas nuevas. El objetivo es entrenar la adaptabilidad, no maximizar el porcentaje.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-48h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Laboratorio de fichas</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">45 min diseño mnemotecnias</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Sesión creativa dedicada a transformar flashcards difíciles en material memorable mediante técnicas avanzadas de memorización.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Optimizar la retención de conceptos complejos. Una buena mnemotecnia puede convertir 10 minutos de memorización en 10 segundos de recuerdo instantáneo.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Jueves tarde (tras el 3er bloque)</li>
+                                            <li>Seleccionar 5-10 conceptos más difíciles</li>
+                                            <li>Crear: acrónimos, historias, imágenes mentales</li>
+                                            <li>Diseñar diagramas visuales o mapas mentales</li>
+                                            <li>Compartir las mejores con el grupo</li>
+                                            <li>Usar herramientas digitales (Canva, etc.)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Una mnemotecnia exitosa debe permitir recordar el concepto 30 días después sin repasos intermedios. Test mensual de retención.</p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="task-item task-48h" onclick="toggleTask(this)">
+                                <div class="task-header">
+                                    <div class="task-title">
+                                        <strong>Simulacro contrarreloj</strong><br>
+                                        <span style="font-size: 0.875rem; color: #6b7280;">100p en 35 min (quincenal)</span>
+                                    </div>
+                                    <span class="task-arrow">▼</span>
+                                </div>
+                                <div class="task-detail">
+                                    <div class="task-detail-content">
+                                        <h5>📚 Descripción completa</h5>
+                                        <p>Simulacro de alta presión: 100 preguntas en solo 35 minutos (21 segundos por pregunta). Entrena la toma de decisiones rápida bajo estrés extremo.</p>
+                                        
+                                        <h5>🎯 Objetivo pedagógico</h5>
+                                        <p>Preparar para el peor escenario posible el día del examen. Si puedes mantener 70% de acierto a esta velocidad, el examen real parecerá pausado.</p>
+                                        
+                                        <h5>⚙️ Metodología</h5>
+                                        <ul>
+                                            <li>Viernes alternos (quincenal) 18:00h</li>
+                                            <li>Ambiente de máxima concentración</li>
+                                            <li>NO se permite revisar respuestas durante</li>
+                                            <li>Estrategia: primera pasada rápida, marcar dudas</li>
+                                            <li>Analizar después: ¿qué preguntas consumieron más tiempo?</li>
+                                            <li>NO cuenta para ranking (solo mejora personal)</li>
+                                        </ul>
+                                        
+                                        <h5>📊 Métricas clave</h5>
+                                        <p>Objetivo: mantener mínimo 70% acierto. Más importante: reducir el tiempo de "bloqueo" ante preguntas difíciles.</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        <div style="margin-top: 1rem; padding: 1rem; background: #94a3b8; color: white; border-radius: 0.5rem;">
+                            <strong>Resultado:</strong> ~12,400 preguntas cubriendo el banco completo + técnica Feynman diaria
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- RUTINA SEMANAL -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-clock"></span>Rutina Semanal Tipo</h2>
+            
+            <div class="timeline">
+                <div class="day">
+                    <div class="day-name">Lunes</div>
+                    <div class="day-task">Test diario<br>Mini-test si necesario</div>
+                </div>
+                <div class="day">
+                    <div class="day-name">Martes</div>
+                    <div class="day-task">Test diario<br>Flashcards</div>
+                </div>
+                <div class="day">
+                    <div class="day-name">Miércoles</div>
+                    <div class="day-task">Test diario<br>Caso práctico</div>
+                </div>
+                <div class="day">
+                    <div class="day-name">Jueves</div>
+                    <div class="day-task">Test diario<br>Laboratorio fichas</div>
+                </div>
+                <div class="day">
+                    <div class="day-name">Viernes</div>
+                    <div class="day-task">Descanso activo<br>Preparar simulacros</div>
+                </div>
+                <div class="day highlight">
+                    <div class="day-name">Sábado</div>
+                    <div class="day-task">SIMULACRO RF<br>100 preguntas nueva dificulad examen promo 41</div>
+                </div>
+                <div class="day highlight">
+                    <div class="day-name">Domingo</div>
+                    <div class="day-task">SIMULACRO PLUS<br>100 preguntas test entrenamiento</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SISTEMA DE GAMIFICACIÓN -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-trophy"></span>Sistema de Gamificación Elo-Plus</h2>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">¿Cómo funciona el sistema de puntos?</h3>
+                <p style="margin-bottom: 1rem;">Cada semana puedes ganar hasta <strong>25 puntos Elo</strong> según tu rendimiento:</p>
+                
+                <div class="points-system">
+                    <div class="point-rule">
+                        <div class="point-value">+5 pts</div>
+                        <div class="point-desc">Por participar en el simulacro semanal</div>
+                    </div>
+                    <div class="point-rule">
+                        <div class="point-value">Hasta +20 pts</div>
+                        <div class="point-desc">Según tu posición relativa en el ranking</div>
+                    </div>
+                    <div class="point-rule">
+                        <div class="point-value">+10 pts extra</div>
+                        <div class="point-desc">Si quedas Top-3 en el directo del sábado</div>
+                    </div>
+                    <div class="point-rule">
+                        <div class="point-value">+5 pts bonus</div>
+                        <div class="point-desc">Si reduces tu error de confianza ≥5%</div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h3><span class="icon-check"></span>Sistema transparente y justo</h3>
+                    <p>• El techo de +25 puntos hace que todos sepan exactamente cuánto pueden ganar<br>
+                    • Los puntos Top-3 se muestran como medalla pero no suman al Elo para evitar inflación<br>
+                    • La racha de participación es la llave para acceder a contenido premium</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- LEADERBOARD DINÁMICO -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-chart"></span>Leaderboard Dinámico - Vista de Ejemplo</h2>
+            
+            <div class="leaderboard">
+                <h3 style="margin-bottom: 1.5rem;">Ranking Semanal - RF15</h3>
+                
+                <!-- Ejemplo posición 1 -->
+                <div class="leaderboard-item">
+                    <div class="leaderboard-left">
+                        <span class="leaderboard-position position-1">1º</span>
+                        <span class="leaderboard-user">maria-2847</span>
+                        <span class="badge badge-star icon-star">Top 3 Directo</span>
+                    </div>
+                    <div class="leaderboard-stats">
+                        <span class="elo-delta delta-positive">↗ +25</span>
+                        <span class="streak streak-fire"><span class="icon-fire"></span>12</span>
+                        <span class="badge badge-elo">1,485 pts</span>
+                    </div>
+                </div>
+                
+                <!-- Ejemplo posición 2 -->
+                <div class="leaderboard-item">
+                    <div class="leaderboard-left">
+                        <span class="leaderboard-position position-2">2º</span>
+                        <span class="leaderboard-user">carlos-9182</span>
+                    </div>
+                    <div class="leaderboard-stats">
+                        <span class="elo-delta delta-positive">↗ +22</span>
+                        <span class="streak streak-fire"><span class="icon-fire"></span>8</span>
+                        <span class="badge badge-elo">1,423 pts</span>
+                    </div>
+                </div>
+                
+                <!-- Ejemplo posición 3 -->
+                <div class="leaderboard-item">
+                    <div class="leaderboard-left">
+                        <span class="leaderboard-position position-3">3º</span>
+                        <span class="leaderboard-user">lucia-5634</span>
+                        <span class="badge badge-star icon-star">Top 3 Directo</span>
+                    </div>
+                    <div class="leaderboard-stats">
+                        <span class="elo-delta delta-neutral">→ +15</span>
+                        <span class="streak streak-fire"><span class="icon-fire"></span>15</span>
+                        <span class="badge badge-elo">1,397 pts</span>
+                    </div>
+                </div>
+                
+                <!-- Más posiciones -->
+                <div class="leaderboard-item">
+                    <div class="leaderboard-left">
+                        <span class="leaderboard-position">4º</span>
+                        <span class="leaderboard-user">jorge-7823</span>
+                    </div>
+                    <div class="leaderboard-stats">
+                        <span class="elo-delta delta-negative">↘ +8</span>
+                        <span class="streak">⭐ 3</span>
+                        <span class="badge badge-elo">1,352 pts</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
+                    <p><strong>Leyenda:</strong><br>
+                    • <strong>↗ ↘ →</strong> Cambio de Elo respecto a semana anterior<br>
+                    • <strong>🔥</strong> Racha de 4+ semanas consecutivas<br>
+                    • <strong>⭐</strong> Medalla Top-3 en directo (no suma Elo)<br>
+                    • <strong>Slug anónimo</strong> protege la privacidad (ej: maria-2847)</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- BENEFICIOS CLAVE -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon-star"></span>Beneficios Clave del Sistema</h2>
+            
+            <div class="stats-grid">
+                <div class="card" style="text-align: center;">
+                    <h3 style="color: var(--color-primario); margin-bottom: 0.5rem;">Adaptativo</h3>
+                    <p>Cada alumno trabaja según su tiempo disponible sin sentirse rezagado</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 style="color: var(--color-texto); margin-bottom: 0.5rem;">Motivador</h3>
+                    <p>Sistema de puntos transparente que premia el esfuerzo constante</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 style="color: var(--color-secundario); margin-bottom: 0.5rem;">Completo</h3>
+                    <p>Cubre 100% del banco de 12,000 preguntas sin generar fatiga</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 style="color: var(--color-alerta); margin-bottom: 0.5rem;">Medible</h3>
+                    <p>Métricas claras para detectar y corregir problemas a tiempo</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- NOTAS PARA LA IMPLEMENTACIÓN -->
+        <section class="section">
+            <h2 class="section-title">📝 Notas para la Jefa de Estudios</h2>
+            
+            <div class="card" style="background: #fef3c7; border-left: 4px solid var(--color-alerta);">
+
+                
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Consideraciones técnicas:</h3>
+                <ul style="margin-left: 1.5rem;">
+                    <li>El sistema real funcionará con Supabase (base de datos) + dashboard HTML</li>
+                    <li>Los cálculos de Elo se hacen automáticamente cada lunes</li>
+                    <li>El formulario de envío se integra en el LMS existente</li>
+                    <li>Coste estimado: tiempo de configuración inicial + mantenimiento mínimo</li>
+                </ul>
+                
+            </div>
+        </section>
+        
+        <!-- PIE -->
+        <div style="text-align: center; margin-top: 4rem; padding: 2rem; color: #6b7280;">
+            <p>IZETA 2025 - Sistema de Preparación Avanzada</p>
+
+        </div>
+    </div>
+    
+    <!-- Script para interactividad básica -->
+    <script>
+        // Función para cambiar de tab
+        function showTab(tabId) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Desactivar todas las pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar contenido seleccionado
+            document.getElementById(tabId).classList.add('active');
+            
+            // Activar pestaña seleccionada
+            event.target.classList.add('active');
+        }
+        
+        // Toggle entre ranking global y progreso
+        function toggleRanking(type) {
+            // Cambiar botones activos
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Mostrar/ocultar contenido
+            if (type === 'global') {
+                document.getElementById('ranking-global').style.display = 'block';
+                document.getElementById('ranking-progress').style.display = 'none';
+            } else {
+                document.getElementById('ranking-global').style.display = 'none';
+                document.getElementById('ranking-progress').style.display = 'block';
+            }
+        }
+        
+        // Función para expandir/contraer tareas
+        function toggleTask(element) {
+            element.classList.toggle('expanded');
+        }
+        
+        // Animación suave al hacer scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.card, .cohort-card').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.5s ease-out';
+                observer.observe(el);
+            });
+        });
+        
+        // Resaltar elementos al hacer hover para mejor comprensión
+        document.querySelectorAll('.cohort-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
