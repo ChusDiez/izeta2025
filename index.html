@@ -189,13 +189,13 @@
         .task-detail {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: white;
+            background: #fff;
             border-top: 1px solid #e5e7eb;
+            transition: max-height .35s ease;
         }
-        
+
         .task-item.expanded .task-detail {
-            max-height: 500px;
+            /* Altura controlada dinámicamente vía JavaScript */
         }
         
         .task-detail-content {
@@ -1598,9 +1598,18 @@
             }
         }
         
-        // Función para expandir/contraer tareas
+        // Función para expandir/contraer tareas con altura dinámica
         function toggleTask(element) {
-            element.classList.toggle('expanded');
+            const detail = element.querySelector('.task-detail');
+            if (!detail) return;
+
+            const expanded = element.classList.toggle('expanded');
+            if (expanded) {
+                // Usar la altura real del contenido para la transición
+                detail.style.maxHeight = detail.scrollHeight + 'px';
+            } else {
+                detail.style.maxHeight = '0';
+            }
         }
         
         // Animación suave al hacer scroll
