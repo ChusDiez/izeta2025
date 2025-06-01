@@ -686,7 +686,8 @@ function renderWeeklyRanking(data) {
                 </div>
                 ${medalHTML}
                 <div class="score-display">
-                    <div class="score-number">${result.score}/100</div>
+                    // Cambiar de /100 a /10
+                    <div class="score-number">${result.score.toFixed(2).replace('.', ',')}/10</div>
                     <div class="score-label">
                         ${result.blank_answers > 0 ? `${result.blank_answers} blancos` : 'Completo'}
                     </div>

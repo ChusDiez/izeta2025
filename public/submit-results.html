@@ -297,6 +297,17 @@
             margin: 0 0.25rem;
         }
         
+        .error-input {
+            border-color: #DC2626 !important;
+        }
+        
+        .field-error {
+            color: #DC2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
         @media (max-width: 640px) {
             .container {
                 border-radius: 0;
@@ -363,28 +374,25 @@
                         <label for="score">
                             Puntuación obtenida <span class="required">*</span>
                             <span class="help-text" style="display: block; font-weight: normal; margin-top: 0.25rem;">
-                            Sobre 10, usa coma para decimales (ej: 8,50)
+                                Sobre 10 - Usa COMA para decimales (ej: 8,50)
                             </span>
                         </label>
                         <input 
-                            type="number" 
+                            type="text" 
                             id="score" 
                             name="score" 
-                            min="0" 
-                            max="10" 
                             required 
                             class="score-input"
-                            placeholder="8,55"
-                            pattern="^([0-9]|10)(,[0-9]{1,2})?$"
-                            title="Puntuación sobre 10 con máximo 2 decimales usando coma"
+                            placeholder="8,50"
                         >
+                        <div id="scoreError" class="field-error"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="blank_answers">
                             Preguntas en blanco
                             <span class="help-text" style="display: block; font-weight: normal; margin-top: 0.25rem;">
-                            Cuántas te han faltado para las 100?
+                                Cuántas te han faltado para las 100?
                             </span>
                         </label>
                         <input 
@@ -525,8 +533,14 @@
                     ofrecerte recomendaciones más precisas para mejorar tu rendimiento. Leemos, pero no juzgamos.
                 </div>
                 
+                <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem; background: #f3f4f6; padding: 1rem; border-radius: 8px;">
+                    <strong>Nota importante sobre la puntuación:</strong>
+                    <br>✅ Correcto: 8,50 | 7,25 | 9,00 | 10 | 5,5 | 8
+                    <br>❌ Incorrecto: 8.50 (usa coma, no punto) | 85 (es sobre 10, no sobre 100)
+                </div>
+                
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" onclick="document.getElementById('resultsForm').reset()">
+                    <button type="button" class="btn-secondary" onclick="limpiarFormulario()">
                         Limpiar
                     </button>
                     <button type="submit" class="btn-primary" id="submitBtn">
@@ -669,6 +683,55 @@
             document.getElementById('charCount').textContent = e.target.value.length;
         });
 
+        // Validar el score mientras se escribe
+        document.getElementById('score').addEventListener('input', function(e) {
+            validarScore();
+        });
+
+        // Validar score
+        function validarScore() {
+            const scoreInput = document.getElementById('score');
+            const scoreError = document.getElementById('scoreError');
+            const value = scoreInput.value.trim();
+            
+            // Reset error
+            scoreInput.classList.remove('error-input');
+            scoreError.style.display = 'none';
+            scoreError.textContent = '';
+            
+            if (!value) {
+                return true; // Vacío es válido durante la escritura
+            }
+            
+            // Verificar si usa punto
+            if (value.includes('.')) {
+                scoreInput.classList.add('error-input');
+                scoreError.textContent = 'Por favor usa coma (,) para los decimales, no punto (.)';
+                scoreError.style.display = 'block';
+                return false;
+            }
+            
+            // Verificar formato básico
+            const formatoValido = /^([0-9]|10)(,[0-9]{0,2})?$/.test(value);
+            if (!formatoValido) {
+                scoreInput.classList.add('error-input');
+                scoreError.textContent = 'Formato inválido. Usa un número del 0 al 10 con máximo 2 decimales';
+                scoreError.style.display = 'block';
+                return false;
+            }
+            
+            // Convertir y verificar rango
+            const numero = parseFloat(value.replace(',', '.'));
+            if (numero > 10) {
+                scoreInput.classList.add('error-input');
+                scoreError.textContent = 'La puntuación debe ser entre 0 y 10';
+                scoreError.style.display = 'block';
+                return false;
+            }
+            
+            return true;
+        }
+
         // Cargar simulacros disponibles
         async function loadSimulacros() {
             try {
@@ -694,24 +757,19 @@
                 data.forEach(sim => {
                     const option = document.createElement('option');
                     option.value = sim.id;
-                    
-                    // Guardar la fecha de inicio en el dataset
                     option.dataset.startDate = sim.start_date;
                     
-                    // Formatear el texto del option
                     const startDate = new Date(sim.start_date);
                     const isFuture = startDate > today;
                     
-                    // Texto base
                     let optionText = `RF${sim.week_number} - Semana del ${formatDate(sim.start_date)}`;
                     
-                    // Añadir indicadores visuales
                     if (isFuture) {
                         optionText += ' 🔒 (Próximamente)';
-                        option.style.color = '#9ca3af'; // Gris para futuros
+                        option.style.color = '#9ca3af';
                     } else if (sim.status === 'active') {
                         optionText += ' 🟢 (Activo)';
-                        option.style.color = '#059669'; // Verde para activo
+                        option.style.color = '#059669';
                     }
                     
                     option.textContent = optionText;
@@ -734,24 +792,42 @@
             const errorMsg = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
             
-            // Deshabilitar botón
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Enviando...';
-            
             // Ocultar mensajes previos
             successMsg.style.display = 'none';
             errorMsg.style.display = 'none';
+            
+            // Validar score
+            const scoreValue = document.getElementById('score').value.trim();
+            if (!scoreValue) {
+                document.getElementById('score').focus();
+                document.getElementById('scoreError').textContent = 'La puntuación es obligatoria';
+                document.getElementById('scoreError').style.display = 'block';
+                document.getElementById('score').classList.add('error-input');
+                return;
+            }
+            
+            if (!validarScore()) {
+                document.getElementById('score').focus();
+                return;
+            }
+            
+            // Deshabilitar botón
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Enviando...';
             
             try {
                 // Obtener temas seleccionados
                 const selectedTopics = Array.from(document.querySelectorAll('input[name="weakest_topics"]:checked'))
                     .map(cb => cb.value);
                 
+                // Convertir score de coma a punto para la base de datos
+                const scoreNum = parseFloat(scoreValue.replace(',', '.'));
+                
                 // Obtener datos del formulario
                 const formData = {
                     email: document.getElementById('email').value,
                     simulation_id: document.getElementById('simulacro').value,
-                    score: parseInt(document.getElementById('score').value),
+                    score: scoreNum,
                     blank_answers: parseInt(document.getElementById('blank_answers').value),
                     confidence_score: parseInt(document.getElementById('confidence').value),
                     time_taken: document.getElementById('time').value ? parseInt(document.getElementById('time').value) * 60 : null,
@@ -763,24 +839,23 @@
                     difficulty_note: document.getElementById('difficulty_note').value || null
                 };
 
-                // ===== VALIDACIÓN DE FECHA =====
+                // Validar fecha del simulacro
                 const simulacroSelect = document.getElementById('simulacro');
                 const selectedOption = simulacroSelect.options[simulacroSelect.selectedIndex];
                 if (selectedOption && selectedOption.dataset.startDate) {
                     const simulacroStartDate = new Date(selectedOption.dataset.startDate);
                     const today = new Date();
-                    today.setHours(0, 0, 0, 0); // Resetear a medianoche
+                    today.setHours(0, 0, 0, 0);
                     
                     if (simulacroStartDate > today) {
                         throw new Error('No puedes enviar resultados para un simulacro que aún no ha comenzado');
                     }
                 }
-                // ===== FIN VALIDACIÓN =====
 
                 // Verificar si el usuario existe
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
-                    .select('id, slug') // Añadimos slug aquí
+                    .select('id, slug')
                     .eq('email', formData.email)
                     .single();
 
@@ -788,7 +863,7 @@
                     throw new Error('Email no registrado en el sistema');
                 }
 
-                // Verificar si ya envió resultados para este simulacro
+                // Verificar si ya envió resultados
                 const { data: existingResult } = await supabaseClient
                     .from('user_results')
                     .select('id')
@@ -823,7 +898,7 @@
                 // Agregar email a la cola
                 const weekNumber = document.querySelector('#simulacro option:checked').textContent.match(/RF(\d+)/)[1];
                 
-                const { error: emailError } = await supabaseClient
+                await supabaseClient
                     .from('email_queue')
                     .insert({
                         to_email: formData.email,
@@ -835,42 +910,27 @@
                             blank_answers: formData.blank_answers,
                             review_time: formData.review_time,
                             weakest_topics: selectedTopics,
-                            user_slug: userData.slug // Añadimos el slug aquí
+                            user_slug: userData.slug
                         }
                     });
 
-                if (emailError) {
-                    console.error('Error al programar email:', emailError);
-                }
-
-                // Opcional: Activar llamada manual a la función edge
-                if (window.location.hostname !== 'localhost') {
-                    fetch('https://hindymhwohevsqumekyv.supabase.co/functions/v1/send-email', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }).catch(err => console.error('Error procesando emails:', err));
-                }
-
-                // Mostrar éxito con el identificador del usuario
+                // Mostrar éxito
                 successMsg.innerHTML = `
                     <strong>✅ Resultados enviados correctamente.</strong><br>
                     Tu identificador en el ranking es: <span class="user-identifier">${userData.slug}</span><br>
                     Procesando...
                 `;
                 
-                // Añadir mensajes específicos según los datos
+                // Mensajes adicionales
                 let additionalMsg = '';
+                if (formData.score < 5) {
+                    additionalMsg += '<br>• Tu puntuación está por debajo del aprobado. Es importante reforzar los conceptos base.';
+                }
+                if (formData.score >= 8.5) {
+                    additionalMsg += '<br>• ¡Excelente puntuación! Mantén este nivel de preparación.';
+                }
                 if (formData.blank_answers > 10) {
                     additionalMsg += '<br>• Detectamos varias respuestas en blanco. Considera revisar estrategias de gestión del tiempo.';
-                }
-                if (formData.stress_level > 75) {
-                    additionalMsg += '<br>• Tu nivel de estrés fue elevado. Te recomendamos técnicas de relajación pre-examen.';
-                }
-                if (selectedTopics.length > 0) {
-                    additionalMsg += '<br>• Enfoca tu estudio en: ' + selectedTopics.join(', ');
                 }
                 
                 if (additionalMsg) {
@@ -880,7 +940,6 @@
                 successMsg.style.display = 'block';
                 document.getElementById('resultsForm').reset();
                 
-                // Rehabilitar botón después de 3 segundos
                 setTimeout(() => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Enviar Resultados';
@@ -891,13 +950,12 @@
                 errorText.textContent = error.message || 'Error al enviar los resultados';
                 errorMsg.style.display = 'block';
                 
-                // Rehabilitar botón
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Enviar Resultados';
             }
         });
 
-        // Función helper para formatear fechas
+        // Función para formatear fechas
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('es-ES', { 
@@ -905,6 +963,18 @@
                 month: '2-digit', 
                 year: 'numeric' 
             });
+        }
+
+        // Función para limpiar el formulario
+        function limpiarFormulario() {
+            document.getElementById('resultsForm').reset();
+            document.getElementById('scoreError').style.display = 'none';
+            document.getElementById('score').classList.remove('error-input');
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('confidenceValue').textContent = '50%';
+            document.getElementById('reviewValue').textContent = '30 min';
+            document.getElementById('charCount').textContent = '0';
         }
 
         // Cargar al iniciar
