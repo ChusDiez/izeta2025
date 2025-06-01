@@ -185,7 +185,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             console.log('12. Admin según campo directo:', isAdminUser);
         }
         
-        console.log('=== RESULTADO FIN
+        console.log('=== RESULTADO FIN');
+    }
+    catch (err) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = 'Error de autenticación. Verifica tus datos.';
+        errorDiv.style.display = 'block';
+        console.error('Error en el proceso de login:', err);
+    }
+});
     </script>
 </body>
 </html>
