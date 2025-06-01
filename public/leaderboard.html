@@ -314,7 +314,6 @@
         padding: 2rem;
         margin-bottom: 2rem;
         box-shadow: var(--shadow);
-        overflow: hidden;
         position: relative;
     }
     
@@ -596,12 +595,14 @@
         box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
     
-    /* Touch para móviles */
+/* Touch para móviles */
     @media (pointer: coarse) {
         .achievements-track {
             overflow-x: auto;
+            overflow-y: hidden; /* Añadimos esto para evitar scroll vertical */
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem; /* Espacio para la barra de scroll si aparece */
         }
         
         .achievement-card {
@@ -610,6 +611,12 @@
         
         .slider-controls {
             display: none;
+        }
+        
+        /* En móviles, el slider no debe ser sticky */
+        .achievements-slider {
+            position: relative !important;
+            top: auto !important;
         }
     }
     /* Slider de logros */
