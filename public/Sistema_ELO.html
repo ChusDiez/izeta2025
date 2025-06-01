@@ -6,55 +6,17 @@
     <title>Sistema ELO IZETA 2025 - Dashboard y Base de Datos</title>
     <style>
         :root {
-            /* Paletas globales */
-            --base-primary: #1E3A8A;
-            --intensive-primary: #111827;
-            --elite-primary: #0B1F3F;
-            --base-accent: #FF6B00;
-            --intensive-accent: #84CC16;
-            --elite-accent: #10B981;
-
-            --ui-text: #212121;
-            --ui-link: #3B82F6;
-            --ui-danger: #DC2626;
-            --ui-success: #10B981;
-            --ui-warning: #FBBF24;
-
-            --white: #FFFFFF;
-            --gray-50: #F9FAFB;
-            --gray-100: #F3F4F6;
-            --gray-200: #E5E7EB;
-
-            --hover-brightness: 1.2;
-            --active-brightness: 0.9;
-            --disabled-opacity: 0.5;
-
-            /* Local */
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-
-            /* Compatibilidad */
-            --primary-blue: var(--base-primary);
-            --secondary-gray: var(--gray-700);
-            --accent-gold: var(--elite-secondary);
+            --primary-blue: #1e40af;
+            --secondary-gray: #475569;
+            --accent-gold: #fbbf24;
             --accent-silver: #9ca3af;
             --accent-bronze: #d97706;
-            --success-green: var(--ui-success);
-            --danger-red: var(--ui-danger);
-            --bg-light: var(--gray-50);
-            --text-dark: var(--ui-text);
-        }
-
-        button:hover, a:hover {
-            filter: brightness(var(--hover-brightness));
-        }
-
-        button:active, a:active {
-            filter: brightness(var(--active-brightness));
-        }
-
-        button:disabled, a:disabled {
-            opacity: var(--disabled-opacity);
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         
         * {
@@ -70,11 +32,6 @@
             line-height: 1.6;
             padding: 20px;
         }
-
-        a {
-            color: var(--ui-link);
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
         
         .container {
             max-width: 1400px;
@@ -83,13 +40,7 @@
         
         /* Header Principal */
         .header {
-            background: linear-gradient(120deg,
-                #1E3A8A 0%, #111827 40%, #0B1F3F 80%, #0B1F3F 100%);
-            background-image:
-                radial-gradient(circle at 30% 40%, rgba(255, 107, 0, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 60% 60%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(251, 191, 36, 0.08) 0%, transparent 50%),
-                linear-gradient(120deg, #1E3A8A 0%, #111827 40%, #0B1F3F 80%, #0B1F3F 100%);
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-gray));
             color: white;
             padding: 3rem 2rem;
             border-radius: 20px;
@@ -225,7 +176,7 @@
         }
         
         .calculation-table tr:nth-child(even) {
-            background: var(--gray-50);
+            background: #f9fafb;
         }
         
         .calculation-table tr:hover {
@@ -525,7 +476,7 @@
         
         .progress-fill {
             height: 100%;
-            background: var(--base-accent);
+            background: linear-gradient(to right, var(--primary-blue), var(--accent-gold));
             border-radius: 15px;
             display: flex;
             align-items: center;
