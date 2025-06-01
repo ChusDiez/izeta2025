@@ -515,6 +515,25 @@
                 grid-template-columns: 1fr;
             }
         }
+        /* Añadir después de los estilos existentes */
+#at-risk-table, #all-students-table {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+#at-risk-table tbody tr, #all-students-table tbody tr {
+    cursor: pointer;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #d97706;
+}
     </style>
 </head>
 <body>
@@ -928,5 +947,296 @@
             console.log('Actualizando datos...');
         }, 30000);
     </script>
+    <!-- Antes del </body> en Dashboard_rendimiento.html -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/assets/js/config.js"></script>
+<script>
+// Variables globales
+let currentUser = null;
+let chartInstances = {};
+
+// Verificar autenticación y permisos
+async function checkAdminAccess() {
+    try {
+        console.log('Verificando autenticación...');
+        const user = await checkAuth();
+        console.log('Usuario:', user);
+        
+        if (!user) {
+            console.log('No hay usuario autenticado');
+            window.location.href = '/admin/login.html'; // Cambiar a login.html
+            return;
+        }
+
+        console.log('Verificando permisos de admin...');
+        const admin = await isAdmin();
+        console.log('Es admin:', admin);
+        
+        if (!admin) {
+            alert('No tienes permisos para acceder a esta página');
+            window.location.href = '/public/Leaderboard.html';
+            return;
+        }
+
+        currentUser = user;
+        console.log('Cargando datos del dashboard...');
+        loadDashboardData();
+    } catch (error) {
+        console.error('Error en checkAdminAccess:', error);
+        window.location.href = '/admin/login.html';
+    }
+}
+
+// Cargar datos del dashboard
+async function loadDashboardData() {
+    try {
+        // Cargar estadísticas generales
+        const { data: stats, error: statsError } = await supabaseClient
+            .from('cohort_statistics')
+            .select('*');
+
+        if (statsError) throw statsError;
+
+        updateGeneralStats(stats);
+
+        // Cargar usuarios en riesgo
+        const { data: atRiskUsers, error: riskError } = await supabaseClient
+            .from('admin_dashboard')
+            .select('*')
+            .in('risk_level', ['high', 'critical'])
+            .order('probability_pass', { ascending: true });
+
+        if (riskError) throw riskError;
+
+        renderAtRiskStudents(atRiskUsers);
+
+        // Cargar todos los estudiantes
+        const { data: allStudents, error: studentsError } = await supabaseClient
+            .from('admin_dashboard')
+            .select('*')
+            .order('current_elo', { ascending: false });
+
+        if (studentsError) throw studentsError;
+
+        renderAllStudents(allStudents);
+        
+        // Crear gráficos
+        createCharts(stats, allStudents);
+
+    } catch (error) {
+        console.error('Error cargando dashboard:', error);
+    }
+}
+
+// Actualizar estadísticas generales
+function updateGeneralStats(stats) {
+    // Calcular totales
+    const totalStudents = stats.reduce((sum, s) => sum + s.total_students, 0);
+    const totalAtRisk = stats.reduce((sum, s) => sum + s.at_risk_count, 0);
+    const avgProbability = stats.reduce((sum, s) => sum + (s.average_pass_probability * s.total_students), 0) / totalStudents;
+    
+    // Actualizar UI
+    document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalStudents;
+    document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = avgProbability.toFixed(1) + '%';
+    document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = totalAtRisk;
+    
+    // Calcular abandonos (estudiantes inactivos > 2 semanas)
+    // Esto requeriría una query adicional
+}
+
+// Renderizar estudiantes en riesgo
+function renderAtRiskStudents(students) {
+    const tbody = document.querySelector('#at-risk-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = students.map(student => {
+        const riskClass = student.risk_level === 'critical' ? 'risk-high' : 'risk-medium';
+        const zScoreClass = student.z_score < -1 ? 'danger' : 'warning';
+        
+        return `
+            <tr>
+                <td>
+                    <div>
+                        <div style="font-weight: 600;">${student.username}</div>
+                        <div style="font-size: 0.875rem; color: var(--gray-500);">${student.email}</div>
+                    </div>
+                </td>
+                <td><span class="badge badge-info">${student.cohort}</span></td>
+                <td>${student.average_score?.toFixed(0) || 'N/A'}/100</td>
+                <td><span style="color: var(--${zScoreClass});">${student.z_score?.toFixed(2) || 'N/A'}</span></td>
+                <td>
+                    <div class="risk-indicator ${riskClass}">
+                        <span>⚠️</span> ${student.probability_pass?.toFixed(0) || 0}%
+                    </div>
+                </td>
+                <td>
+                    <div style="font-size: 0.75rem;">
+                        ${student.risk_level === 'critical' ? 
+                            '<div class="badge badge-danger">Prob. muy baja</div>' : 
+                            '<div class="badge badge-warning">Prob. baja</div>'}
+                        ${student.trend_direction === 'down' ? 
+                            '<div class="badge badge-warning" style="margin-top: 0.25rem;">Tendencia negativa</div>' : ''}
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon" title="Ver detalles" onclick="viewStudentDetails('${student.id}')">👁️</button>
+                        <button class="btn-icon" title="Enviar email" onclick="sendEmail('${student.id}')">📧</button>
+                        <button class="btn-icon" title="Añadir nota" onclick="addNote('${student.id}')">📝</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Renderizar todos los estudiantes
+function renderAllStudents(students) {
+    const tbody = document.querySelector('#all-students-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = students.slice(0, 50).map(student => { // Limitar a 50 para performance
+        const streakEmoji = student.current_streak >= 8 ? '🔥' : '⭐';
+        const multiplier = student.current_streak >= 16 ? 'x2.0' : 
+                          student.current_streak >= 8 ? 'x1.5' : 'x1.0';
+        
+        return `
+            <tr>
+                <td style="font-weight: 600;">${student.username}</td>
+                <td style="font-size: 0.875rem;">${student.email}</td>
+                <td><span class="badge badge-info">${student.cohort}</span></td>
+                <td>${student.recent_average?.toFixed(0) || 'N/A'}/100</td>
+                <td style="font-weight: 600; color: var(--primary);">${formatNumber(student.current_elo)}</td>
+                <td><span style="color: var(--${student.z_score > 0 ? 'success' : 'danger'});">${student.z_score?.toFixed(2) || 'N/A'}</span></td>
+                <td>
+                    <div class="risk-indicator risk-${student.probability_pass >= 70 ? 'low' : student.probability_pass >= 50 ? 'medium' : 'high'}">
+                        <span>${student.probability_pass >= 70 ? '✅' : '⚠️'}</span> ${student.probability_pass?.toFixed(0) || 0}%
+                    </div>
+                </td>
+                <td>
+                    <span style="color: var(--${student.trend_direction === 'up' ? 'success' : student.trend_direction === 'down' ? 'danger' : 'gray-500'});">
+                        ${student.trend_direction === 'up' ? '↗' : student.trend_direction === 'down' ? '↘' : '→'} 
+                        ${student.z_score ? (student.z_score > 0 ? '+' : '') + student.z_score.toFixed(2) : 'N/A'}
+                    </span>
+                </td>
+                <td>
+                    ${student.current_streak > 0 ? 
+                        `<span class="badge badge-danger">${streakEmoji} ${student.current_streak}</span>` : 
+                        '<span>-</span>'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Crear gráficos
+function createCharts(stats, students) {
+    // Gráfico de distribución por probabilidad
+    const probChart = document.getElementById('probabilityChart');
+    if (probChart) {
+        const ctx = probChart.getContext('2d');
+        
+        // Calcular distribución
+        const high = students.filter(s => s.probability_pass >= 70).length;
+        const medium = students.filter(s => s.probability_pass >= 50 && s.probability_pass < 70).length;
+        const low = students.filter(s => s.probability_pass < 50).length;
+        
+        if (chartInstances.probability) chartInstances.probability.destroy();
+        
+        chartInstances.probability = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alta (>70%)', 'Media (50-70%)', 'Baja (<50%)'],
+                datasets: [{
+                    data: [high, medium, low],
+                    backgroundColor: ['#10B981', '#FBBF24', '#DC2626']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico de rendimiento por cohorte
+    const cohortChart = document.getElementById('cohortChart');
+    if (cohortChart) {
+        const ctx = cohortChart.getContext('2d');
+        
+        if (chartInstances.cohort) chartInstances.cohort.destroy();
+        
+        chartInstances.cohort = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: stats.map(s => s.cohort),
+                datasets: [{
+                    label: 'Promedio de Score',
+                    data: stats.map(s => s.average_score || 0),
+                    backgroundColor: '#3B82F6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Funciones de acción
+function viewStudentDetails(studentId) {
+    // Implementar vista detallada
+    console.log('Ver detalles de:', studentId);
+}
+
+function sendEmail(studentId) {
+    // Implementar envío de email
+    showEmailModal();
+}
+
+function addNote(studentId) {
+    // Implementar añadir nota
+    const note = prompt('Añadir nota para el estudiante:');
+    if (note) {
+        // Guardar nota en la base de datos
+        console.log('Nota para', studentId, ':', note);
+    }
+}
+
+// Modal de email
+function showEmailModal() {
+    document.getElementById('emailModal').classList.add('active');
+}
+
+function hideEmailModal() {
+    document.getElementById('emailModal').classList.remove('active');
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('emailModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideEmailModal();
+    }
+});
+
+// Auto-actualizar cada minuto
+setInterval(loadDashboardData, 60000);
+
+// Iniciar al cargar
+document.addEventListener('DOMContentLoaded', checkAdminAccess);
+</script>
 </body>
 </html>
