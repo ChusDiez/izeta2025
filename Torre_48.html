@@ -6,16 +6,53 @@
     <title>IZETA 2025 - Nivel Élite (48h/semana)</title>
     <style>
         :root {
-            --primary-dark: #1a1a1a;
-            --secondary-navy: #2c3e50;
-            --accent-gray: #34495e;
-            --success-green: #27ae60;
-            --accent-gold: #f39c12;
-            --bg-light: #f8f9fa;
-            --text-primary: #212529;
+            /* Paletas globales */
+            --elite-primary: #0B1F3F;
+            --elite-secondary: #FBBF24;
+            --elite-accent: #10B981;
+            --elite-primary-light: #1B2F4F;
+            --elite-primary-dark: #000F2F;
+
+            --ui-text: #212121;
+            --ui-link: #3B82F6;
+            --ui-danger: #DC2626;
+            --ui-success: #10B981;
+            --ui-warning: #FBBF24;
+
+            --white: #FFFFFF;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+
+            --hover-brightness: 1.2;
+            --active-brightness: 0.9;
+            --disabled-opacity: 0.5;
+
+            /* Locales */
             --border-dark: #495057;
             --shadow: 0 2px 8px rgba(0,0,0,0.1);
             --shadow-strong: 0 4px 16px rgba(0,0,0,0.15);
+
+            /* Compatibilidad */
+            --bg-light: var(--gray-50);
+            --text-primary: var(--ui-text);
+            --accent-gold: var(--elite-secondary);
+            --success-green: var(--ui-success);
+            --accent-gray: var(--elite-primary-light);
+            --primary-dark: var(--elite-primary);
+            --secondary-navy: var(--elite-primary-dark);
+        }
+
+        button:hover, a:hover {
+            filter: brightness(var(--hover-brightness));
+        }
+
+        button:active, a:active {
+            filter: brightness(var(--active-brightness));
+        }
+
+        button:disabled, a:disabled {
+            opacity: var(--disabled-opacity);
         }
         
         * {
@@ -31,6 +68,11 @@
             line-height: 1.6;
             padding: 20px;
         }
+
+        a {
+            color: var(--ui-link);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         
         .container {
             max-width: 1400px;
@@ -38,7 +80,7 @@
         }
         
         .header {
-            background: var(--primary-dark);
+            background: var(--elite-primary);
             color: white;
             padding: 3rem 2rem;
             border-radius: 10px;

@@ -6,17 +6,54 @@
     <title>IZETA 2025 - Nivel Intensivo (36h/semana)</title>
     <style>
         :root {
+            /* Paletas globales */
+            --intensive-primary: #111827;
+            --intensive-secondary: #06B6D4;
+            --intensive-accent: #84CC16;
+            --intensive-primary-light: #1F2937;
+            --intensive-primary-dark: #030712;
+
+            --ui-text: #212121;
+            --ui-link: #3B82F6;
+            --ui-danger: #DC2626;
+            --ui-success: #10B981;
+            --ui-warning: #FBBF24;
+
+            --white: #FFFFFF;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+
+            --hover-brightness: 1.2;
+            --active-brightness: 0.9;
+            --disabled-opacity: 0.5;
+
+            /* Locales */
             --chess-black: #1a1a1a;
             --chess-white: #f0f0f0;
             --chess-gold: #d4a574;
             --chess-silver: #c0c0c0;
             --chess-bronze: #cd7f32;
-            --accent-purple: #9b59b6;
-            --success-green: #27ae60;
-            --warning-amber: #f39c12;
-            --bg-light: #fafafa;
-            --text-primary: #2c3e50;
             --shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+            /* Compatibilidad */
+            --bg-light: var(--gray-50);
+            --text-primary: var(--ui-text);
+            --accent-purple: var(--intensive-secondary);
+            --success-green: var(--ui-success);
+            --warning-amber: var(--ui-warning);
+        }
+
+        button:hover, a:hover {
+            filter: brightness(var(--hover-brightness));
+        }
+
+        button:active, a:active {
+            filter: brightness(var(--active-brightness));
+        }
+
+        button:disabled, a:disabled {
+            opacity: var(--disabled-opacity);
         }
         
         * {
@@ -32,6 +69,11 @@
             line-height: 1.6;
             padding: 20px;
         }
+
+        a {
+            color: var(--ui-link);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         
         .container {
             max-width: 1400px;
@@ -39,7 +81,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            background: var(--intensive-primary);
             color: white;
             padding: 2rem;
             border-radius: 15px;
@@ -124,14 +166,14 @@
             background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 12px rgba(17, 24, 39, 0.1);
             transition: all 0.3s ease;
             position: relative;
         }
         
         .day-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
         }
         
         .day-card.intensive::after {
@@ -234,7 +276,7 @@
             text-align: center;
             font-weight: 600;
             color: var(--text-primary);
-            border-top: 2px solid var(--accent-purple);
+            border-top: 2px solid var(--intensive-accent);
         }
         
         .progress-bar {
@@ -247,7 +289,7 @@
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(to right, var(--accent-purple), var(--chess-gold));
+            background: var(--intensive-accent);
             border-radius: 4px;
             transition: width 0.5s ease;
         }
