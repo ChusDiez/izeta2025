@@ -232,12 +232,14 @@
     .elo-display {
         text-align: right;
         min-width: 120px;
+        position: relative; /* Añadido para las animaciones de cambio */
     }
     
     .elo-number {
         font-size: 1.3rem;
         font-weight: bold;
         color: var(--primary-blue);
+        position: relative; /* Para la animación de cambio */
     }
     
     .elo-change {
@@ -317,15 +319,12 @@
     }
     
     .achievements-track {
-        display: flex;
-        transition: transform 0.3s ease;
-        gap: 2rem;
-        justify-content: center;
-    }
-    
-    .achievements-track.centered {
-        transform: none !important;
-    }
+            display: flex;
+            transition: transform 0.3s ease;
+            gap: 2rem;
+            overflow: hidden; /* Movemos el overflow aquí */
+            border-radius: 10px; /* Para mantener las esquinas redondeadas */
+        }
     
     .achievement-card {
         flex: 0 0 300px;
@@ -408,54 +407,127 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* Panel de error mejorado */
-    .error-panel {
-        background: #FEE2E2;
-        border: 1px solid #DC2626;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin: 1rem;
-        color: #991B1B;
-    }
-
-    .error-panel h3 {
-        margin-bottom: 0.5rem;
-        color: #DC2626;
-    }
-
-    .debug-info {
-        background: #F3F4F6;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-top: 1rem;
-        font-size: 0.875rem;
-    }
-
-    .retry-button {
-        background: var(--primary-blue);
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 1rem;
-        font-weight: 600;
-    }
-
-    .retry-button:hover {
-        background: #0E2A6A;
+    /* ============================================ */
+    /* NUEVOS ESTILOS PARA TIEMPO REAL - INICIO */
+    /* ============================================ */
+    
+    /* Animación de actualización de fila */
+    .ranking-row.updating {
+        background-color: #fef3c7 !important;
+        transition: background-color 0.3s ease;
     }
     
-    /* Mensaje informativo */
-    .info-message {
-        background: #E0F2FE;
-        border: 1px solid #0284C7;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem;
-        color: #075985;
-        text-align: center;
+    .ranking-row.updated {
+        background-color: #d1fae5 !important;
+        transition: background-color 3s ease;
     }
+    
+    /* Animación de cambio de posición */
+    .ranking-row.position-changed {
+        animation: positionPulse 1s ease;
+    }
+    
+    @keyframes positionPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+    
+    /* Animación de cambio de ELO */
+    .elo-change-animation {
+        position: absolute;
+        top: -20px;
+        right: 0;
+        font-size: 0.875rem;
+        font-weight: bold;
+        animation: floatUp 2s ease-out forwards;
+    }
+    
+    .elo-change-animation.positive {
+        color: var(--success-green);
+    }
+    
+    .elo-change-animation.negative {
+        color: var(--danger-red);
+    }
+    
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+    }
+    
+    /* Notificaciones en tiempo real */
+    .realtime-notification {
+        position: fixed;
+        top: 80px;
+        right: -400px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 1rem 1.5rem;
+        transition: right 0.3s ease;
+        z-index: 1000;
+        max-width: 300px;
+    }
+    
+    .realtime-notification.show {
+        right: 20px;
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .notification-icon {
+        font-size: 1.25rem;
+    }
+    
+    /* Indicador de conexión en tiempo real */
+    .realtime-indicator {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        z-index: 1000;
+    }
+    
+    .realtime-indicator.connected {
+        background: rgba(16, 185, 129, 0.9);
+    }
+    
+    .realtime-indicator.disconnected {
+        background: rgba(220, 38, 38, 0.9);
+    }
+    
+    .realtime-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    /* ============================================ */
+    /* NUEVOS ESTILOS PARA TIEMPO REAL - FIN */
+    /* ============================================ */
     
     /* Responsive */
     @media (max-width: 1024px) {
@@ -540,6 +612,33 @@
             display: none;
         }
     }
+    /* Slider de logros */
+        .achievements-slider {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            /* QUITAMOS overflow: hidden; */
+            position: sticky;
+            top: 10px;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+
+        /* Efecto cuando el slider está pegado arriba */
+            .achievements-slider.is-stuck {
+                box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+                transform: translateY(-2px);
+            }
+
+        /* En móvil, mejor mantenerlo normal */
+        @media (max-width: 768px) {
+            .achievements-slider {
+                position: relative;
+                top: auto;
+            }
+        }
 </style>
 </head>
 <body>
@@ -572,9 +671,6 @@
                 <div class="ranking-header" style="background: #111827;">
                     <h2>⚡ Ranking ELO Global</h2>
                     <p>Clasificación general acumulada</p>
-                    <p style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">
-                        📅 El ELO se actualiza cada lunes tras procesar los resultados semanales
-                    </p>
                 </div>
                 <div class="ranking-list" id="eloRanking">
                     <div class="loading">
@@ -589,10 +685,7 @@
         <div class="achievements-slider">
             <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary-blue);">🌟 Destacados de la Semana</h3>
             <div class="achievements-track" id="achievementsTrack">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 1rem;">Cargando destacados...</p>
-                </div>
+                <!-- Se llenará dinámicamente -->
             </div>
             <div class="slider-controls" id="sliderControls">
                 <!-- Se llenará dinámicamente -->
@@ -603,211 +696,109 @@
     <a href="/public/index.html" class="float-home">🏠</a>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/config.js"></script>
     <script>
-// Configuración de Supabase
-const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ';
-
-// Inicializar cliente
-const { createClient } = window.supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false
-    }
-});
-
 // Variables globales
 let weeklyData = [];
 let eloData = [];
 let currentSlide = 0;
 let achievements = [];
 let activeSimulation = null;
-let debugMode = false; // Desactivado por defecto, activar solo si es necesario
 
-// Función de debug mejorada
-function debugLog(message, data) {
-    if (debugMode) {
-        console.log(`[IZETA Debug] ${message}`, data || '');
-    }
-}
+// ============================================
+// NUEVAS VARIABLES PARA TIEMPO REAL - INICIO
+// ============================================
+let realtimeSubscriptions = {
+    results: null,
+    users: null
+};
+// ============================================
+// NUEVAS VARIABLES PARA TIEMPO REAL - FIN
+// ============================================
 
-// Función para mostrar errores en la UI de forma más amigable
-function showError(containerId, message, showRetry = true) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="error-panel">
-            <h3>⚠️ Aviso</h3>
-            <p>${message}</p>
-            ${showRetry ? '<button class="retry-button" onclick="loadAllData()">🔄 Reintentar</button>' : ''}
-        </div>
-    `;
-}
-
-// Función para mostrar mensaje informativo
-function showInfo(containerId, message) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="info-message">
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-// Cargar datos iniciales con mejor manejo de errores
+// Cargar datos iniciales
 async function loadAllData() {
-    debugLog('Iniciando carga de datos...');
-    
     try {
-        // Resetear estado de la UI
-        document.getElementById('headerSubtitle').textContent = 'Cargando información...';
-        
-        // Cargar simulacro activo
-        await loadActiveSimulation();
-        
-        // Cargar datos en paralelo para mejor rendimiento
-        const promises = [
-            loadWeeklyRanking(),
-            loadEloRanking(),
-            loadAchievements()
-        ];
-        
-        await Promise.allSettled(promises);
-        
-    } catch (error) {
-        console.error('Error general en loadAllData:', error);
-        document.getElementById('headerSubtitle').textContent = 'Error al cargar datos';
-    }
-}
-
-// Cargar simulacro activo
-async function loadActiveSimulation() {
-    debugLog('Cargando simulacro activo...');
-    
-    try {
+        // Obtener simulacro activo
         const { data: simData, error: simError } = await supabaseClient
             .from('weekly_simulations')
             .select('*')
             .eq('status', 'active')
-            .order('week_number', { ascending: false })
-            .limit(1)
             .single();
-        
-        if (simError) {
-            // No es un error crítico, solo significa que no hay simulacro activo
-            debugLog('No hay simulacro activo:', simError);
+
+        if (simError || !simData) {
+            console.error('Error obteniendo simulacro activo:', simError);
             document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
-            document.getElementById('headerSubtitle').textContent = 'Sistema de Rankings IZETA 2025';
-            activeSimulation = null;
-        } else if (simData) {
+        } else {
             activeSimulation = simData;
-            document.getElementById('weeklyInfo').textContent = 
-                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
-            document.getElementById('headerSubtitle').textContent = 
-                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
-            debugLog('Simulacro activo encontrado:', simData);
+            document.getElementById('weeklyInfo').textContent = `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
+            document.getElementById('headerSubtitle').textContent = `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
         }
+
+        // Cargar ranking semanal
+        loadWeeklyRanking();
+        
+        // Cargar ranking ELO
+        loadEloRanking();
+        
+        // Cargar logros
+        loadAchievements();
+
     } catch (error) {
-        console.error('Error cargando simulacro activo:', error);
-        document.getElementById('weeklyInfo').textContent = 'Error al cargar simulacro';
+        console.error('Error general:', error);
     }
 }
 
-// Cargar ranking semanal mejorado
+// Cargar ranking semanal
 async function loadWeeklyRanking() {
-    debugLog('Cargando ranking semanal...');
-    
     try {
         if (!activeSimulation) {
-            showInfo('weeklyRanking', 'No hay simulacro activo esta semana. El próximo simulacro comenzará el sábado.');
+            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
             return;
         }
 
+        // Obtener resultados del simulacro activo con información del usuario
         const { data, error } = await supabaseClient
             .from('user_results')
             .select(`
                 *,
-                users!inner (
-                    slug,
-                    current_elo,
-                    current_streak,
-                    cohort
-                )
+                users!inner(slug, current_elo, current_streak, cohort)
             `)
             .eq('simulation_id', activeSimulation.id)
             .order('score', { ascending: false });
 
-        if (error) {
-            console.error('Error cargando ranking semanal:', error);
-            showError('weeklyRanking', 'No se pudo cargar el ranking semanal. Por favor, intenta más tarde.');
-            return;
-        }
+        if (error) throw error;
 
         if (!data || data.length === 0) {
-            showInfo('weeklyRanking', 'Aún no hay resultados registrados para este simulacro.');
+            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay resultados aún para este simulacro</p>';
             return;
         }
 
         weeklyData = data;
         renderWeeklyRanking(data);
-        debugLog(`Ranking semanal cargado: ${data.length} registros`);
 
     } catch (error) {
-        console.error('Error crítico en loadWeeklyRanking:', error);
-        showError('weeklyRanking', 'Error al cargar el ranking semanal.');
+        console.error('Error cargando ranking semanal:', error);
+        document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking semanal</p>';
     }
 }
 
-// Cargar ranking ELO completamente mejorado
+// Cargar ranking ELO global
 async function loadEloRanking() {
-    debugLog('Cargando ranking ELO...');
-    
     try {
-        // Intentar primero con la vista public_leaderboard
-        let { data, error } = await supabaseClient
+        const { data, error } = await supabaseClient
             .from('public_leaderboard')
             .select('*')
-            .order('current_elo', { ascending: false })
-            .limit(50);
+            .order('current_elo', { ascending: false });
 
-        // Si la vista falla, intentar directamente con la tabla users
-        if (error || !data) {
-            debugLog('Vista public_leaderboard no disponible, usando tabla users');
-            
-            const usersQuery = await supabaseClient
-                .from('users')
-                .select('id, slug, current_elo, current_streak, cohort, active')
-                .eq('active', true)
-                .gt('total_simulations', 0) // Solo usuarios que han participado
-                .order('current_elo', { ascending: false })
-                .limit(50);
-            
-            data = usersQuery.data;
-            error = usersQuery.error;
-        }
-
-        if (error) {
-            console.error('Error cargando ranking ELO:', error);
-            showError('eloRanking', 'No se pudo cargar el ranking ELO. Por favor, intenta más tarde.');
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            showInfo('eloRanking', 'Aún no hay suficientes datos para mostrar el ranking ELO. Participa en los simulacros para aparecer aquí.');
-            return;
-        }
+        if (error) throw error;
 
         eloData = data;
         renderEloRanking(data);
-        debugLog(`Ranking ELO cargado: ${data.length} registros`);
 
     } catch (error) {
-        console.error('Error crítico en loadEloRanking:', error);
-        showError('eloRanking', 'Error al cargar el ranking ELO.');
+        console.error('Error cargando ranking ELO:', error);
+        document.getElementById('eloRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking ELO</p>';
     }
 }
 
@@ -815,21 +806,21 @@ async function loadEloRanking() {
 function renderWeeklyRanking(data) {
     const container = document.getElementById('weeklyRanking');
     
-    try {
-        container.innerHTML = data.map((result, index) => {
-            const position = index + 1;
-            const isTop3 = position <= 3;
-            let rowClass = 'ranking-row';
-            if (position === 1) rowClass += ' top-1';
-            else if (position === 2) rowClass += ' top-2';
-            else if (position === 3) rowClass += ' top-3';
+    container.innerHTML = data.map((result, index) => {
+        const position = index + 1;
+        const isTop3 = position <= 3;
+        let rowClass = 'ranking-row';
+        if (position === 1) rowClass += ' top-1';
+        else if (position === 2) rowClass += ' top-2';
+        else if (position === 3) rowClass += ' top-3';
 
-            // Medallas para logros especiales
-            let medals = [];
+        // Medallas solo para simulacro activo
+        let medals = [];
+        if (activeSimulation && activeSimulation.status === 'active') {
             if (isTop3 && result.is_saturday_live) {
                 medals.push({ icon: '🥇', tooltip: 'Top 3 en directo' });
             }
-            if (result.score === 10) { // Score perfecto es 10, no 100
+            if (result.score === 100) {
                 medals.push({ icon: '💯', tooltip: 'Puntuación perfecta' });
             }
             if (result.blank_answers === 0) {
@@ -838,230 +829,562 @@ function renderWeeklyRanking(data) {
             if (result.review_time >= 60) {
                 medals.push({ icon: '📚', tooltip: 'Análisis profundo' });
             }
+        }
 
-            const medalHTML = medals.length > 0 ? `
-                <div class="medals">
-                    ${medals.map(m => `<span class="medal" data-tooltip="${m.tooltip}">${m.icon}</span>`).join('')}
-                </div>
-            ` : '';
+        const medalHTML = medals.length > 0 ? `
+            <div class="medals">
+                ${medals.map(m => `<span class="medal" data-tooltip="${m.tooltip}">${m.icon}</span>`).join('')}
+            </div>
+        ` : '';
 
-            // Formatear el score correctamente
-            const scoreFormatted = typeof result.score === 'number' ? 
-                result.score.toFixed(2).replace('.', ',') : 
-                'N/A';
-
-            return `
-                <div class="${rowClass}">
-                    <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
-                    <div class="user-info">
-                        <div class="user-name">${result.users?.slug || 'Usuario desconocido'}</div>
-                        <div class="user-stats">
-                            <span>📋 ${result.users?.cohort || 'Sin cohorte'}</span>
-                            ${result.is_saturday_live ? '<span>🔴 En directo</span>' : ''}
-                            ${result.time_taken ? `<span>⏱️ ${Math.round(result.time_taken/60)} min</span>` : ''}
-                        </div>
-                    </div>
-                    ${medalHTML}
-                    <div class="score-display">
-                        <div class="score-number">${scoreFormatted}/10</div>
-                        <div class="score-label">
-                            ${result.blank_answers > 0 ? `${result.blank_answers} blancos` : 'Completo'}
-                        </div>
+        // IMPORTANTE: Añadimos data-user-id y data-score para el sistema de tiempo real
+        return `
+            <div class="${rowClass}" data-user-id="${result.user_id}" data-score="${result.score}">
+                <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
+                <div class="user-info">
+                    <div class="user-name">${result.users.slug}</div>
+                    <div class="user-stats">
+                        <span>📋 ${result.users.cohort}</span>
+                        ${result.is_saturday_live ? '<span>🔴 En directo</span>' : ''}
+                        ${result.time_taken ? `<span>⏱️ ${Math.round(result.time_taken/60)} min</span>` : ''}
+                        ${result.error_percentage ? `<span>❌ Errores: ${result.error_percentage}%</span>` : ''}
                     </div>
                 </div>
-            `;
-        }).join('');
-    } catch (renderError) {
-        console.error('Error renderizando ranking semanal:', renderError);
-        showError('weeklyRanking', 'Error al mostrar el ranking');
-    }
+                ${medalHTML}
+                <div class="score-display">
+                    <div class="score-number">${result.score.toFixed(2).replace('.', ',')}/10</div>
+                    <div class="score-label">
+                        ${result.blank_answers > 0 ? `${result.blank_answers} blancos` : 'Completo'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Renderizar ranking ELO
 function renderEloRanking(data) {
     const container = document.getElementById('eloRanking');
     
-    try {
-        container.innerHTML = data.map((user, index) => {
-            const position = index + 1;
-            const isTop3 = position <= 3;
-            let rowClass = 'ranking-row';
-            if (position === 1) rowClass += ' top-1';
-            else if (position === 2) rowClass += ' top-2';
-            else if (position === 3) rowClass += ' top-3';
+    container.innerHTML = data.map((user, index) => {
+        const position = index + 1;
+        const isTop3 = position <= 3;
+        let rowClass = 'ranking-row';
+        if (position === 1) rowClass += ' top-1';
+        else if (position === 2) rowClass += ' top-2';
+        else if (position === 3) rowClass += ' top-3';
 
-            // Indicador de racha
-            let streakHTML = '';
-            const streak = user.current_streak || 0;
-            if (streak >= 16) {
-                streakHTML = `<span class="streak-indicator streak-hot">👑 ${streak} semanas</span>`;
-            } else if (streak >= 8) {
-                streakHTML = `<span class="streak-indicator streak-hot">🔥 ${streak} semanas</span>`;
-            } else if (streak >= 4) {
-                streakHTML = `<span class="streak-indicator streak-fire">🔥 ${streak} semanas</span>`;
-            } else if (streak > 0) {
-                streakHTML = `<span class="streak-indicator">⭐ ${streak} semanas</span>`;
-            }
+        // Indicador de racha
+        let streakHTML = '';
+        if (user.current_streak >= 16) {
+            streakHTML = `<span class="streak-indicator streak-hot">👑 ${user.current_streak} semanas</span>`;
+        } else if (user.current_streak >= 8) {
+            streakHTML = `<span class="streak-indicator streak-hot">🔥 ${user.current_streak} semanas</span>`;
+        } else if (user.current_streak >= 4) {
+            streakHTML = `<span class="streak-indicator streak-fire">🔥 ${user.current_streak} semanas</span>`;
+        } else if (user.current_streak > 0) {
+            streakHTML = `<span class="streak-indicator">⭐ ${user.current_streak} semanas</span>`;
+        }
 
-            // Cambio de ELO (si está disponible)
-            const hasChange = user.last_elo_change !== undefined && user.last_elo_change !== null;
-            const changeClass = user.last_elo_change > 0 ? 'change-positive' : 
-                               user.last_elo_change < 0 ? 'change-negative' : '';
-            const changeSymbol = user.last_elo_change > 0 ? '↗' : 
-                                user.last_elo_change < 0 ? '↘' : '→';
+        // Color del cambio
+        const changeClass = user.last_elo_change > 0 ? 'change-positive' : 
+                           user.last_elo_change < 0 ? 'change-negative' : '';
+        const changeSymbol = user.last_elo_change > 0 ? '↗' : 
+                            user.last_elo_change < 0 ? '↘' : '→';
 
-            return `
-                <div class="${rowClass}">
-                    <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
-                    <div class="user-info">
-                        <div class="user-name">${user.slug || 'Usuario desconocido'}</div>
-                        <div class="user-stats">
-                            <span>📋 ${user.cohort || 'Sin cohorte'}</span>
-                            ${streakHTML}
-                            ${user.last_score ? `<span>📊 Último: ${(user.last_score).toFixed(2)}/10</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">${formatNumber(user.current_elo || 1000)}</div>
-                        <div class="score-label">Puntos ELO</div>
-                        ${hasChange ? 
-                            `<div class="elo-change ${changeClass}">${changeSymbol} ${Math.abs(user.last_elo_change)}</div>` : 
-                            ''}
+        // Medallas permanentes
+        const medals = user.medals || [];
+        const medalHTML = medals.length > 0 ? `
+            <div class="medals">
+                ${medals.map(medal => {
+                    const medalEmojis = {
+                        'streak_diamond': '💎',
+                        'streak_gold': '🏆',
+                        'perfect_week': '🌟',
+                        'comeback': '🚀'
+                    };
+                    return `<span class="medal" data-tooltip="${medal}">${medalEmojis[medal] || '🏅'}</span>`;
+                }).join('')}
+            </div>
+        ` : '';
+
+        // IMPORTANTE: Añadimos data-user-id y data-elo para el sistema de tiempo real
+        return `
+            <div class="${rowClass}" data-user-id="${user.user_id || user.id}" data-elo="${user.current_elo}">
+                <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
+                <div class="user-info">
+                    <div class="user-name">${user.slug}</div>
+                    <div class="user-stats">
+                        <span>📋 ${user.cohort}</span>
+                        ${streakHTML}
+                        ${user.last_score ? `<span>📊 Último: ${user.last_score}/100</span>` : ''}
                     </div>
                 </div>
-            `;
-        }).join('');
-    } catch (renderError) {
-        console.error('Error renderizando ranking ELO:', renderError);
-        showError('eloRanking', 'Error al mostrar el ranking');
+                ${medalHTML}
+                <div class="elo-display">
+                    <div class="elo-number">${formatNumber(user.current_elo)}</div>
+                    <div class="score-label">Puntos ELO</div>
+                    ${user.last_elo_change ? 
+                        `<div class="elo-change ${changeClass}">${changeSymbol} ${Math.abs(user.last_elo_change)}</div>` : 
+                        ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================
+// SISTEMA DE TIEMPO REAL - INICIO
+// ============================================
+
+// 1. CONFIGURAR SUSCRIPCIONES EN TIEMPO REAL
+function setupRealtimeSubscriptions() {
+    console.log('Configurando suscripciones en tiempo real...');
+    
+    // Suscribirse a cambios en user_results
+    realtimeSubscriptions.results = supabaseClient
+        .channel('public-leaderboard-results')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT', // Cuando se insertan nuevos resultados
+                schema: 'public',
+                table: 'user_results'
+            },
+            (payload) => {
+                console.log('Nuevo resultado detectado:', payload);
+                handleNewResult(payload.new);
+            }
+        )
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE', // Cuando se actualizan resultados
+                schema: 'public',
+                table: 'user_results'
+            },
+            (payload) => {
+                console.log('Resultado actualizado:', payload);
+                handleUpdatedResult(payload.new);
+            }
+        )
+        .subscribe((status) => {
+            console.log('Estado de suscripción a resultados:', status);
+        });
+    
+    // Suscribirse a cambios en users (ELO, estadísticas)
+    realtimeSubscriptions.users = supabaseClient
+        .channel('public-leaderboard-users')
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'users'
+            },
+            (payload) => {
+                console.log('Usuario actualizado:', payload);
+                handleUserUpdate(payload.new);
+            }
+        )
+        .subscribe();
+}
+
+// 2. MANEJADORES DE EVENTOS EN TIEMPO REAL
+async function handleNewResult(newResult) {
+    // Mostrar notificación temporal
+    showRealtimeNotification('Nuevo resultado registrado', 'info');
+    
+    // Si el resultado es del simulacro activo, actualizar ranking semanal
+    if (activeSimulation && newResult.simulation_id === activeSimulation.id) {
+        // Actualizar solo la fila afectada en lugar de recargar todo
+        await updateWeeklyRankingRow(newResult.user_id);
+    }
+    
+    // Actualizar contadores y estadísticas
+    updateRealtimeStats();
+}
+
+async function handleUpdatedResult(updatedResult) {
+    // Similar a handleNewResult pero para actualizaciones
+    showRealtimeNotification('Resultado actualizado', 'update');
+    
+    if (activeSimulation && updatedResult.simulation_id === activeSimulation.id) {
+        await updateWeeklyRankingRow(updatedResult.user_id);
     }
 }
 
-// Cargar logros mejorado
-async function loadAchievements() {
-    debugLog('Cargando logros destacados...');
+async function handleUserUpdate(updatedUser) {
+    // Actualizar ranking ELO específicamente para ese usuario
+    await updateEloRankingRow(updatedUser.id);
     
+    // Si cambió significativamente, mostrar animación
+    if (updatedUser.current_elo) {
+        animateEloChange(updatedUser.id, updatedUser.current_elo);
+    }
+}
+
+// 3. ACTUALIZACIÓN OPTIMIZADA DE FILAS INDIVIDUALES
+async function updateWeeklyRankingRow(userId) {
     try {
-        // Inicializar con valores por defecto
-        let lowestErrorUser = null;
-        let mostActiveUser = null;
-        let saturdayChampion = null;
+        // Obtener datos actualizados solo para ese usuario
+        const { data, error } = await supabaseClient
+            .from('user_results')
+            .select(`
+                *,
+                users!inner(slug, current_elo, current_streak, cohort)
+            `)
+            .eq('user_id', userId)
+            .eq('simulation_id', activeSimulation.id)
+            .single();
+        
+        if (error) throw error;
+        if (!data) return;
+        
+        // Calcular la tasa de error si no viene de la BD
+        if (!data.error_percentage && data.correct_answers && data.wrong_answers) {
+            data.error_percentage = ((data.wrong_answers / (data.correct_answers + data.wrong_answers)) * 100).toFixed(2);
+        }
+        
+        // Encontrar el elemento en el DOM
+        const existingRow = document.querySelector(`#weeklyRanking [data-user-id="${userId}"]`);
+        
+        if (existingRow) {
+            // Actualizar fila existente con animación
+            updateRowWithAnimation(existingRow, data, 'weekly');
+        } else {
+            // Es un nuevo resultado, recargar toda la lista
+            await loadWeeklyRanking();
+        }
+        
+        // Re-calcular posiciones
+        recalculatePositions('weeklyRanking');
+        
+    } catch (error) {
+        console.error('Error actualizando fila:', error);
+    }
+}
 
-        // 1. Menor tasa de error (solo si hay datos semanales)
-        if (weeklyData && weeklyData.length > 0) {
-            // Filtrar usuarios con error_percentage válido
-            const validUsers = weeklyData.filter(u => 
-                u.error_percentage !== null && 
-                u.error_percentage !== undefined &&
-                u.error_percentage >= 0
-            );
+async function updateEloRankingRow(userId) {
+    try {
+        // Obtener datos actualizados del usuario
+        const { data, error } = await supabaseClient
+            .from('public_leaderboard')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        
+        if (error) throw error;
+        if (!data) return;
+        
+        const existingRow = document.querySelector(`#eloRanking [data-user-id="${userId}"]`);
+        
+        if (existingRow) {
+            updateRowWithAnimation(existingRow, data, 'elo');
+        } else {
+            // Recargar todo el ranking ELO
+            await loadEloRanking();
+        }
+        
+        recalculatePositions('eloRanking');
+        
+    } catch (error) {
+        console.error('Error actualizando ELO row:', error);
+    }
+}
+
+// 4. ANIMACIONES Y EFECTOS VISUALES
+function updateRowWithAnimation(row, newData, type) {
+    // Añadir clase de actualización
+    row.classList.add('updating');
+    
+    // Actualizar contenido según el tipo
+    if (type === 'weekly') {
+        // Actualizar score
+        const scoreElement = row.querySelector('.score-number');
+        if (scoreElement) {
+            scoreElement.textContent = newData.score.toFixed(2).replace('.', ',') + '/10';
+        }
+        
+        // Actualizar error percentage en stats
+        const userStats = row.querySelector('.user-stats');
+        if (userStats && newData.error_percentage) {
+            // Buscar o crear el span de errores
+            let errorSpan = userStats.querySelector('span:contains("Errores")');
+            if (!errorSpan) {
+                errorSpan = document.createElement('span');
+                userStats.appendChild(errorSpan);
+            }
+            errorSpan.textContent = `❌ Errores: ${newData.error_percentage}%`;
+        }
+        
+        // Actualizar data-score
+        row.dataset.score = newData.score;
+    } else if (type === 'elo') {
+        // Actualizar ELO
+        const eloElement = row.querySelector('.elo-number');
+        if (eloElement) {
+            const oldElo = parseInt(eloElement.textContent.replace(/\./g, ''));
+            const newElo = newData.current_elo;
             
-            if (validUsers.length > 0) {
-                lowestErrorUser = validUsers.reduce((min, user) => 
-                    user.error_percentage < min.error_percentage ? user : min
-                );
+            // Animar el cambio de número
+            animateCounter(eloElement, oldElo, newElo, 1000);
+        }
+        
+        // Actualizar data-elo
+        row.dataset.elo = newData.current_elo;
+    }
+    
+    // Animar cambios
+    setTimeout(() => {
+        row.classList.remove('updating');
+        row.classList.add('updated');
+        
+        // Remover clase después de la animación
+        setTimeout(() => {
+            row.classList.remove('updated');
+        }, 3000);
+    }, 100);
+}
+
+function animateEloChange(userId, newElo) {
+    const row = document.querySelector(`[data-user-id="${userId}"]`);
+    if (!row) return;
+    
+    const eloElement = row.querySelector('.elo-number');
+    if (!eloElement) return;
+    
+    const oldElo = parseInt(eloElement.textContent.replace(/\./g, ''));
+    const difference = newElo - oldElo;
+    
+    if (difference === 0) return;
+    
+    // Animación de contador
+    animateCounter(eloElement, oldElo, newElo, 1000);
+    
+    // Mostrar cambio
+    const changeIndicator = document.createElement('div');
+    changeIndicator.className = `elo-change-animation ${difference > 0 ? 'positive' : 'negative'}`;
+    changeIndicator.textContent = `${difference > 0 ? '+' : ''}${difference}`;
+    eloElement.appendChild(changeIndicator);
+    
+    // Remover después de la animación
+    setTimeout(() => changeIndicator.remove(), 2000);
+}
+
+function animateCounter(element, start, end, duration) {
+    const range = end - start;
+    const increment = range / (duration / 16); // 60 FPS
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            element.textContent = formatNumber(end);
+            clearInterval(timer);
+        } else {
+            element.textContent = formatNumber(Math.floor(current));
+        }
+    }, 16);
+}
+
+// 5. NOTIFICACIONES EN TIEMPO REAL
+function showRealtimeNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = 'realtime-notification';
+    notification.innerHTML = `
+        <div class="notification-content ${type}">
+            <span class="notification-icon">
+                ${type === 'info' ? '🔄' : type === 'update' ? '📊' : '✅'}
+            </span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animación de entrada
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Auto-eliminar después de 3 segundos
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// 6. RECALCULAR POSICIONES DESPUÉS DE CAMBIOS
+function recalculatePositions(tableId) {
+    const rows = Array.from(document.querySelectorAll(`#${tableId} .ranking-row`));
+    
+    // Ordenar según el tipo de ranking
+    if (tableId === 'weeklyRanking') {
+        rows.sort((a, b) => {
+            const scoreA = parseFloat(a.dataset.score || 0);
+            const scoreB = parseFloat(b.dataset.score || 0);
+            return scoreB - scoreA;
+        });
+    } else if (tableId === 'eloRanking') {
+        rows.sort((a, b) => {
+            const eloA = parseInt(a.dataset.elo || 0);
+            const eloB = parseInt(b.dataset.elo || 0);
+            return eloB - eloA;
+        });
+    }
+    
+    // Actualizar posiciones y clases
+    rows.forEach((row, index) => {
+        const position = index + 1;
+        const positionElement = row.querySelector('.rank-position');
+        
+        if (positionElement) {
+            const oldPosition = parseInt(positionElement.textContent);
+            positionElement.textContent = position + 'º';
+            
+            // Actualizar clases especiales para top 3
+            row.classList.remove('top-1', 'top-2', 'top-3', 'rank-1', 'rank-2', 'rank-3');
+            if (position === 1) {
+                row.classList.add('top-1');
+                positionElement.classList.add('rank-1');
+            } else if (position === 2) {
+                row.classList.add('top-2');
+                positionElement.classList.add('rank-2');
+            } else if (position === 3) {
+                row.classList.add('top-3');
+                positionElement.classList.add('rank-3');
+            }
+            
+            // Animar cambio de posición
+            if (oldPosition !== position && !isNaN(oldPosition)) {
+                row.classList.add('position-changed');
+                setTimeout(() => row.classList.remove('position-changed'), 1000);
             }
         }
+    });
+    
+    // Reordenar en el DOM
+    const container = document.getElementById(tableId);
+    rows.forEach(row => container.appendChild(row));
+}
 
-        // 2. Usuario más activo
-        try {
-            const { data: activeUsers, error: activeError } = await supabaseClient
-                .from('users')
-                .select('slug, total_simulations')
-                .gt('total_simulations', 0)
-                .order('total_simulations', { ascending: false })
-                .limit(1);
+// 7. ACTUALIZAR ESTADÍSTICAS EN TIEMPO REAL
+function updateRealtimeStats() {
+    // Actualizar logros si es necesario
+    loadAchievements();
+}
 
-            if (!activeError && activeUsers && activeUsers.length > 0) {
-                mostActiveUser = activeUsers[0];
-            }
-        } catch (err) {
-            debugLog('Error obteniendo usuario más activo:', err);
+// 8. LIMPIAR SUSCRIPCIONES AL SALIR
+function cleanupRealtimeSubscriptions() {
+    Object.values(realtimeSubscriptions).forEach(subscription => {
+        if (subscription) {
+            supabaseClient.removeChannel(subscription);
+        }
+    });
+    
+    console.log('Suscripciones en tiempo real limpiadas');
+}
+
+// 9. INTEGRACIÓN CON EL CÓDIGO EXISTENTE
+async function loadAllDataWithRealtime() {
+    // Primero cargar datos normalmente
+    await loadAllData();
+    
+    // Luego configurar suscripciones si no están activas
+    if (!realtimeSubscriptions.results) {
+        setupRealtimeSubscriptions();
+        
+        // Añadir indicador de conexión
+        addRealtimeIndicator();
+    }
+}
+
+// 10. INDICADOR DE ESTADO DE CONEXIÓN
+function addRealtimeIndicator() {
+    if (document.querySelector('.realtime-indicator')) return; // Ya existe
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'realtime-indicator connected';
+    indicator.innerHTML = `
+        <div class="realtime-dot"></div>
+        <span>Actualización en tiempo real activa</span>
+    `;
+    document.body.appendChild(indicator);
+}
+
+// ============================================
+// SISTEMA DE TIEMPO REAL - FIN
+// ============================================
+
+// Cargar logros destacados
+async function loadAchievements() {
+    try {
+        // Obtener estadísticas para los logros
+        
+        // 1. Menor tasa de error de la semana
+        let lowestErrorUser = null;
+        if (weeklyData.length > 0) {
+            lowestErrorUser = weeklyData.reduce((min, user) => 
+                user.error_percentage < min.error_percentage ? user : min
+            );
         }
 
-        // 3. Rey del sábado
-        try {
-            const { data: saturdayResults, error: satError } = await supabaseClient
-                .from('user_results')
-                .select('user_id, users!inner(slug)')
-                .eq('is_saturday_live', true);
+        // 2. Más simulacros completados
+        const { data: mostActive, error: activeError } = await supabaseClient
+            .from('users')
+            .select('slug, total_simulations')
+            .order('total_simulations', { ascending: false })
+            .limit(1)
+            .single();
 
-            if (!satError && saturdayResults && saturdayResults.length > 0) {
-                // Contar participaciones por usuario
-                const saturdayCount = {};
-                saturdayResults.forEach(record => {
-                    const slug = record.users?.slug;
-                    if (slug) {
-                        saturdayCount[slug] = (saturdayCount[slug] || 0) + 1;
-                    }
-                });
-                
-                // Encontrar el máximo
-                if (Object.keys(saturdayCount).length > 0) {
-                    const maxCount = Math.max(...Object.values(saturdayCount));
-                    const championSlug = Object.keys(saturdayCount).find(key => saturdayCount[key] === maxCount);
-                    saturdayChampion = { slug: championSlug, count: maxCount };
-                }
-            }
-        } catch (err) {
-            debugLog('Error obteniendo rey del sábado:', err);
+        // 3. Mayor asistencia a sábados
+        const { data: saturdayKing, error: satError } = await supabaseClient
+            .from('user_results')
+            .select('user_id, users!inner(slug)')
+            .eq('is_saturday_live', true)
+            .limit(100); // Obtener todos y contar
+
+        let saturdayChampion = null;
+        if (saturdayKing && saturdayKing.length > 0) {
+            const saturdayCount = {};
+            saturdayKing.forEach(record => {
+                const slug = record.users.slug;
+                saturdayCount[slug] = (saturdayCount[slug] || 0) + 1;
+            });
+            
+            const maxSaturdays = Math.max(...Object.values(saturdayCount));
+            const championSlug = Object.keys(saturdayCount).find(key => saturdayCount[key] === maxSaturdays);
+            saturdayChampion = { slug: championSlug, count: maxSaturdays };
         }
 
-        // Crear array de logros
         achievements = [
             {
                 icon: '🎯',
-                title: 'Menor Tasa de Error',
-                value: lowestErrorUser ? `${(lowestErrorUser.error_percentage || 0).toFixed(1)}%` : 'Por determinar',
-                subtitle: lowestErrorUser ? lowestErrorUser.users?.slug || 'Usuario' : 'Participa para aparecer aquí',
+                title: '¿Quién acierta más en la diana del acierto?',
+                value: lowestErrorUser ? `${lowestErrorUser.error_percentage}%` : 'N/A',
+                subtitle: lowestErrorUser ? lowestErrorUser.users.slug : 'Sin datos',
                 color: '#10B981'
             },
             {
                 icon: '📚',
-                title: 'Quién lleva más Simulacros',
-                value: mostActiveUser ? mostActiveUser.total_simulations : 'Por determinar',
-                subtitle: mostActiveUser ? mostActiveUser.slug : 'Sé el primero',
+                title: '¿Quién ha completado más simulacros?',
+                value: mostActive ? mostActive.total_simulations : 0,
+                subtitle: mostActive ? mostActive.slug : 'Sin datos',
                 color: '#3B82F6'
             },
             {
                 icon: '🔴',
-                title: '¿Quién asiste más en directo?',
-                value: saturdayChampion ? `${saturdayChampion.count} directos` : 'Por determinar',
-                subtitle: saturdayChampion ? saturdayChampion.slug : 'Participa en directo',
+                title: '¿Quién se conecta más en directo?',
+                value: saturdayChampion ? `${saturdayChampion.count} directos` : 'N/A',
+                subtitle: saturdayChampion ? saturdayChampion.slug : 'Sin datos',
                 color: '#DC2626'
             }
         ];
 
         renderAchievements();
-        debugLog('Logros cargados correctamente');
 
     } catch (error) {
         console.error('Error cargando logros:', error);
-        // Mostrar logros vacíos en caso de error
-        achievements = [
-            {
-                icon: '🎯',
-                title: 'Menor Tasa de Error',
-                value: 'Por determinar',
-                subtitle: 'Datos no disponibles',
-                color: '#10B981'
-            },
-            {
-                icon: '📚',
-                title: 'Quién lleva más Simulacros',
-                value: 'Por determinar',
-                subtitle: 'Datos no disponibles',
-                color: '#3B82F6'
-            },
-            {
-                icon: '🔴',
-                title: '¿Quién asiste más en directo?',
-                value: 'Por determinar',
-                subtitle: 'Datos no disponibles',
-                color: '#DC2626'
-            }
-        ];
-        renderAchievements();
     }
 }
 
@@ -1079,65 +1402,153 @@ function renderAchievements() {
         </div>
     `).join('');
     
-    // Centrar si solo hay 3 elementos
-    if (achievements.length === 3) {
-        track.classList.add('centered');
-        controls.style.display = 'none';
+    // Solo mostrar controles en desktop
+    if (window.innerWidth > 768) {
+        controls.innerHTML = achievements.map((_, index) => `
+            <div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></div>
+        `).join('');
+        
+        // Auto-slide cada 5 segundos
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % achievements.length;
+            updateSlider();
+        }, 5000);
+    }
+}
+
+// Control del slider
+function goToSlide(index) {
+    currentSlide = index;
+    updateSlider();
+}
+
+function updateSlider() {
+    const track = document.getElementById('achievementsTrack');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    const offset = currentSlide * -320; // 300px card + 20px gap
+    track.style.transform = `translateX(${offset}px)`;
+    
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+    });
+}
+
+// Touch/swipe para móviles
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    if (touchEndX < touchStartX - 50) {
+        // Swipe left
+        currentSlide = Math.min(currentSlide + 1, achievements.length - 1);
+        updateSlider();
+    }
+    if (touchEndX > touchStartX + 50) {
+        // Swipe right
+        currentSlide = Math.max(currentSlide - 1, 0);
+        updateSlider();
     }
 }
 
 // Utilidades
 function formatDate(dateString) {
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', { 
-            day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
-        });
-    } catch {
-        return 'Fecha no válida';
-    }
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
 }
 
 function formatNumber(num) {
-    try {
-        return new Intl.NumberFormat('es-ES').format(num || 0);
-    } catch {
-        return '0';
-    }
+    return new Intl.NumberFormat('es-ES').format(num);
 }
 
-// Auto-actualizar cada 30 segundos (opcional, se puede desactivar si no es necesario)
-let autoUpdateInterval = setInterval(() => {
-    if (document.hidden) return; // No actualizar si la página no está visible
-    loadAllData();
-}, 3000);
+// ============================================
+// INICIALIZACIÓN CON TIEMPO REAL
+// ============================================
 
-// Limpiar interval cuando se cierra la página
-window.addEventListener('beforeunload', () => {
-    if (autoUpdateInterval) {
-        clearInterval(autoUpdateInterval);
-    }
+// Reemplazar la inicialización original con la nueva que incluye tiempo real
+document.addEventListener('DOMContentLoaded', () => {
+    // Cargar datos con tiempo real
+    loadAllDataWithRealtime();
+    
+    // Limpiar al salir
+    window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 });
+// Sistema para detectar cuando el slider está "pegado"
+function setupStickyObserver() {
+    const slider = document.querySelector('.achievements-slider');
+    if (!slider) return;
+    
+    // Crear un observador de intersección
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            // Si el elemento no está completamente visible, está "pegado"
+            if (entry.intersectionRatio < 1) {
+                slider.classList.add('is-stuck');
+            } else {
+                slider.classList.remove('is-stuck');
+            }
+        },
+        {
+            // Observar con un margen negativo igual al top del sticky
+            rootMargin: '-10px 0px 0px 0px',
+            threshold: [1]
+        }
+    );
+    
+    observer.observe(slider);
+}
 
-// Verificar visibilidad de la página para pausar actualizaciones
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden && autoUpdateInterval) {
-        clearInterval(autoUpdateInterval);
-        autoUpdateInterval = null;
-    } else if (!document.hidden && !autoUpdateInterval) {
-        autoUpdateInterval = setInterval(() => {
-            loadAllData();
-        }, 30000);
-    }
+// Llamar a la función cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    // Tu código existente...
+    loadAllDataWithRealtime();
+    
+    // AGREGAR ESTA LÍNEA:
+    setupStickyObserver();
+    
+    // Limpiar al salir
+    window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 });
-
-// Cargar al iniciar
-document.addEventListener('DOMContentLoaded', async () => {
-    debugLog('Página cargada, iniciando...');
-    await loadAllData();
-});
+// Sistema para detectar cuando el slider está "pegado"
+function setupStickyObserver() {
+    const slider = document.querySelector('.achievements-slider');
+    if (!slider) return;
+    
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.intersectionRatio < 1) {
+                slider.classList.add('is-stuck');
+            } else {
+                slider.classList.remove('is-stuck');
+            }
+        },
+        {
+            rootMargin: '-10px 0px 0px 0px',
+            threshold: [1]
+        }
+    );
+    
+    observer.observe(slider);
+}
+// Para depuración
+window.realtimeDebug = {
+    subscriptions: realtimeSubscriptions,
+    forceUpdate: (userId) => updateWeeklyRankingRow(userId),
+    testNotification: () => showRealtimeNotification('Test de notificación', 'info')
+};
     </script>
 </body>
 </html>
