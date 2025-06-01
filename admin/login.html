@@ -79,6 +79,11 @@
             background: var(--primary-dark);
         }
         
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
         .error {
             color: #dc2626;
             text-align: center;
@@ -109,91 +114,135 @@
                 <label for="password">Contraseña</label>
                 <input type="password" id="password" required placeholder="••••••••">
             </div>
-            <button type="submit">Iniciar Sesión</button>
+            <button type="submit" id="submitBtn">Iniciar Sesión</button>
         </form>
         <div id="error" class="error"></div>
         <div class="links">
-            <a href="/public/index.html">← Volver al inicio</a>
+            <a href="../public/index.html">← Volver al inicio</a>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/izeta2025/assets/js/config.js"></script>
     <script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('error');
-    
-    console.log('=== INICIANDO PROCESO DE LOGIN ===');
-    console.log('1. Email:', email);
-    
-    try {
-        // Paso 1: Autenticación
-        console.log('2. Intentando autenticación...');
-        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+        // ========================================
+        // CONFIGURACIÓN DE SUPABASE
+        // ========================================
+        const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ';
         
-        if (authError) {
-            console.error('❌ Error de autenticación:', authError);
-            throw authError;
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // ========================================
+        // FUNCIÓN PARA DETECTAR SI ESTAMOS EN GITHUB PAGES
+        // ========================================
+        function getBasePath() {
+            // Si estamos en GitHub Pages, necesitamos añadir el nombre del repositorio
+            if (window.location.hostname.includes('github.io')) {
+                const pathParts = window.location.pathname.split('/');
+                // El primer elemento después de la / es el nombre del repositorio
+                return '/' + pathParts[1];
+            }
+            // Si estamos en desarrollo local, no necesitamos prefijo
+            return '';
         }
         
-        console.log('✅ Autenticación exitosa');
-        console.log('3. Usuario autenticado:', authData.user.email);
+        // ========================================
+        // FUNCIÓN SIMPLE PARA VERIFICAR SI ES ADMIN
+        // ========================================
+        async function checkIfUserIsAdmin(email) {
+            try {
+                console.log('Verificando si es admin:', email);
+                
+                // Buscar directamente en la tabla users
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('is_admin')
+                    .eq('email', email.toLowerCase().trim()) // Normalizar email
+                    .single();
+                
+                if (error) {
+                    console.error('Error al buscar usuario:', error);
+                    return false;
+                }
+                
+                console.log('Datos del usuario:', data);
+                
+                // Verificar si el campo is_admin es true
+                return data && data.is_admin === true;
+                
+            } catch (error) {
+                console.error('Error en checkIfUserIsAdmin:', error);
+                return false;
+            }
+        }
         
-        // Pequeña pausa para asegurar que la sesión se establezca
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Paso 2: Verificar si el usuario actual está autenticado
-        console.log('4. Verificando sesión actual...');
-        const { data: { user: currentUser } } = await supabaseClient.auth.getUser();
-        console.log('5. Usuario en sesión:', currentUser?.email);
-        
-        // Paso 3: Buscar en la tabla users
-        console.log('6. Buscando en tabla users...');
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
+        // ========================================
+        // MANEJADOR DEL FORMULARIO DE LOGIN
+        // ========================================
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-        console.log('7. Datos del usuario:', userData);
-        console.log('8. Error al buscar usuario:', userError);
-        
-        // Paso 4: Intentar la función RPC
-        console.log('9. Llamando a función is_admin RPC...');
-        const { data: isAdminRPC, error: rpcError } = await supabaseClient.rpc('is_admin');
-        console.log('10. Resultado RPC is_admin:', isAdminRPC);
-        console.log('11. Error RPC:', rpcError);
-        
-        // Determinar si es admin
-        let isAdminUser = false;
-        
-        // Método 1: Usar RPC si funciona
-        if (!rpcError && isAdminRPC !== null) {
-            isAdminUser = isAdminRPC === true;
-            console.log('12. Admin según RPC:', isAdminUser);
-        } 
-        // Método 2: Verificación directa si RPC falla
-        else if (userData && userData.is_admin !== undefined) {
-            isAdminUser = userData.is_admin === true;
-            console.log('12. Admin según campo directo:', isAdminUser);
-        }
-        
-        console.log('=== RESULTADO FIN');
-    }
-    catch (err) {
-        const errorDiv = document.getElementById('error');
-        errorDiv.textContent = 'Error de autenticación. Verifica tus datos.';
-        errorDiv.style.display = 'block';
-        console.error('Error en el proceso de login:', err);
-    }
-});
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Limpiar errores anteriores
+            errorDiv.style.display = 'none';
+            
+            // Deshabilitar botón mientras procesa
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verificando...';
+            
+            try {
+                // PASO 1: Autenticar al usuario
+                console.log('Iniciando sesión...');
+                const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (authError) {
+                    throw authError;
+                }
+                
+                console.log('Login exitoso');
+                
+                // PASO 2: Verificar si es admin (sin usar RPC)
+                const isAdmin = await checkIfUserIsAdmin(email);
+                console.log('¿Es admin?', isAdmin);
+                
+                // PASO 3: Redirigir según el resultado
+                const basePath = getBasePath();
+                
+                if (isAdmin) {
+                    console.log('Redirigiendo a Dashboard...');
+                    window.location.href = basePath + '/admin/dashboard.html';
+                } else {
+                    console.log('Redirigiendo a Leaderboard...');
+                    window.location.href = basePath + '/public/leaderboard.html';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Mostrar mensaje de error amigable
+                let mensaje = 'Error al iniciar sesión';
+                if (error.message.includes('Invalid login credentials')) {
+                    mensaje = 'Email o contraseña incorrectos';
+                } else if (error.message) {
+                    mensaje = error.message;
+                }
+                
+                errorDiv.textContent = mensaje;
+                errorDiv.style.display = 'block';
+                
+                // Rehabilitar botón
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Iniciar Sesión';
+            }
+        });
     </script>
 </body>
 </html>
