@@ -174,6 +174,16 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+
+        .plan-button {
+            width: 2.2rem;
+            height: 2.2rem;
+            padding: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         
         /* Estilos base */
         * {
@@ -661,6 +671,23 @@
         .icon-fire::before { content: "🔥 "; }
         .icon-star::before { content: "⭐ "; }
         .icon-check::before { content: "✅ "; }
+
+        .float-home {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--color-primario);
+            color: white;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -672,24 +699,16 @@
             </a>
             
             <div class="nav-links">
-                <!-- Dropdown de Planes -->
-                <div class="nav-dropdown">
-                    <div class="nav-dropdown-toggle">
-                        📚 Planes de Estudio
-                        <span style="font-size: 0.8rem;">▼</span>
-                    </div>
-                    <div class="nav-dropdown-menu">
-                        <a href="Caballo_20.html" class="nav-dropdown-item">
-                            <span class="chess-icon">♞</span>Base (20h/semana)
-                        </a>
-                        <a href="Alfil_36.html" class="nav-dropdown-item">
-                            <span class="chess-icon">♗</span>Intensivo (36h/semana)
-                        </a>
-                        <a href="Torre_48.html" class="nav-dropdown-item">
-                            <span class="chess-icon">♜</span>Élite (48h/semana)
-                        </a>
-                    </div>
-                </div>
+                <!-- Planes de estudio -->
+                <a href="Caballo_20.html" class="nav-link plan-button">
+                    ♞
+                </a>
+                <a href="Alfil_36.html" class="nav-link plan-button">
+                    ♗
+                </a>
+                <a href="Torre_48.html" class="nav-link plan-button">
+                    ♜
+                </a>
                 
                 <!-- Sistema ELO -->
                 <a href="Sistema_ELO.html" class="nav-link">
@@ -698,12 +717,12 @@
                 
                 <!-- Leaderboard Público -->
                 <a href="Leaderboard.html" class="nav-link leaderboard">
-                    📊 Leaderboard
+                    📊 LD
                 </a>
                 
                 <!-- Dashboard Admin (solo visible para ti) -->
                 <a href="Dashboard_rendimiento.html" class="nav-link admin">
-                    🔐 Dashboard Admin
+                    🔐
                 </a>
             </div>
         </div>
@@ -1866,5 +1885,6 @@
             });
         });
     </script>
+    <a href="index.html" class="float-home">🏠</a>
 </body>
 </html>
