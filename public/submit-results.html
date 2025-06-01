@@ -766,7 +766,7 @@
                 const { data, error } = await supabaseClient
                     .from('weekly_simulations')
                     .select('id, week_number, start_date, end_date, status')
-                    .order('week_number', { ascending: false });
+                    .order('week_number', { ascending: true });
 
                 if (error) throw error;
 
@@ -909,7 +909,6 @@
                         review_time: parseInt(document.getElementById('review_time').value),
                         weakest_topics: selectedTopics,
                         difficulty_note: document.getElementById('difficulty_note').value || null,
-                        error_percentage: (correct + wrong) > 0 ? parseFloat(((wrong / (correct + wrong)) * 100).toFixed(2)) : 0
                         });
 
                 if (insertError) throw insertError;
