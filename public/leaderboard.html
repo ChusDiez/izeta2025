@@ -320,11 +320,11 @@
         display: flex;
         transition: transform 0.3s ease;
         gap: 2rem;
-        justify-content: center; /* Centrar cuando son pocos elementos */
+        justify-content: center;
     }
     
     .achievements-track.centered {
-        transform: none !important; /* Anular transformaciones cuando está centrado */
+        transform: none !important;
     }
     
     .achievement-card {
@@ -408,7 +408,7 @@
         100% { transform: rotate(360deg); }
     }
 
-    /* Panel de error detallado */
+    /* Panel de error mejorado */
     .error-panel {
         background: #FEE2E2;
         border: 1px solid #DC2626;
@@ -423,27 +423,12 @@
         color: #DC2626;
     }
 
-    .error-details {
-        background: white;
-        padding: 1rem;
-        border-radius: 5px;
-        margin-top: 0.5rem;
-        font-family: monospace;
-        font-size: 0.875rem;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
     .debug-info {
         background: #F3F4F6;
         padding: 1rem;
         border-radius: 5px;
         margin-top: 1rem;
         font-size: 0.875rem;
-    }
-
-    .debug-info p {
-        margin: 0.25rem 0;
     }
 
     .retry-button {
@@ -459,6 +444,17 @@
 
     .retry-button:hover {
         background: #0E2A6A;
+    }
+    
+    /* Mensaje informativo */
+    .info-message {
+        background: #E0F2FE;
+        border: 1px solid #0284C7;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem;
+        color: #075985;
+        text-align: center;
     }
     
     /* Responsive */
@@ -593,7 +589,10 @@
         <div class="achievements-slider">
             <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary-blue);">🌟 Destacados de la Semana</h3>
             <div class="achievements-track" id="achievementsTrack">
-                <!-- Se llenará dinámicamente -->
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem;">Cargando destacados...</p>
+                </div>
             </div>
             <div class="slider-controls" id="sliderControls">
                 <!-- Se llenará dinámicamente -->
@@ -624,7 +623,7 @@ let eloData = [];
 let currentSlide = 0;
 let achievements = [];
 let activeSimulation = null;
-let debugMode = true; // Activar modo debug para diagnóstico
+let debugMode = false; // Desactivado por defecto, activar solo si es necesario
 
 // Función de debug mejorada
 function debugLog(message, data) {
@@ -633,36 +632,30 @@ function debugLog(message, data) {
     }
 }
 
-// Función para mostrar errores detallados en la UI
-function showDetailedError(location, error, additionalInfo = {}) {
-    debugLog(`Error en ${location}:`, { error, additionalInfo });
+// Función para mostrar errores en la UI de forma más amigable
+function showError(containerId, message, showRetry = true) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
-    const errorHtml = `
+    container.innerHTML = `
         <div class="error-panel">
-            <h3>❌ Error al cargar ${location}</h3>
-            <p><strong>Mensaje:</strong> ${error.message || 'Error desconocido'}</p>
-            <div class="error-details">
-                <strong>Detalles técnicos:</strong><br>
-                ${JSON.stringify(error, null, 2)}
-            </div>
-            <div class="debug-info">
-                <p><strong>Información adicional:</strong></p>
-                <p>URL: ${window.location.href}</p>
-                <p>Timestamp: ${new Date().toISOString()}</p>
-                ${Object.entries(additionalInfo).map(([key, value]) => 
-                    `<p>${key}: ${JSON.stringify(value)}</p>`
-                ).join('')}
-            </div>
-            <button class="retry-button" onclick="loadAllData()">🔄 Reintentar</button>
+            <h3>⚠️ Aviso</h3>
+            <p>${message}</p>
+            ${showRetry ? '<button class="retry-button" onclick="loadAllData()">🔄 Reintentar</button>' : ''}
         </div>
     `;
+}
+
+// Función para mostrar mensaje informativo
+function showInfo(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
-    // Mostrar el error en el lugar correspondiente
-    if (location === 'ranking semanal') {
-        document.getElementById('weeklyRanking').innerHTML = errorHtml;
-    } else if (location === 'ranking ELO') {
-        document.getElementById('eloRanking').innerHTML = errorHtml;
-    }
+    container.innerHTML = `
+        <div class="info-message">
+            <p>${message}</p>
+        </div>
+    `;
 }
 
 // Cargar datos iniciales con mejor manejo de errores
@@ -670,104 +663,70 @@ async function loadAllData() {
     debugLog('Iniciando carga de datos...');
     
     try {
-        // 1. Primero intentar obtener el simulacro activo
-        debugLog('Obteniendo simulacro activo...');
+        // Resetear estado de la UI
+        document.getElementById('headerSubtitle').textContent = 'Cargando información...';
         
-        // Obtener todos los simulacros activos para detectar problemas
-        const { data: activeSimulations, error: activeError } = await supabaseClient
-            .from('weekly_simulations')
-            .select('*')
-            .eq('status', 'active')
-            .order('week_number', { ascending: false });
+        // Cargar simulacro activo
+        await loadActiveSimulation();
         
-        debugLog('Simulacros activos encontrados:', activeSimulations?.length || 0);
+        // Cargar datos en paralelo para mejor rendimiento
+        const promises = [
+            loadWeeklyRanking(),
+            loadEloRanking(),
+            loadAchievements()
+        ];
         
-        // Si hay múltiples activos, es un problema de datos
-        if (activeSimulations && activeSimulations.length > 1) {
-            debugLog('⚠️ ADVERTENCIA: Hay múltiples simulacros activos, tomando el más reciente');
-            // Tomar el de mayor week_number (más reciente)
-            const simData = activeSimulations[0];
-            activeSimulation = simData;
-            document.getElementById('weeklyInfo').textContent = 
-                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
-            document.getElementById('headerSubtitle').textContent = 
-                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
-            await loadWeeklyRanking();
-        } else if (activeSimulations && activeSimulations.length === 1) {
-            // Caso normal: un solo simulacro activo
-            const simData = activeSimulations[0];
-            activeSimulation = simData;
-            debugLog('Simulacro activo encontrado:', simData);
-            document.getElementById('weeklyInfo').textContent = 
-                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
-            document.getElementById('headerSubtitle').textContent = 
-                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
-            await loadWeeklyRanking();
-        } else if (activeError) {
-            debugLog('Error obteniendo simulacros activos:', activeError);
-            showDetailedError('simulacro activo', activeError);
-            document.getElementById('weeklyInfo').textContent = 'Error al cargar simulacro';
-        } else {
-            debugLog('No hay simulacro activo');
-            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
-            document.getElementById('weeklyRanking').innerHTML = 
-                '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
-        }
-        
-        // También mostrar info de debug sobre todos los simulacros
-        const { data: allSims } = await supabaseClient
-            .from('weekly_simulations')
-            .select('id, week_number, status, start_date, end_date')
-            .order('week_number', { ascending: false })
-            .limit(5);
-        
-        debugLog('Últimos 5 simulacros:', allSims);
-        
-        if (simError) {
-            debugLog('Error obteniendo simulacro activo:', simError);
-            showDetailedError('simulacro activo', simError);
-            document.getElementById('weeklyInfo').textContent = 'Error al cargar simulacro';
-        } else if (!simData) {
-            debugLog('No hay simulacro activo');
-            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
-            document.getElementById('weeklyRanking').innerHTML = 
-                '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
-        } else {
-            activeSimulation = simData;
-            debugLog('Simulacro activo encontrado:', simData);
-            document.getElementById('weeklyInfo').textContent = 
-                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
-            document.getElementById('headerSubtitle').textContent = 
-                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
-            
-            // Cargar ranking semanal solo si hay simulacro activo
-            await loadWeeklyRanking();
-        }
-        
-        // 2. Cargar ranking ELO independientemente
-        await loadEloRanking();
-        
-        // 3. Cargar logros
-        await loadAchievements();
+        await Promise.allSettled(promises);
         
     } catch (error) {
-        debugLog('Error general en loadAllData:', error);
-        showDetailedError('datos generales', error);
+        console.error('Error general en loadAllData:', error);
+        document.getElementById('headerSubtitle').textContent = 'Error al cargar datos';
     }
 }
 
-// Cargar ranking semanal con mejor diagnóstico
+// Cargar simulacro activo
+async function loadActiveSimulation() {
+    debugLog('Cargando simulacro activo...');
+    
+    try {
+        const { data: simData, error: simError } = await supabaseClient
+            .from('weekly_simulations')
+            .select('*')
+            .eq('status', 'active')
+            .order('week_number', { ascending: false })
+            .limit(1)
+            .single();
+        
+        if (simError) {
+            // No es un error crítico, solo significa que no hay simulacro activo
+            debugLog('No hay simulacro activo:', simError);
+            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
+            document.getElementById('headerSubtitle').textContent = 'Sistema de Rankings IZETA 2025';
+            activeSimulation = null;
+        } else if (simData) {
+            activeSimulation = simData;
+            document.getElementById('weeklyInfo').textContent = 
+                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
+            document.getElementById('headerSubtitle').textContent = 
+                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
+            debugLog('Simulacro activo encontrado:', simData);
+        }
+    } catch (error) {
+        console.error('Error cargando simulacro activo:', error);
+        document.getElementById('weeklyInfo').textContent = 'Error al cargar simulacro';
+    }
+}
+
+// Cargar ranking semanal mejorado
 async function loadWeeklyRanking() {
     debugLog('Cargando ranking semanal...');
     
     try {
         if (!activeSimulation) {
-            debugLog('No hay simulacro activo, saltando ranking semanal');
+            showInfo('weeklyRanking', 'No hay simulacro activo esta semana. El próximo simulacro comenzará el sábado.');
             return;
         }
 
-        // Intentar con una consulta más simple primero
-        debugLog('Ejecutando consulta de resultados...');
         const { data, error } = await supabaseClient
             .from('user_results')
             .select(`
@@ -783,154 +742,77 @@ async function loadWeeklyRanking() {
             .order('score', { ascending: false });
 
         if (error) {
-            debugLog('Error en consulta de resultados:', error);
-            showDetailedError('ranking semanal', error, {
-                simulation_id: activeSimulation.id,
-                query: 'user_results with users join'
-            });
-            
-            // Intentar consulta alternativa sin join
-            debugLog('Intentando consulta alternativa sin join...');
-            const { data: resultsOnly, error: resultsError } = await supabaseClient
-                .from('user_results')
-                .select('*')
-                .eq('simulation_id', activeSimulation.id)
-                .order('score', { ascending: false });
-            
-            if (resultsError) {
-                throw resultsError;
-            } else {
-                debugLog('Resultados obtenidos sin join:', resultsOnly);
-            }
+            console.error('Error cargando ranking semanal:', error);
+            showError('weeklyRanking', 'No se pudo cargar el ranking semanal. Por favor, intenta más tarde.');
             return;
         }
 
-        debugLog(`Resultados obtenidos: ${data?.length || 0} registros`);
-
         if (!data || data.length === 0) {
-            document.getElementById('weeklyRanking').innerHTML = 
-                '<p style="text-align: center; padding: 2rem;">No hay resultados aún para este simulacro</p>';
+            showInfo('weeklyRanking', 'Aún no hay resultados registrados para este simulacro.');
             return;
         }
 
         weeklyData = data;
         renderWeeklyRanking(data);
+        debugLog(`Ranking semanal cargado: ${data.length} registros`);
 
     } catch (error) {
-        debugLog('Error crítico en loadWeeklyRanking:', error);
-        showDetailedError('ranking semanal', error);
+        console.error('Error crítico en loadWeeklyRanking:', error);
+        showError('weeklyRanking', 'Error al cargar el ranking semanal.');
     }
 }
 
-// Cargar ranking ELO global con mejor diagnóstico
+// Cargar ranking ELO completamente mejorado
 async function loadEloRanking() {
-    debugLog('=================== INICIO CARGA RANKING ELO ===================');
+    debugLog('Cargando ranking ELO...');
     
     try {
-        // Primero intentar la vista public_leaderboard
-        debugLog('Intentando cargar desde public_leaderboard...');
-        const { data, error, count } = await supabaseClient
+        // Intentar primero con la vista public_leaderboard
+        let { data, error } = await supabaseClient
             .from('public_leaderboard')
-            .select('*', { count: 'exact' })
-            .order('current_elo', { ascending: false });
+            .select('*')
+            .order('current_elo', { ascending: false })
+            .limit(50);
 
-        debugLog('Respuesta de public_leaderboard:', { 
-            dataLength: data?.length || 0, 
-            error: error,
-            count: count 
-        });
-
-        if (error) {
-            debugLog('❌ Error en consulta public_leaderboard:', error);
-            showDetailedError('ranking ELO', error, {
-                table: 'public_leaderboard',
-                query: 'select all ordered by elo',
-                errorCode: error.code,
-                errorDetails: error.details,
-                errorHint: error.hint
-            });
+        // Si la vista falla, intentar directamente con la tabla users
+        if (error || !data) {
+            debugLog('Vista public_leaderboard no disponible, usando tabla users');
             
-            // PLAN B: Intentar consulta directa a users
-            debugLog('🔄 Intentando PLAN B: consulta directa a tabla users...');
-            const { data: usersData, error: usersError } = await supabaseClient
+            const usersQuery = await supabaseClient
                 .from('users')
-                .select('slug, current_elo, current_streak, cohort, active')
+                .select('id, slug, current_elo, current_streak, cohort, active')
                 .eq('active', true)
+                .gt('total_simulations', 0) // Solo usuarios que han participado
                 .order('current_elo', { ascending: false })
                 .limit(50);
             
-            debugLog('Respuesta de users (PLAN B):', { 
-                dataLength: usersData?.length || 0, 
-                error: usersError 
-            });
-            
-            if (usersError) {
-                debugLog('❌ Error también en PLAN B:', usersError);
-                throw usersError;
-            } else if (usersData && usersData.length > 0) {
-                debugLog('✅ PLAN B exitoso! Usando datos de users directamente');
-                eloData = usersData;
-                renderEloRanking(usersData);
-                return;
-            } else {
-                debugLog('⚠️ PLAN B no devolvió datos');
-                document.getElementById('eloRanking').innerHTML = 
-                    '<p style="text-align: center; padding: 2rem;">No hay usuarios activos en el sistema</p>';
-                return;
-            }
+            data = usersQuery.data;
+            error = usersQuery.error;
         }
 
-        // Si llegamos aquí, la consulta a public_leaderboard fue exitosa
-        debugLog(`✅ Ranking ELO obtenido exitosamente: ${data?.length || 0} registros`);
-        
-        if (!data || data.length === 0) {
-            debugLog('⚠️ La vista public_leaderboard está vacía');
-            document.getElementById('eloRanking').innerHTML = 
-                '<p style="text-align: center; padding: 2rem;">No hay datos de ranking disponibles</p>';
-            
-            // Intentar PLAN B aunque la vista esté vacía
-            debugLog('🔄 Intentando PLAN B por vista vacía...');
-            const { data: usersData } = await supabaseClient
-                .from('users')
-                .select('slug, current_elo, current_streak, cohort, active')
-                .eq('active', true)
-                .order('current_elo', { ascending: false })
-                .limit(50);
-                
-            if (usersData && usersData.length > 0) {
-                debugLog('✅ PLAN B exitoso para vista vacía');
-                eloData = usersData;
-                renderEloRanking(usersData);
-            }
+        if (error) {
+            console.error('Error cargando ranking ELO:', error);
+            showError('eloRanking', 'No se pudo cargar el ranking ELO. Por favor, intenta más tarde.');
             return;
         }
 
-        // Datos obtenidos correctamente de public_leaderboard
+        if (!data || data.length === 0) {
+            showInfo('eloRanking', 'Aún no hay suficientes datos para mostrar el ranking ELO. Participa en los simulacros para aparecer aquí.');
+            return;
+        }
+
         eloData = data;
         renderEloRanking(data);
+        debugLog(`Ranking ELO cargado: ${data.length} registros`);
 
     } catch (error) {
-        debugLog('❌ Error crítico en loadEloRanking:', error);
-        showDetailedError('ranking ELO', error);
-        
-        // PLAN C: Mostrar al menos algo de información
-        document.getElementById('eloRanking').innerHTML = `
-            <div class="error-panel">
-                <h3>❌ Error al cargar el ranking ELO</h3>
-                <p>No se pudo acceder a los datos del ranking.</p>
-                <p>Por favor, verifica la consola para más detalles.</p>
-                <button class="retry-button" onclick="loadEloRanking()">🔄 Reintentar solo ELO</button>
-            </div>
-        `;
-    } finally {
-        debugLog('=================== FIN CARGA RANKING ELO ===================');
+        console.error('Error crítico en loadEloRanking:', error);
+        showError('eloRanking', 'Error al cargar el ranking ELO.');
     }
 }
 
 // Renderizar ranking semanal
 function renderWeeklyRanking(data) {
-    debugLog('Renderizando ranking semanal con', data.length, 'registros');
-    
     const container = document.getElementById('weeklyRanking');
     
     try {
@@ -942,21 +824,19 @@ function renderWeeklyRanking(data) {
             else if (position === 2) rowClass += ' top-2';
             else if (position === 3) rowClass += ' top-3';
 
-            // Medallas solo para simulacro activo
+            // Medallas para logros especiales
             let medals = [];
-            if (activeSimulation && activeSimulation.status === 'active') {
-                if (isTop3 && result.is_saturday_live) {
-                    medals.push({ icon: '🥇', tooltip: 'Top 3 en directo' });
-                }
-                if (result.score === 100) {
-                    medals.push({ icon: '💯', tooltip: 'Puntuación perfecta' });
-                }
-                if (result.blank_answers === 0) {
-                    medals.push({ icon: '✅', tooltip: 'Sin blancos' });
-                }
-                if (result.review_time >= 60) {
-                    medals.push({ icon: '📚', tooltip: 'Análisis profundo' });
-                }
+            if (isTop3 && result.is_saturday_live) {
+                medals.push({ icon: '🥇', tooltip: 'Top 3 en directo' });
+            }
+            if (result.score === 10) { // Score perfecto es 10, no 100
+                medals.push({ icon: '💯', tooltip: 'Puntuación perfecta' });
+            }
+            if (result.blank_answers === 0) {
+                medals.push({ icon: '✅', tooltip: 'Sin blancos' });
+            }
+            if (result.review_time >= 60) {
+                medals.push({ icon: '📚', tooltip: 'Análisis profundo' });
             }
 
             const medalHTML = medals.length > 0 ? `
@@ -974,9 +854,9 @@ function renderWeeklyRanking(data) {
                 <div class="${rowClass}">
                     <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
                     <div class="user-info">
-                        <div class="user-name">${result.users?.slug || 'Usuario'}</div>
+                        <div class="user-name">${result.users?.slug || 'Usuario desconocido'}</div>
                         <div class="user-stats">
-                            <span>📋 ${result.users?.cohort || 'N/A'}</span>
+                            <span>📋 ${result.users?.cohort || 'Sin cohorte'}</span>
                             ${result.is_saturday_live ? '<span>🔴 En directo</span>' : ''}
                             ${result.time_taken ? `<span>⏱️ ${Math.round(result.time_taken/60)} min</span>` : ''}
                         </div>
@@ -992,15 +872,13 @@ function renderWeeklyRanking(data) {
             `;
         }).join('');
     } catch (renderError) {
-        debugLog('Error renderizando ranking semanal:', renderError);
-        container.innerHTML = '<p style="text-align: center; color: #ef4444;">Error al mostrar el ranking</p>';
+        console.error('Error renderizando ranking semanal:', renderError);
+        showError('weeklyRanking', 'Error al mostrar el ranking');
     }
 }
 
 // Renderizar ranking ELO
 function renderEloRanking(data) {
-    debugLog('Renderizando ranking ELO con', data.length, 'registros');
-    
     const container = document.getElementById('eloRanking');
     
     try {
@@ -1014,54 +892,39 @@ function renderEloRanking(data) {
 
             // Indicador de racha
             let streakHTML = '';
-            if (user.current_streak >= 16) {
-                streakHTML = `<span class="streak-indicator streak-hot">👑 ${user.current_streak} semanas</span>`;
-            } else if (user.current_streak >= 8) {
-                streakHTML = `<span class="streak-indicator streak-hot">🔥 ${user.current_streak} semanas</span>`;
-            } else if (user.current_streak >= 4) {
-                streakHTML = `<span class="streak-indicator streak-fire">🔥 ${user.current_streak} semanas</span>`;
-            } else if (user.current_streak > 0) {
-                streakHTML = `<span class="streak-indicator">⭐ ${user.current_streak} semanas</span>`;
+            const streak = user.current_streak || 0;
+            if (streak >= 16) {
+                streakHTML = `<span class="streak-indicator streak-hot">👑 ${streak} semanas</span>`;
+            } else if (streak >= 8) {
+                streakHTML = `<span class="streak-indicator streak-hot">🔥 ${streak} semanas</span>`;
+            } else if (streak >= 4) {
+                streakHTML = `<span class="streak-indicator streak-fire">🔥 ${streak} semanas</span>`;
+            } else if (streak > 0) {
+                streakHTML = `<span class="streak-indicator">⭐ ${streak} semanas</span>`;
             }
 
-            // Color del cambio
+            // Cambio de ELO (si está disponible)
+            const hasChange = user.last_elo_change !== undefined && user.last_elo_change !== null;
             const changeClass = user.last_elo_change > 0 ? 'change-positive' : 
                                user.last_elo_change < 0 ? 'change-negative' : '';
             const changeSymbol = user.last_elo_change > 0 ? '↗' : 
                                 user.last_elo_change < 0 ? '↘' : '→';
 
-            // Medallas permanentes
-            const medals = user.medals || [];
-            const medalHTML = medals.length > 0 ? `
-                <div class="medals">
-                    ${medals.map(medal => {
-                        const medalEmojis = {
-                            'streak_diamond': '💎',
-                            'streak_gold': '🏆',
-                            'perfect_week': '🌟',
-                            'comeback': '🚀'
-                        };
-                        return `<span class="medal" data-tooltip="${medal}">${medalEmojis[medal] || '🏅'}</span>`;
-                    }).join('')}
-                </div>
-            ` : '';
-
             return `
                 <div class="${rowClass}">
                     <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
                     <div class="user-info">
-                        <div class="user-name">${user.slug || 'Usuario'}</div>
+                        <div class="user-name">${user.slug || 'Usuario desconocido'}</div>
                         <div class="user-stats">
-                            <span>📋 ${user.cohort || 'N/A'}</span>
+                            <span>📋 ${user.cohort || 'Sin cohorte'}</span>
                             ${streakHTML}
-                            ${user.last_score ? `<span>📊 Último: ${user.last_score}/10</span>` : ''}
+                            ${user.last_score ? `<span>📊 Último: ${(user.last_score).toFixed(2)}/10</span>` : ''}
                         </div>
                     </div>
-                    ${medalHTML}
                     <div class="elo-display">
                         <div class="elo-number">${formatNumber(user.current_elo || 1000)}</div>
                         <div class="score-label">Puntos ELO</div>
-                        ${user.last_elo_change ? 
+                        ${hasChange ? 
                             `<div class="elo-change ${changeClass}">${changeSymbol} ${Math.abs(user.last_elo_change)}</div>` : 
                             ''}
                     </div>
@@ -1069,95 +932,136 @@ function renderEloRanking(data) {
             `;
         }).join('');
     } catch (renderError) {
-        debugLog('Error renderizando ranking ELO:', renderError);
-        container.innerHTML = '<p style="text-align: center; color: #ef4444;">Error al mostrar el ranking ELO</p>';
+        console.error('Error renderizando ranking ELO:', renderError);
+        showError('eloRanking', 'Error al mostrar el ranking');
     }
 }
 
-// Cargar logros destacados
+// Cargar logros mejorado
 async function loadAchievements() {
-    debugLog('Cargando logros...');
+    debugLog('Cargando logros destacados...');
     
     try {
-        // 1. Menor tasa de error de la semana
+        // Inicializar con valores por defecto
         let lowestErrorUser = null;
-        if (weeklyData.length > 0) {
-            lowestErrorUser = weeklyData.reduce((min, user) => 
-                (user.error_percentage || 100) < (min.error_percentage || 100) ? user : min
-            );
-        }
-
-        // 2. Más simulacros completados
-        const { data: mostActive, error: activeError } = await supabaseClient
-            .from('users')
-            .select('slug, total_simulations')
-            .gt('total_simulations', 0) // Solo usuarios con al menos 1 simulacro
-            .order('total_simulations', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        if (activeError) {
-            debugLog('Error obteniendo usuario más activo:', activeError);
-        } else {
-            debugLog('Usuario más activo:', mostActive);
-        }
-
-        // 3. Mayor asistencia a sábados
-        const { data: saturdayKing, error: satError } = await supabaseClient
-            .from('user_results')
-            .select('user_id, users!inner(slug)')
-            .eq('is_saturday_live', true)
-            .limit(100);
-
-        if (satError) {
-            debugLog('Error obteniendo rey del sábado:', satError);
-        }
-
+        let mostActiveUser = null;
         let saturdayChampion = null;
-        if (saturdayKing && saturdayKing.length > 0) {
-            const saturdayCount = {};
-            saturdayKing.forEach(record => {
-                const slug = record.users?.slug;
-                if (slug) {
-                    saturdayCount[slug] = (saturdayCount[slug] || 0) + 1;
-                }
-            });
+
+        // 1. Menor tasa de error (solo si hay datos semanales)
+        if (weeklyData && weeklyData.length > 0) {
+            // Filtrar usuarios con error_percentage válido
+            const validUsers = weeklyData.filter(u => 
+                u.error_percentage !== null && 
+                u.error_percentage !== undefined &&
+                u.error_percentage >= 0
+            );
             
-            if (Object.keys(saturdayCount).length > 0) {
-                const maxSaturdays = Math.max(...Object.values(saturdayCount));
-                const championSlug = Object.keys(saturdayCount).find(key => saturdayCount[key] === maxSaturdays);
-                saturdayChampion = { slug: championSlug, count: maxSaturdays };
+            if (validUsers.length > 0) {
+                lowestErrorUser = validUsers.reduce((min, user) => 
+                    user.error_percentage < min.error_percentage ? user : min
+                );
             }
         }
 
+        // 2. Usuario más activo
+        try {
+            const { data: activeUsers, error: activeError } = await supabaseClient
+                .from('users')
+                .select('slug, total_simulations')
+                .gt('total_simulations', 0)
+                .order('total_simulations', { ascending: false })
+                .limit(1);
+
+            if (!activeError && activeUsers && activeUsers.length > 0) {
+                mostActiveUser = activeUsers[0];
+            }
+        } catch (err) {
+            debugLog('Error obteniendo usuario más activo:', err);
+        }
+
+        // 3. Rey del sábado
+        try {
+            const { data: saturdayResults, error: satError } = await supabaseClient
+                .from('user_results')
+                .select('user_id, users!inner(slug)')
+                .eq('is_saturday_live', true);
+
+            if (!satError && saturdayResults && saturdayResults.length > 0) {
+                // Contar participaciones por usuario
+                const saturdayCount = {};
+                saturdayResults.forEach(record => {
+                    const slug = record.users?.slug;
+                    if (slug) {
+                        saturdayCount[slug] = (saturdayCount[slug] || 0) + 1;
+                    }
+                });
+                
+                // Encontrar el máximo
+                if (Object.keys(saturdayCount).length > 0) {
+                    const maxCount = Math.max(...Object.values(saturdayCount));
+                    const championSlug = Object.keys(saturdayCount).find(key => saturdayCount[key] === maxCount);
+                    saturdayChampion = { slug: championSlug, count: maxCount };
+                }
+            }
+        } catch (err) {
+            debugLog('Error obteniendo rey del sábado:', err);
+        }
+
+        // Crear array de logros
         achievements = [
             {
                 icon: '🎯',
                 title: 'Menor Tasa de Error',
-                value: lowestErrorUser ? `${(lowestErrorUser.error_percentage || 0).toFixed(1)}%` : 'N/A',
-                subtitle: lowestErrorUser ? lowestErrorUser.users?.slug || 'Usuario' : 'Sin datos',
+                value: lowestErrorUser ? `${(lowestErrorUser.error_percentage || 0).toFixed(1)}%` : 'Por determinar',
+                subtitle: lowestErrorUser ? lowestErrorUser.users?.slug || 'Usuario' : 'Participa para aparecer aquí',
                 color: '#10B981'
             },
             {
                 icon: '📚',
-                title: 'Más Simulacros',
-                value: mostActive ? mostActive.total_simulations : 0,
-                subtitle: mostActive ? mostActive.slug : 'Sin datos',
+                title: 'Quién lleva más Simulacros',
+                value: mostActiveUser ? mostActiveUser.total_simulations : 'Por determinar',
+                subtitle: mostActiveUser ? mostActiveUser.slug : 'Sé el primero',
                 color: '#3B82F6'
             },
             {
                 icon: '🔴',
-                title: 'Rey del Sábado',
-                value: saturdayChampion ? `${saturdayChampion.count} directos` : 'N/A',
-                subtitle: saturdayChampion ? saturdayChampion.slug : 'Sin datos',
+                title: '¿Quién asiste más en directo?',
+                value: saturdayChampion ? `${saturdayChampion.count} directos` : 'Por determinar',
+                subtitle: saturdayChampion ? saturdayChampion.slug : 'Participa en directo',
                 color: '#DC2626'
             }
         ];
 
         renderAchievements();
+        debugLog('Logros cargados correctamente');
 
     } catch (error) {
-        debugLog('Error cargando logros:', error);
+        console.error('Error cargando logros:', error);
+        // Mostrar logros vacíos en caso de error
+        achievements = [
+            {
+                icon: '🎯',
+                title: 'Menor Tasa de Error',
+                value: 'Por determinar',
+                subtitle: 'Datos no disponibles',
+                color: '#10B981'
+            },
+            {
+                icon: '📚',
+                title: 'Quién lleva más Simulacros',
+                value: 'Por determinar',
+                subtitle: 'Datos no disponibles',
+                color: '#3B82F6'
+            },
+            {
+                icon: '🔴',
+                title: '¿Quién asiste más en directo?',
+                value: 'Por determinar',
+                subtitle: 'Datos no disponibles',
+                color: '#DC2626'
+            }
+        ];
+        renderAchievements();
     }
 }
 
@@ -1175,128 +1079,63 @@ function renderAchievements() {
         </div>
     `).join('');
     
-    // Si solo hay 3 elementos, centrarlos sin slider
+    // Centrar si solo hay 3 elementos
     if (achievements.length === 3) {
         track.classList.add('centered');
         controls.style.display = 'none';
-        return;
-    }
-    
-    // Solo mostrar controles en desktop y si hay más de 3 elementos
-    if (window.innerWidth > 768 && achievements.length > 3) {
-        controls.innerHTML = achievements.map((_, index) => `
-            <div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></div>
-        `).join('');
-        
-        // Auto-slide cada 5 segundos
-        setInterval(() => {
-            currentSlide = (currentSlide + 1) % achievements.length;
-            updateSlider();
-        }, 5000);
-    }
-}
-
-// Control del slider
-function goToSlide(index) {
-    currentSlide = index;
-    updateSlider();
-}
-
-function updateSlider() {
-    const track = document.getElementById('achievementsTrack');
-    const dots = document.querySelectorAll('.slider-dot');
-    
-    const offset = currentSlide * -320; // 300px card + 20px gap
-    track.style.transform = `translateX(${offset}px)`;
-    
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentSlide);
-    });
-}
-
-// Touch/swipe para móviles
-let touchStartX = 0;
-let touchEndX = 0;
-
-document.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-});
-
-document.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-});
-
-function handleSwipe() {
-    if (touchEndX < touchStartX - 50) {
-        // Swipe left
-        currentSlide = Math.min(currentSlide + 1, achievements.length - 1);
-        updateSlider();
-    }
-    if (touchEndX > touchStartX + 50) {
-        // Swipe right
-        currentSlide = Math.max(currentSlide - 1, 0);
-        updateSlider();
     }
 }
 
 // Utilidades
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-    });
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+    } catch {
+        return 'Fecha no válida';
+    }
 }
 
 function formatNumber(num) {
-    return new Intl.NumberFormat('es-ES').format(num);
-}
-
-// Auto-actualizar cada 30 segundos
-setInterval(() => {
-    debugLog('Auto-actualizando datos...');
-    loadAllData();
-}, 30000);
-
-// Verificar estado de conexión con Supabase
-async function testSupabaseConnection() {
-    debugLog('Probando conexión con Supabase...');
-    
     try {
-        // Intentar una consulta simple
-        const { data, error } = await supabaseClient
-            .from('weekly_simulations')
-            .select('count')
-            .limit(1);
-        
-        if (error) {
-            debugLog('Error en prueba de conexión:', error);
-            return false;
-        }
-        
-        debugLog('Conexión exitosa con Supabase');
-        return true;
-    } catch (err) {
-        debugLog('Error crítico en conexión:', err);
-        return false;
+        return new Intl.NumberFormat('es-ES').format(num || 0);
+    } catch {
+        return '0';
     }
 }
+
+// Auto-actualizar cada 30 segundos (opcional, se puede desactivar si no es necesario)
+let autoUpdateInterval = setInterval(() => {
+    if (document.hidden) return; // No actualizar si la página no está visible
+    loadAllData();
+}, 3000);
+
+// Limpiar interval cuando se cierra la página
+window.addEventListener('beforeunload', () => {
+    if (autoUpdateInterval) {
+        clearInterval(autoUpdateInterval);
+    }
+});
+
+// Verificar visibilidad de la página para pausar actualizaciones
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && autoUpdateInterval) {
+        clearInterval(autoUpdateInterval);
+        autoUpdateInterval = null;
+    } else if (!document.hidden && !autoUpdateInterval) {
+        autoUpdateInterval = setInterval(() => {
+            loadAllData();
+        }, 30000);
+    }
+});
 
 // Cargar al iniciar
 document.addEventListener('DOMContentLoaded', async () => {
     debugLog('Página cargada, iniciando...');
-    
-    // Primero probar la conexión
-    const isConnected = await testSupabaseConnection();
-    
-    if (!isConnected) {
-        document.getElementById('headerSubtitle').textContent = 
-            'Error de conexión con la base de datos';
-    }
-    
-    // Cargar datos independientemente
     await loadAllData();
 });
     </script>
