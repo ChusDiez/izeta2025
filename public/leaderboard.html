@@ -672,22 +672,56 @@ async function loadAllData() {
     try {
         // 1. Primero intentar obtener el simulacro activo
         debugLog('Obteniendo simulacro activo...');
-        const { data: simData, error: simError } = await supabaseClient
+        
+        // Obtener todos los simulacros activos para detectar problemas
+        const { data: activeSimulations, error: activeError } = await supabaseClient
             .from('weekly_simulations')
             .select('*')
             .eq('status', 'active')
-            .maybeSingle(); // Usar maybeSingle en lugar de single para evitar error si no hay datos
+            .order('week_number', { ascending: false });
         
-        debugLog('Respuesta de weekly_simulations:', { simData, simError });
+        debugLog('Simulacros activos encontrados:', activeSimulations?.length || 0);
         
-        // También intentar ver todos los simulacros para debug
-        const { data: allSims, error: allSimsError } = await supabaseClient
+        // Si hay múltiples activos, es un problema de datos
+        if (activeSimulations && activeSimulations.length > 1) {
+            debugLog('⚠️ ADVERTENCIA: Hay múltiples simulacros activos, tomando el más reciente');
+            // Tomar el de mayor week_number (más reciente)
+            const simData = activeSimulations[0];
+            activeSimulation = simData;
+            document.getElementById('weeklyInfo').textContent = 
+                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
+            document.getElementById('headerSubtitle').textContent = 
+                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
+            await loadWeeklyRanking();
+        } else if (activeSimulations && activeSimulations.length === 1) {
+            // Caso normal: un solo simulacro activo
+            const simData = activeSimulations[0];
+            activeSimulation = simData;
+            debugLog('Simulacro activo encontrado:', simData);
+            document.getElementById('weeklyInfo').textContent = 
+                `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
+            document.getElementById('headerSubtitle').textContent = 
+                `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
+            await loadWeeklyRanking();
+        } else if (activeError) {
+            debugLog('Error obteniendo simulacros activos:', activeError);
+            showDetailedError('simulacro activo', activeError);
+            document.getElementById('weeklyInfo').textContent = 'Error al cargar simulacro';
+        } else {
+            debugLog('No hay simulacro activo');
+            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
+            document.getElementById('weeklyRanking').innerHTML = 
+                '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
+        }
+        
+        // También mostrar info de debug sobre todos los simulacros
+        const { data: allSims } = await supabaseClient
             .from('weekly_simulations')
             .select('id, week_number, status, start_date, end_date')
             .order('week_number', { ascending: false })
             .limit(5);
         
-        debugLog('Últimos 5 simulacros:', { allSims, allSimsError });
+        debugLog('Últimos 5 simulacros:', allSims);
         
         if (simError) {
             debugLog('Error obteniendo simulacro activo:', simError);
@@ -790,54 +824,106 @@ async function loadWeeklyRanking() {
 
 // Cargar ranking ELO global con mejor diagnóstico
 async function loadEloRanking() {
-    debugLog('Cargando ranking ELO...');
+    debugLog('=================== INICIO CARGA RANKING ELO ===================');
     
     try {
-        const { data, error } = await supabaseClient
+        // Primero intentar la vista public_leaderboard
+        debugLog('Intentando cargar desde public_leaderboard...');
+        const { data, error, count } = await supabaseClient
             .from('public_leaderboard')
-            .select('*')
+            .select('*', { count: 'exact' })
             .order('current_elo', { ascending: false });
 
+        debugLog('Respuesta de public_leaderboard:', { 
+            dataLength: data?.length || 0, 
+            error: error,
+            count: count 
+        });
+
         if (error) {
-            debugLog('Error en consulta ELO:', error);
+            debugLog('❌ Error en consulta public_leaderboard:', error);
             showDetailedError('ranking ELO', error, {
                 table: 'public_leaderboard',
-                query: 'select all ordered by elo'
+                query: 'select all ordered by elo',
+                errorCode: error.code,
+                errorDetails: error.details,
+                errorHint: error.hint
             });
             
-            // Intentar consulta directa a users como fallback
-            debugLog('Intentando consulta directa a users...');
+            // PLAN B: Intentar consulta directa a users
+            debugLog('🔄 Intentando PLAN B: consulta directa a tabla users...');
             const { data: usersData, error: usersError } = await supabaseClient
                 .from('users')
-                .select('slug, current_elo, current_streak, cohort')
+                .select('slug, current_elo, current_streak, cohort, active')
                 .eq('active', true)
                 .order('current_elo', { ascending: false })
                 .limit(50);
             
+            debugLog('Respuesta de users (PLAN B):', { 
+                dataLength: usersData?.length || 0, 
+                error: usersError 
+            });
+            
             if (usersError) {
+                debugLog('❌ Error también en PLAN B:', usersError);
                 throw usersError;
-            } else if (usersData) {
-                debugLog('Datos obtenidos directamente de users:', usersData);
+            } else if (usersData && usersData.length > 0) {
+                debugLog('✅ PLAN B exitoso! Usando datos de users directamente');
+                eloData = usersData;
+                renderEloRanking(usersData);
+                return;
+            } else {
+                debugLog('⚠️ PLAN B no devolvió datos');
+                document.getElementById('eloRanking').innerHTML = 
+                    '<p style="text-align: center; padding: 2rem;">No hay usuarios activos en el sistema</p>';
+                return;
+            }
+        }
+
+        // Si llegamos aquí, la consulta a public_leaderboard fue exitosa
+        debugLog(`✅ Ranking ELO obtenido exitosamente: ${data?.length || 0} registros`);
+        
+        if (!data || data.length === 0) {
+            debugLog('⚠️ La vista public_leaderboard está vacía');
+            document.getElementById('eloRanking').innerHTML = 
+                '<p style="text-align: center; padding: 2rem;">No hay datos de ranking disponibles</p>';
+            
+            // Intentar PLAN B aunque la vista esté vacía
+            debugLog('🔄 Intentando PLAN B por vista vacía...');
+            const { data: usersData } = await supabaseClient
+                .from('users')
+                .select('slug, current_elo, current_streak, cohort, active')
+                .eq('active', true)
+                .order('current_elo', { ascending: false })
+                .limit(50);
+                
+            if (usersData && usersData.length > 0) {
+                debugLog('✅ PLAN B exitoso para vista vacía');
                 eloData = usersData;
                 renderEloRanking(usersData);
             }
             return;
         }
 
-        debugLog(`Ranking ELO obtenido: ${data?.length || 0} registros`);
-        
-        if (!data || data.length === 0) {
-            document.getElementById('eloRanking').innerHTML = 
-                '<p style="text-align: center; padding: 2rem;">No hay datos de ranking disponibles</p>';
-            return;
-        }
-
+        // Datos obtenidos correctamente de public_leaderboard
         eloData = data;
         renderEloRanking(data);
 
     } catch (error) {
-        debugLog('Error crítico en loadEloRanking:', error);
+        debugLog('❌ Error crítico en loadEloRanking:', error);
         showDetailedError('ranking ELO', error);
+        
+        // PLAN C: Mostrar al menos algo de información
+        document.getElementById('eloRanking').innerHTML = `
+            <div class="error-panel">
+                <h3>❌ Error al cargar el ranking ELO</h3>
+                <p>No se pudo acceder a los datos del ranking.</p>
+                <p>Por favor, verifica la consola para más detalles.</p>
+                <button class="retry-button" onclick="loadEloRanking()">🔄 Reintentar solo ELO</button>
+            </div>
+        `;
+    } finally {
+        debugLog('=================== FIN CARGA RANKING ELO ===================');
     }
 }
 
