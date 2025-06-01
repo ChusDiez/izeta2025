@@ -1,1 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ELO IZETA 2025 - Dashboard y Base de Datos</title>
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-gray: #475569;
+            --accent-gold: #fbbf24;
+            --accent-silver: #9ca3af;
+            --accent-bronze: #d97706;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Header Principal */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-gray));
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Secciones */
+        .section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Sistema de Puntos Visual */
+        .points-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .point-card {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .point-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .point-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-blue);
+        }
+        
+        .points-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+        
+        .points-desc {
+            color: var(--secondary-gray);
+            font-size: 0.95rem;
+        }
+        
+        /* Tabla de Cálculo */
+        .calculation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .calculation-table th {
+            background: var(--primary-blue);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .calculation-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .calculation-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .calculation-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        
+        .calculation-table tr:hover {
+            background: #f3f4f6;
+        }
+        
+        /* Sistema de Rachas */
+        .streak-system {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .streak-level {
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .streak-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .streak-fire { color: #ef4444; }
+        .streak-star { color: #fbbf24; }
+        .streak-rocket { color: #3b82f6; }
+        .streak-crown { color: #a855f7; }
+        
+        /* Ranking Visual */
+        .ranking-example {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .ranking-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .ranking-row:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .rank-position {
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .rank-1 { color: var(--accent-gold); }
+        .rank-2 { color: var(--accent-silver); }
+        .rank-3 { color: var(--accent-bronze); }
+        
+        .user-info {
+            flex: 1;
+            margin: 0 1rem;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--secondary-gray);
+        }
+        
+        .elo-change {
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .change-positive { color: var(--success-green); }
+        .change-negative { color: var(--danger-red); }
+        
+        /* Dashboard Mockup */
+        .dashboard-preview {
+            background: #1f2937;
+            border-radius: 15px;
+            padding: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .dashboard-widget {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .widget-title {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .widget-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .widget-chart {
+            height: 100px;
+            background: linear-gradient(to top, rgba(59,130,246,0.5), transparent);
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: #3b82f6;
+            clip-path: polygon(0 100%, 20% 80%, 40% 85%, 60% 40%, 80% 50%, 100% 20%, 100% 100%);
+        }
+        
+        /* Medallas */
+        .medals-showcase {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .medal {
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .medal:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+        
+        .medal-icon {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        
+        /* Base de Datos */
+        .db-schema {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+        
+        .db-table {
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        
+        .db-table-name {
+            color: #60a5fa;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .db-field {
+            margin-left: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .field-type {
+            color: #86efac;
+        }
+        
+        .field-constraint {
+            color: #fbbf24;
+        }
+        
+        /* Animaciones */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .points-breakdown {
+                grid-template-columns: 1fr;
+            }
+            
+            .streak-system {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .ranking-row {
+                flex-wrap: wrap;
+            }
+        }
+        
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            background: #e5e7eb;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary-blue), var(--accent-gold));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Principal -->
+        <div class="header fade-in">
+            <h1>🏆 Sistema ELO IZETA 2025</h1>
+            <p>Sistema de Puntuación Competitiva y Dashboard de Seguimiento</p>
+            <p style="margin-top: 1rem; font-size: 1rem;">Transparente • Justo • Motivador</p>
+        </div>
+        
+        <!-- SECCIÓN 1: SISTEMA DE PUNTOS -->
+        <section class="section">
+            <h2 class="section-title">📊 Sistema de Puntuación ELO (0-25 puntos semanales)</h2>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem;">¿Cómo se calculan tus puntos semanales?</h3>
+                
+                <div class="points-breakdown">
+                    <div class="point-card">
+                        <div class="points-value">+5</div>
+                        <div class="points-desc">
+                            <strong>Participación Base</strong><br>
+                            Por completar el simulacro semanal
+                        </div>
+                    </div>
+                    
+                    <div class="point-card">
+                        <div class="points-value">0-20</div>
+                        <div class="points-desc">
+                            <strong>Rendimiento Relativo</strong><br>
+                            Según tu posición en el ranking
+                        </div>
+                    </div>
+                    
+                    <div class="point-card">
+                        <div class="points-value">+5</div>
+                        <div class="points-desc">
+                            <strong>Bonus Mejora</strong><br>
+                            Si reduces tu error ≥5%
+                        </div>
+                    </div>
+                    
+                    <div class="point-card">
+                        <div class="points-value">x1.5</div>
+                        <div class="points-desc">
+                            <strong>Multiplicador Racha</strong><br>
+                            A partir de 8 semanas seguidas
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #eff6ff; padding: 1.5rem; border-radius: 10px; margin-top: 2rem;">
+                    <p style="text-align: center; font-weight: 600;">
+                        💡 El techo de 25 puntos evita inflación y mantiene la competición equilibrada
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- TABLA DE CÁLCULO DETALLADA -->
+        <section class="section">
+            <h2 class="section-title">🧮 Tabla de Cálculo Detallada</h2>
+            
+            <div class="card">
+                <table class="calculation-table">
+                    <thead>
+                        <tr>
+                            <th>Posición</th>
+                            <th>Puntos Base</th>
+                            <th>Puntos Rendimiento</th>
+                            <th>Bonus Posible</th>
+                            <th>Total Máximo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color: var(--accent-gold);">1º lugar</strong></td>
+                            <td>5</td>
+                            <td>20</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>30 → 25</strong> (cap)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: var(--accent-silver);">2º lugar</strong></td>
+                            <td>5</td>
+                            <td>19</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>29 → 25</strong> (cap)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: var(--accent-bronze);">3º lugar</strong></td>
+                            <td>5</td>
+                            <td>18</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>28 → 25</strong> (cap)</td>
+                        </tr>
+                        <tr>
+                            <td>Top 10%</td>
+                            <td>5</td>
+                            <td>15-17</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>20-25</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Top 25%</td>
+                            <td>5</td>
+                            <td>12-14</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>17-19</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Top 50%</td>
+                            <td>5</td>
+                            <td>8-11</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>13-16</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Resto</td>
+                            <td>5</td>
+                            <td>0-7</td>
+                            <td>+5 (mejora)</td>
+                            <td><strong>5-12</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 2rem; padding: 1.5rem; background: #f0fdf4; border-radius: 10px; border-left: 4px solid var(--success-green);">
+                    <h4 style="margin-bottom: 0.5rem;">📈 Ejemplo de Cálculo Real:</h4>
+                    <p><strong>María termina 15ª de 200 participantes (Top 7.5%)</strong></p>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Base: +5 puntos</li>
+                        <li>Rendimiento: +16 puntos (por estar en top 10%)</li>
+                        <li>Mejora: +5 puntos (redujo su error del 18% al 12%)</li>
+                        <li>Racha: x1.0 (lleva 3 semanas, necesita 8 para multiplicador)</li>
+                        <li><strong>Total: 26 → 25 puntos</strong> (aplicado cap)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SISTEMA DE RACHAS -->
+        <section class="section">
+            <h2 class="section-title">🔥 Sistema de Rachas y Multiplicadores</h2>
+            
+            <div class="card">
+                <div class="streak-system">
+                    <div class="streak-level">
+                        <div class="streak-icon">📚</div>
+                        <strong>1-3 semanas</strong><br>
+                        Multiplicador x1.0<br>
+                        <span style="color: var(--secondary-gray); font-size: 0.875rem;">Construyendo hábito</span>
+                    </div>
+                    
+                    <div class="streak-level">
+                        <div class="streak-icon streak-star">⭐</div>
+                        <strong>4-7 semanas</strong><br>
+                        Multiplicador x1.0<br>
+                        <span style="color: var(--secondary-gray); font-size: 0.875rem;">Consistencia inicial</span>
+                    </div>
+                    
+                    <div class="streak-level">
+                        <div class="streak-icon streak-fire">🔥</div>
+                        <strong>8-15 semanas</strong><br>
+                        Multiplicador x1.5<br>
+                        <span style="color: var(--danger-red); font-size: 0.875rem;">¡En fuego!</span>
+                    </div>
+                    
+                    <div class="streak-level">
+                        <div class="streak-icon streak-crown">👑</div>
+                        <strong>16+ semanas</strong><br>
+                        Multiplicador x2.0<br>
+                        <span style="color: var(--accent-gold); font-size: 0.875rem;">Élite absoluta</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <div class="progress-bar" style="max-width: 600px; margin: 0 auto;">
+                        <div class="progress-fill" style="width: 65%;">
+                            Semana 13 de 20 - Racha activa: 13 🔥
+                        </div>
+                    </div>
+                    <p style="margin-top: 0.5rem; color: var(--secondary-gray);">
+                        💪 Mantén tu racha para desbloquear multiplicadores especiales
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- RANKING SEMANAL EJEMPLO -->
+        <section class="section">
+            <h2 class="section-title">🏅 Ejemplo de Ranking Semanal</h2>
+            
+            <div class="ranking-example">
+                <div class="ranking-header">
+                    <div>
+                        <h3>Semana 15 - Simulacro RF</h3>
+                        <p style="color: var(--secondary-gray);">245 participantes</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.875rem; color: var(--secondary-gray);">Media grupal</div>
+                        <div style="font-size: 1.5rem; font-weight: bold;">76.4/100</div>
+                    </div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position rank-1">1º</div>
+                    <div class="user-info">
+                        <div class="user-name">carlos-4821</div>
+                        <div class="user-stats">
+                            <span>📊 93/100</span>
+                            <span>🔥 15 semanas</span>
+                            <span>⚡ 1,847 ELO</span>
+                        </div>
+                    </div>
+                    <div class="elo-change change-positive">↗ +25</div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position rank-2">2º</div>
+                    <div class="user-info">
+                        <div class="user-name">laura-9273</div>
+                        <div class="user-stats">
+                            <span>📊 91/100</span>
+                            <span>🔥 12 semanas</span>
+                            <span>⚡ 1,765 ELO</span>
+                        </div>
+                    </div>
+                    <div class="elo-change change-positive">↗ +38</div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position rank-3">3º</div>
+                    <div class="user-info">
+                        <div class="user-name">miguel-1547</div>
+                        <div class="user-stats">
+                            <span>📊 89/100</span>
+                            <span>⭐ 6 semanas</span>
+                            <span>⚡ 1,523 ELO</span>
+                        </div>
+                    </div>
+                    <div class="elo-change change-positive">↗ +23</div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position">15º</div>
+                    <div class="user-info">
+                        <div class="user-name">ana-7639</div>
+                        <div class="user-stats">
+                            <span>📊 83/100</span>
+                            <span class="tooltip" data-tooltip="Primera vez en top 20!">🎯 Nueva</span>
+                            <span>⚡ 1,285 ELO</span>
+                        </div>
+                    </div>
+                    <div class="elo-change change-positive">↗ +21</div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position">142º</div>
+                    <div class="user-info">
+                        <div class="user-name">jorge-3982</div>
+                        <div class="user-stats">
+                            <span>📊 72/100</span>
+                            <span>📚 2 semanas</span>
+                            <span>⚡ 987 ELO</span>
+                        </div>
+                    </div>
+                    <div class="elo-change change-positive">↗ +8</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- DASHBOARD PREVIEW -->
+        <section class="section">
+            <h2 class="section-title">💻 Vista Previa del Dashboard</h2>
+            
+            <div class="dashboard-preview fade-in">
+                <h3 style="margin-bottom: 1rem;">Panel Personal de Seguimiento</h3>
+                
+                <div class="dashboard-grid">
+                    <div class="dashboard-widget">
+                        <div class="widget-title">ELO ACTUAL</div>
+                        <div class="widget-value">1,523</div>
+                        <div style="color: var(--success-green);">↗ +89 esta semana</div>
+                    </div>
+                    
+                    <div class="dashboard-widget">
+                        <div class="widget-title">POSICIÓN GLOBAL</div>
+                        <div class="widget-value">#47</div>
+                        <div style="opacity: 0.8;">de 312 opositores activos</div>
+                    </div>
+                    
+                    <div class="dashboard-widget">
+                        <div class="widget-title">RACHA ACTUAL</div>
+                        <div class="widget-value">12 🔥</div>
+                        <div style="opacity: 0.8;">4 semanas para x1.5</div>
+                    </div>
+                    
+                    <div class="dashboard-widget">
+                        <div class="widget-title">EVOLUCIÓN ELO</div>
+                        <div class="widget-chart">
+                            <div class="chart-line"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-widget">
+                        <div class="widget-title">MEJOR SIMULACRO</div>
+                        <div class="widget-value">89/100</div>
+                        <div style="opacity: 0.8;">Semana 11</div>
+                    </div>
+                    
+                    <div class="dashboard-widget">
+                        <div class="widget-title">PROMEDIO ÚLTIMAS 4</div>
+                        <div class="widget-value">84.5</div>
+                        <div style="color: var(--success-green);">↗ +3.2 vs anterior</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <h4 style="margin-bottom: 1rem;">📈 Comparativa con la Media del Grupo</h4>
+                    <div style="display: flex; justify-content: space-around; text-align: center;">
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: bold;">84.5</div>
+                            <div style="opacity: 0.8;">Tu promedio</div>
+                        </div>
+                        <div style="font-size: 2rem;">vs</div>
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: bold;">76.2</div>
+                            <div style="opacity: 0.8;">Media grupal</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-green);">+8.3</div>
+                            <div style="opacity: 0.8;">Diferencial</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SISTEMA DE MEDALLAS -->
+        <section class="section">
+            <h2 class="section-title">🎖️ Sistema de Medallas (Visual)</h2>
+            
+            <div class="card">
+                <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-gray);">
+                    Las medallas reconocen logros especiales pero NO suman puntos ELO adicionales
+                </p>
+                
+                <div class="medals-showcase">
+                    <div class="medal">
+                        <div class="medal-icon">🥇</div>
+                        <strong>Top 3 Directo</strong><br>
+                        <span style="font-size: 0.875rem; color: var(--secondary-gray);">
+                            Posición 1-3 en simulacro del sábado
+                        </span>
+                    </div>
+                    
+                    <div class="medal">
+                        <div class="medal-icon">⚡</div>
+                        <strong>Mejor Mejora</strong><br>
+                        <span style="font-size: 0.875rem; color: var(--secondary-gray);">
+                            Mayor reducción de error semanal
+                        </span>
+                    </div>
+                    
+                    <div class="medal">
+                        <div class="medal-icon">🎯</div>
+                        <strong>Perfect Score</strong><br>
+                        <span style="font-size: 0.875rem; color: var(--secondary-gray);">
+                            100/100 en cualquier simulacro
+                        </span>
+                    </div>
+                    
+                    <div class="medal">
+                        <div class="medal-icon">💎</div>
+                        <strong>Racha Diamante</strong><br>
+                        <span style="font-size: 0.875rem; color: var(--secondary-gray);">
+                            20 semanas consecutivas
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 1rem; border-radius: 10px; margin-top: 2rem; text-align: center;">
+                    <p>🏆 Las medallas aparecen en tu perfil como reconocimiento visual de tus logros</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- BASE DE DATOS SUPABASE -->
+        <section class="section">
+            <h2 class="section-title">🗄️ Estructura de Base de Datos (Supabase)</h2>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem;">Esquema de Tablas Principales</h3>
+                
+                <div class="db-schema">
+                    <div class="db-table">
+                        <div class="db-table-name">-- Tabla: users</div>
+                        <div class="db-field">id <span class="field-type">UUID</span> <span class="field-constraint">PRIMARY KEY DEFAULT uuid_generate_v4()</span></div>
+                        <div class="db-field">email <span class="field-type">TEXT</span> <span class="field-constraint">UNIQUE NOT NULL</span></div>
+                        <div class="db-field">username <span class="field-type">TEXT</span> <span class="field-constraint">UNIQUE NOT NULL</span></div>
+                        <div class="db-field">slug <span class="field-type">TEXT</span> <span class="field-constraint">UNIQUE NOT NULL</span> -- ej: maria-2847</div>
+                        <div class="db-field">cohort <span class="field-type">TEXT</span> <span class="field-constraint">CHECK (cohort IN ('20h', '36h', '48h'))</span></div>
+                        <div class="db-field">current_elo <span class="field-type">INTEGER</span> <span class="field-constraint">DEFAULT 1000</span></div>
+                        <div class="db-field">current_streak <span class="field-type">INTEGER</span> <span class="field-constraint">DEFAULT 0</span></div>
+                        <div class="db-field">created_at <span class="field-type">TIMESTAMP</span> <span class="field-constraint">DEFAULT NOW()</span></div>
+                        <div class="db-field">active <span class="field-type">BOOLEAN</span> <span class="field-constraint">DEFAULT true</span></div>
+                    </div>
+                    
+                    <div class="db-table">
+                        <div class="db-table-name">-- Tabla: weekly_simulations</div>
+                        <div class="db-field">id <span class="field-type">UUID</span> <span class="field-constraint">PRIMARY KEY DEFAULT uuid_generate_v4()</span></div>
+                        <div class="db-field">week_number <span class="field-type">INTEGER</span> <span class="field-constraint">NOT NULL</span></div>
+                        <div class="db-field">start_date <span class="field-type">DATE</span> <span class="field-constraint">NOT NULL</span></div>
+                        <div class="db-field">end_date <span class="field-type">DATE</span> <span class="field-constraint">NOT NULL</span></div>
+                        <div class="db-field">total_participants <span class="field-type">INTEGER</span> <span class="field-constraint">DEFAULT 0</span></div>
+                        <div class="db-field">average_score <span class="field-type">DECIMAL(5,2)</span></div>
+                        <div class="db-field">status <span class="field-type">TEXT</span> <span class="field-constraint">DEFAULT 'active'</span></div>
+                        <div class="db-field">created_at <span class="field-type">TIMESTAMP</span> <span class="field-constraint">DEFAULT NOW()</span></div>
+                    </div>
+                    
+                    <div class="db-table">
+                        <div class="db-table-name">-- Tabla: user_results</div>
+                        <div class="db-field">id <span class="field-type">UUID</span> <span class="field-constraint">PRIMARY KEY DEFAULT uuid_generate_v4()</span></div>
+                        <div class="db-field">user_id <span class="field-type">UUID</span> <span class="field-constraint">REFERENCES users(id)</span></div>
+                        <div class="db-field">simulation_id <span class="field-type">UUID</span> <span class="field-constraint">REFERENCES weekly_simulations(id)</span></div>
+                        <div class="db-field">score <span class="field-type">INTEGER</span> <span class="field-constraint">CHECK (score >= 0 AND score <= 100)</span></div>
+                        <div class="db-field">error_percentage <span class="field-type">DECIMAL(5,2)</span></div>
+                        <div class="db-field">position <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">points_base <span class="field-type">INTEGER</span> <span class="field-constraint">DEFAULT 5</span></div>
+                        <div class="db-field">points_performance <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">points_improvement <span class="field-type">INTEGER</span> <span class="field-constraint">DEFAULT 0</span></div>
+                        <div class="db-field">multiplier <span class="field-type">DECIMAL(3,1)</span> <span class="field-constraint">DEFAULT 1.0</span></div>
+                        <div class="db-field">total_points <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">submitted_at <span class="field-type">TIMESTAMP</span> <span class="field-constraint">DEFAULT NOW()</span></div>
+                        <div class="db-field">is_saturday_live <span class="field-type">BOOLEAN</span> <span class="field-constraint">DEFAULT false</span></div>
+                    </div>
+                    
+                    <div class="db-table">
+                        <div class="db-table-name">-- Tabla: elo_history</div>
+                        <div class="db-field">id <span class="field-type">UUID</span> <span class="field-constraint">PRIMARY KEY DEFAULT uuid_generate_v4()</span></div>
+                        <div class="db-field">user_id <span class="field-type">UUID</span> <span class="field-constraint">REFERENCES users(id)</span></div>
+                        <div class="db-field">week_number <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">elo_before <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">elo_after <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">change <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">created_at <span class="field-type">TIMESTAMP</span> <span class="field-constraint">DEFAULT NOW()</span></div>
+                    </div>
+                    
+                    <div class="db-table">
+                        <div class="db-table-name">-- Tabla: user_medals</div>
+                        <div class="db-field">id <span class="field-type">UUID</span> <span class="field-constraint">PRIMARY KEY DEFAULT uuid_generate_v4()</span></div>
+                        <div class="db-field">user_id <span class="field-type">UUID</span> <span class="field-constraint">REFERENCES users(id)</span></div>
+                        <div class="db-field">medal_type <span class="field-type">TEXT</span> <span class="field-constraint">NOT NULL</span></div>
+                        <div class="db-field">week_earned <span class="field-type">INTEGER</span></div>
+                        <div class="db-field">metadata <span class="field-type">JSONB</span></div>
+                        <div class="db-field">earned_at <span class="field-type">TIMESTAMP</span> <span class="field-constraint">DEFAULT NOW()</span></div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">🔧 Funciones y Triggers Principales</h3>
+                
+                <div class="db-schema">
+                    <div class="db-table">
+                        <div class="db-table-name">-- Función: calculate_user_points</div>
+                        <pre style="color: #94a3b8; margin-top: 0.5rem;">
+CREATE OR REPLACE FUNCTION calculate_user_points(
+    p_position INTEGER,
+    p_total_participants INTEGER,
+    p_error_reduction DECIMAL,
+    p_streak INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_base_points INTEGER := 5;
+    v_performance_points INTEGER;
+    v_improvement_bonus INTEGER := 0;
+    v_multiplier DECIMAL := 1.0;
+    v_total INTEGER;
+BEGIN
+    -- Calcular puntos por rendimiento
+    v_performance_points := CASE
+        WHEN p_position = 1 THEN 20
+        WHEN p_position = 2 THEN 19
+        WHEN p_position = 3 THEN 18
+        WHEN p_position <= p_total_participants * 0.1 THEN 15 + FLOOR(3 * (1 - (p_position - 3) / (p_total_participants * 0.1 - 3)))
+        WHEN p_position <= p_total_participants * 0.25 THEN 12 + FLOOR(3 * (1 - (p_position - p_total_participants * 0.1) / (p_total_participants * 0.15)))
+        WHEN p_position <= p_total_participants * 0.5 THEN 8 + FLOOR(4 * (1 - (p_position - p_total_participants * 0.25) / (p_total_participants * 0.25)))
+        ELSE FLOOR(7 * (1 - (p_position - p_total_participants * 0.5) / (p_total_participants * 0.5)))
+    END;
+    
+    -- Bonus por mejora
+    IF p_error_reduction >= 5 THEN
+        v_improvement_bonus := 5;
+    END IF;
+    
+    -- Multiplicador por racha
+    IF p_streak >= 16 THEN
+        v_multiplier := 2.0;
+    ELSIF p_streak >= 8 THEN
+        v_multiplier := 1.5;
+    END IF;
+    
+    -- Calcular total con cap de 25
+    v_total := LEAST(25, FLOOR((v_base_points + v_performance_points + v_improvement_bonus) * v_multiplier));
+    
+    RETURN v_total;
+END;
+$$ LANGUAGE plpgsql;</pre>
+                    </div>
+                    
+                    <div class="db-table">
+                        <div class="db-table-name">-- Trigger: update_user_elo</div>
+                        <pre style="color: #94a3b8; margin-top: 0.5rem;">
+CREATE OR REPLACE FUNCTION update_user_elo() RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar ELO del usuario
+    UPDATE users 
+    SET current_elo = current_elo + NEW.total_points
+    WHERE id = NEW.user_id;
+    
+    -- Registrar en historial
+    INSERT INTO elo_history (user_id, week_number, elo_before, elo_after, change)
+    SELECT 
+        NEW.user_id,
+        (SELECT week_number FROM weekly_simulations WHERE id = NEW.simulation_id),
+        current_elo - NEW.total_points,
+        current_elo,
+        NEW.total_points
+    FROM users WHERE id = NEW.user_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+CREATE TRIGGER trigger_update_elo
+AFTER INSERT ON user_results
+FOR EACH ROW EXECUTE FUNCTION update_user_elo();</pre>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">🔒 Políticas de Seguridad RLS</h3>
+                
+                <div class="db-schema">
+                    <pre style="color: #94a3b8;">
+-- Habilitar RLS en todas las tablas
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE elo_history ENABLE ROW LEVEL SECURITY;
+
+-- Política: Los usuarios solo pueden ver su propia información personal
+CREATE POLICY "Users can view own profile" ON users
+    FOR SELECT USING (auth.uid() = id);
+
+-- Política: Todos pueden ver rankings públicos (solo slug, elo, posición)
+CREATE POLICY "Public can view rankings" ON users
+    FOR SELECT USING (true)
+    ALLOW (slug, current_elo, current_streak);
+
+-- Política: Los usuarios solo pueden insertar sus propios resultados
+CREATE POLICY "Users can insert own results" ON user_results
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Política: Los usuarios pueden ver su historial
+CREATE POLICY "Users can view own history" ON elo_history
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- Política: Vista pública para rankings (sin datos personales)
+CREATE VIEW public_rankings AS
+SELECT 
+    slug,
+    current_elo,
+    current_streak,
+    RANK() OVER (ORDER BY current_elo DESC) as position
+FROM users
+WHERE active = true;</pre>
+                </div>
+            </div>
+        </section>
+        
+        <!-- NOTAS FINALES -->
+        <section class="section">
+            <h2 class="section-title">📝 Notas de Implementación</h2>
+            
+            <div class="card" style="background: #fef3c7; border-left: 4px solid var(--accent-gold);">
+                <h3 style="margin-bottom: 1rem;">Para el Equipo de Desarrollo</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div>
+                        <h4>🎯 Prioridades de Desarrollo</h4>
+                        <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Sistema de autenticación con Supabase Auth</li>
+                            <li>Formulario de envío de resultados</li>
+                            <li>Cálculo automático de puntos y posiciones</li>
+                            <li>Dashboard básico con ranking</li>
+                            <li>Sistema de notificaciones (opcional)</li>
+                        </ol>
+                    </div>
+                    
+                    <div>
+                        <h4>⚡ Optimizaciones Recomendadas</h4>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Cache de rankings (actualizar cada 5 min)</li>
+                            <li>Índices en user_id y week_number</li>
+                            <li>Vistas materializadas para estadísticas</li>
+                            <li>API endpoints con rate limiting</li>
+                            <li>Backup automático semanal</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4>🔐 Seguridad Crítica</h4>
+                        <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                            <li>Validación estricta de inputs</li>
+                            <li>Prevenir múltiples envíos por semana</li>
+                            <li>Logs de auditoría para cambios</li>
+                            <li>Encriptación de datos sensibles</li>
+                            <li>2FA para cuentas admin</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; padding: 1rem; background: white; border-radius: 10px;">
+                    <p style="text-align: center;">
+                        <strong>Tiempo estimado de desarrollo:</strong> 2-3 semanas con 1 desarrollador<br>
+                        <strong>Stack recomendado:</strong> Next.js + Supabase + Tailwind CSS<br>
+                        <strong>Hosting:</strong> Vercel (frontend) + Supabase (backend)
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 4rem; padding: 2rem; color: var(--secondary-gray);">
+            <p>Sistema ELO IZETA 2025 - Documentación Técnica</p>
+            <p style="margin-top: 0.5rem;">La transparencia genera confianza • La competición sana motiva • Los datos impulsan la mejora</p>
+        </div>
+    </div>
+    
+    <script>
+        // Animación simple para las medallas
+        document.querySelectorAll('.medal').forEach(medal => {
+            medal.addEventListener('mouseover', function() {
+                this.style.transform = 'scale(1.2) rotate(10deg)';
+            });
+            medal.addEventListener('mouseout', function() {
+                this.style.transform = 'scale(1) rotate(0deg)';
+            });
+        });
+        
+        // Animación para los elementos fade-in
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        document.querySelectorAll('.fade-in').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.5s ease-out';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
