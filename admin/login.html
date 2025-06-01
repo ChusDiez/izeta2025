@@ -120,35 +120,72 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/izeta2025/assets/js/config.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('error');
-            
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (error) throw error;
-                
-                // Verificar si es admin
-                const isAdminUser = await isAdmin();
-                
-                if (isAdminUser) {
-                    window.location.href = 'Dashboard.html';
-                } else {
-                    window.location.href = 'Leaderboard.html';
-                }
-                
-            } catch (error) {
-                errorDiv.textContent = 'Error: ' + error.message;
-                errorDiv.style.display = 'block';
-            }
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('error');
+    
+    console.log('=== INICIANDO PROCESO DE LOGIN ===');
+    console.log('1. Email:', email);
+    
+    try {
+        // Paso 1: Autenticación
+        console.log('2. Intentando autenticación...');
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
         });
+        
+        if (authError) {
+            console.error('❌ Error de autenticación:', authError);
+            throw authError;
+        }
+        
+        console.log('✅ Autenticación exitosa');
+        console.log('3. Usuario autenticado:', authData.user.email);
+        
+        // Pequeña pausa para asegurar que la sesión se establezca
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Paso 2: Verificar si el usuario actual está autenticado
+        console.log('4. Verificando sesión actual...');
+        const { data: { user: currentUser } } = await supabaseClient.auth.getUser();
+        console.log('5. Usuario en sesión:', currentUser?.email);
+        
+        // Paso 3: Buscar en la tabla users
+        console.log('6. Buscando en tabla users...');
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+            
+        console.log('7. Datos del usuario:', userData);
+        console.log('8. Error al buscar usuario:', userError);
+        
+        // Paso 4: Intentar la función RPC
+        console.log('9. Llamando a función is_admin RPC...');
+        const { data: isAdminRPC, error: rpcError } = await supabaseClient.rpc('is_admin');
+        console.log('10. Resultado RPC is_admin:', isAdminRPC);
+        console.log('11. Error RPC:', rpcError);
+        
+        // Determinar si es admin
+        let isAdminUser = false;
+        
+        // Método 1: Usar RPC si funciona
+        if (!rpcError && isAdminRPC !== null) {
+            isAdminUser = isAdminRPC === true;
+            console.log('12. Admin según RPC:', isAdminUser);
+        } 
+        // Método 2: Verificación directa si RPC falla
+        else if (userData && userData.is_admin !== undefined) {
+            isAdminUser = userData.is_admin === true;
+            console.log('12. Admin según campo directo:', isAdminUser);
+        }
+        
+        console.log('=== RESULTADO FIN
     </script>
 </body>
 </html>
