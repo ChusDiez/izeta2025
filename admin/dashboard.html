@@ -3,81 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Privado</title>
+    <title>Dashboard Administrativo - IZETA 2025</title>
     <style>
-        body {
-            font-family: sans-serif;
-            background: var(--light);
-            padding: 2rem;
-            text-align: center;
-            color: var(--ui-text);
-        }
-
-        button:hover, a:hover {
-            filter: brightness(var(--hover-brightness));
-        }
-
-        button:active, a:active {
-            filter: brightness(var(--active-brightness));
-        }
-
-        button:disabled, a:disabled {
-            opacity: var(--disabled-opacity);
-        }
-
-        a {
-            color: var(--ui-link);
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .float-home {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            background: var(--ui-danger);
-            color: white;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            font-size: 1.5rem;
-        }
-
         :root {
-            /* Paletas globales */
-            --ui-text: #212121;
-            --ui-link: #3B82F6;
-            --ui-danger: #DC2626;
-            --ui-success: #10B981;
-            --ui-warning: #FBBF24;
-
-            --white: #FFFFFF;
-            --gray-50: #F9FAFB;
-            --gray-100: #F3F4F6;
-            --gray-200: #E5E7EB;
-            --gray-300: #D1D5DB;
-            --gray-500: #6B7280;
-            --gray-700: #374151;
-
-            --hover-brightness: 1.2;
-            --active-brightness: 0.9;
-            --disabled-opacity: 0.5;
-
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-
-            /* Compatibilidad */
-            --primary: var(--ui-link);
-            --secondary: var(--gray-700);
-            --success: var(--ui-success);
-            --warning: var(--ui-warning);
-            --danger: var(--ui-danger);
-            --info: var(--ui-link);
-            --dark: var(--ui-text);
-            --light: var(--gray-50);
+            /* Sistema de colores coherente con el proyecto */
+            --primary: #1E3A8A;
+            --primary-dark: #0E2A6A;
+            --secondary: #111827;
+            --accent-gold: #FBBF24;
+            --accent-purple: #9b59b6;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #DC2626;
+            --info: #3B82F6;
+            
+            --bg-light: #F9FAFB;
+            --bg-dark: #1F2937;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         
         * {
@@ -88,50 +36,69 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--light);
-            color: var(--dark);
+            background: var(--bg-light);
+            color: var(--text-primary);
             line-height: 1.6;
         }
         
-        /* Layout */
-        .dashboard {
-            display: flex;
+        /* Layout principal con sidebar mejorado */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
             min-height: 100vh;
         }
         
-        /* Sidebar */
+        /* Sidebar mejorado */
         .sidebar {
-            width: 250px;
-            background: var(--dark);
+            background: var(--bg-dark);
             color: white;
-            padding: 2rem 0;
-            position: fixed;
+            position: sticky;
+            top: 0;
             height: 100vh;
             overflow-y: auto;
+            transition: all 0.3s ease;
         }
         
         .sidebar-header {
-            padding: 0 1.5rem 2rem;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.2);
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         
-        .sidebar-title {
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
         
-        .sidebar-subtitle {
+        .sidebar-user {
             font-size: 0.875rem;
-            opacity: 0.7;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
         }
         
-        .nav-menu {
-            margin-top: 1.5rem;
+        .nav-section {
+            padding: 1rem 0;
+        }
+        
+        .nav-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.6;
         }
         
         .nav-item {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             padding: 0.75rem 1.5rem;
             color: white;
             text-decoration: none;
@@ -154,74 +121,101 @@
             top: 0;
             bottom: 0;
             width: 4px;
-            background: white;
+            background: var(--accent-gold);
         }
         
-        /* Main content */
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .nav-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+        }
+        
+        /* Contenido principal */
         .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem;
+            padding: 0;
+            background: var(--bg-light);
+            overflow-x: hidden;
         }
         
-        /* Header */
-        .content-header {
+        /* Header mejorado */
+        .main-header {
             background: white;
             padding: 1.5rem 2rem;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
         }
         
         .page-title {
             font-size: 1.75rem;
             font-weight: 700;
-            color: var(--dark);
+            color: var(--text-primary);
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
         
         .header-actions {
             display: flex;
             gap: 1rem;
+            align-items: center;
         }
         
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
+        /* Sistema de filtros mejorado */
+        .filters-bar {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         
-        .btn-primary {
-            background: var(--primary);
-            color: white;
+        .filter-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
         
-        .btn-primary:hover {
-            background: #1d4ed8;
+        /* Contenedor de contenido */
+        .content-wrapper {
+            padding: 2rem;
         }
         
-        .btn-secondary {
-            background: var(--gray-200);
-            color: var(--gray-700);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--gray-300);
-        }
-        
-        /* Stats Grid */
+        /* Grid de estadísticas mejorado */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -229,10 +223,16 @@
         .stat-card {
             background: white;
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
         
         .stat-card::before {
@@ -249,35 +249,102 @@
         .stat-card.warning::before { background: var(--warning); }
         .stat-card.danger::before { background: var(--danger); }
         
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.primary { background: rgba(30, 58, 138, 0.1); color: var(--primary); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-icon.danger { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
         .stat-label {
             font-size: 0.875rem;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
         }
         
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--dark);
+            color: var(--text-primary);
             margin-bottom: 0.5rem;
         }
         
         .stat-change {
-            font-size: 0.875rem;
             display: flex;
             align-items: center;
             gap: 0.25rem;
+            font-size: 0.875rem;
         }
         
         .change-positive { color: var(--success); }
         .change-negative { color: var(--danger); }
         
-        /* Tables */
-        .table-container {
+        .stat-chart {
+            margin-top: 1rem;
+            height: 60px;
+        }
+        
+        /* Gráficos mejorados */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .chart-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-body {
+            padding: 1.5rem;
+        }
+        
+        /* Tablas mejoradas */
+        .table-card {
+            background: white;
+            border-radius: 12px;
             box-shadow: var(--shadow);
             overflow: hidden;
             margin-bottom: 2rem;
@@ -285,21 +352,24 @@
         
         .table-header {
             padding: 1.5rem;
-            border-bottom: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
         
         .table-title {
             font-size: 1.25rem;
             font-weight: 600;
-            color: var(--dark);
+            color: var(--text-primary);
         }
         
-        .table-actions {
+        .table-controls {
             display: flex;
-            gap: 0.5rem;
+            gap: 1rem;
+            align-items: center;
         }
         
         .search-box {
@@ -308,9 +378,16 @@
         
         .search-input {
             padding: 0.5rem 1rem 0.5rem 2.5rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             width: 300px;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
         }
         
         .search-icon {
@@ -318,7 +395,12 @@
             left: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--gray-500);
+            color: var(--text-secondary);
+        }
+        
+        /* Tabla responsive mejorada */
+        .table-wrapper {
+            overflow-x: auto;
         }
         
         table {
@@ -327,132 +409,124 @@
         }
         
         thead {
-            background: var(--gray-100);
+            background: var(--bg-light);
         }
         
         th {
             padding: 1rem;
             text-align: left;
             font-weight: 600;
-            color: var(--gray-700);
+            color: var(--text-secondary);
             font-size: 0.875rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
         }
         
         td {
             padding: 1rem;
-            border-top: 1px solid var(--gray-200);
+            border-top: 1px solid var(--border-color);
         }
         
         tr:hover {
-            background: var(--gray-100);
+            background: rgba(30, 58, 138, 0.02);
         }
         
-        /* Status badges */
+        /* Sistema de badges mejorado */
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
         }
         
-        .badge-success {
-            background: #dcfce7;
-            color: #15803d;
+        .badge-primary { background: rgba(30, 58, 138, 0.1); color: var(--primary); }
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-danger { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        
+        /* Botones mejorados */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
         }
         
-        .badge-warning {
-            background: #fef3c7;
-            color: #d97706;
+        .btn-primary {
+            background: var(--primary);
+            color: white;
         }
         
-        .badge-danger {
-            background: #fee2e2;
-            color: #dc2626;
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
         }
         
-        .badge-info {
-            background: #dbeafe;
-            color: #1e40af;
+        .btn-secondary {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
         
-        /* Risk indicators */
+        .btn-secondary:hover {
+            background: var(--bg-light);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        
+        .btn-icon {
+            padding: 0.5rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 6px;
+        }
+        
+        .btn-icon:hover {
+            background: var(--bg-light);
+            color: var(--text-primary);
+        }
+        
+        /* Indicadores de riesgo */
         .risk-indicator {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
             font-weight: 600;
+            font-size: 0.875rem;
         }
         
-        .risk-high { color: var(--danger); }
+        .risk-critical { color: var(--danger); }
+        .risk-high { color: #ef4444; }
         .risk-medium { color: var(--warning); }
         .risk-low { color: var(--success); }
         
-        /* Progress bars */
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            transition: width 0.3s ease;
-        }
-        
-        .progress-fill.success { background: var(--success); }
-        .progress-fill.warning { background: var(--warning); }
-        .progress-fill.danger { background: var(--danger); }
-        
-        /* Charts container */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .chart-container {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-        }
-        
-        .chart-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 1rem;
-        }
-        
-        /* Action buttons */
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn-icon {
-            padding: 0.5rem;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            color: var(--gray-500);
-            transition: all 0.2s;
-            border-radius: 4px;
-        }
-        
-        .btn-icon:hover {
-            background: var(--gray-100);
-            color: var(--primary);
-        }
-        
-        /* Modal */
+        /* Modal mejorado */
         .modal {
             display: none;
             position: fixed;
@@ -464,782 +538,2304 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            animation: fadeIn 0.2s ease;
         }
         
         .modal.active {
             display: flex;
         }
         
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
         .modal-content {
             background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            max-width: 500px;
+            border-radius: 12px;
+            max-width: 600px;
             width: 90%;
             max-height: 90vh;
-            overflow-y: auto;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
         }
         
         .modal-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            color: var(--dark);
+            color: var(--text-primary);
         }
         
-        .close-btn {
-            font-size: 1.5rem;
-            background: none;
+        .modal-body {
+            padding: 1.5rem;
+            max-height: calc(90vh - 200px);
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        /* Tabs mejorados */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
             border: none;
+            background: none;
             cursor: pointer;
-            color: var(--gray-500);
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .tab:hover {
+            color: var(--text-primary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -2.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary);
+        }
+        
+        /* Tooltips */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-dark);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 10;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Loading states */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Progress bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        /* Notificaciones */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 400px;
+            animation: slideInRight 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .notification.success .notification-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .notification.error .notification-icon {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--danger);
         }
         
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr;
+            }
+            
             .sidebar {
-                transform: translateX(-100%);
+                position: fixed;
+                left: -260px;
+                z-index: 100;
+                transition: left 0.3s ease;
             }
             
-            .main-content {
-                margin-left: 0;
+            .sidebar.open {
+                left: 0;
             }
             
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 99;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+            }
+        }
+        
+        @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-input {
+                width: 100%;
+            }
         }
-        /* Añadir después de los estilos existentes */
-#at-risk-table, #all-students-table {
-    width: 100%;
-    margin-top: 1rem;
-}
-
-#at-risk-table tbody tr, #all-students-table tbody tr {
-    cursor: pointer;
-}
-
-.badge-danger {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.badge-warning {
-    background: #fef3c7;
-    color: #d97706;
-}
+        
+        /* Utility classes */
+        .text-muted { color: var(--text-secondary); }
+        .text-small { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        
+        .hidden { display: none; }
+        
+        /* Spinner mejorado */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Mobile menu toggle (hidden by default) */
+        .mobile-menu-toggle {
+            display: none;
+            padding: 0.5rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
-    <div class="dashboard">
+    <div class="dashboard-layout">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h1 class="sidebar-title">IZETA 2025</h1>
-                <p class="sidebar-subtitle">Panel de Administración</p>
+                <div class="sidebar-logo">
+                    <span>♔</span>
+                    <span>IZETA 2025</span>
+                </div>
+                <div class="sidebar-user">
+                    <span>👤</span>
+                    <span id="currentUserEmail">admin@izeta.com</span>
+                </div>
             </div>
-            <nav class="nav-menu">
-                <a href="#overview" class="nav-item active">
-                    <span>📊 Vista General</span>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">PRINCIPAL</div>
+                <a href="#overview" class="nav-item active" data-page="overview">
+                    <span class="nav-icon">📊</span>
+                    <span>Vista General</span>
                 </a>
-                <a href="#students" class="nav-item">
-                    <span>👥 Estudiantes</span>
+                <a href="#analytics" class="nav-item" data-page="analytics">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics Avanzado</span>
                 </a>
-                <a href="#at-risk" class="nav-item">
-                    <span>⚠️ En Riesgo</span>
+                <a href="#students" class="nav-item" data-page="students">
+                    <span class="nav-icon">👥</span>
+                    <span>Gestión de Alumnos</span>
+                    <span class="nav-badge" id="totalStudentsBadge">0</span>
                 </a>
-                <a href="#analytics" class="nav-item">
-                    <span>📈 Analytics</span>
+                <a href="#at-risk" class="nav-item" data-page="at-risk">
+                    <span class="nav-icon">⚠️</span>
+                    <span>Alumnos en Riesgo</span>
+                    <span class="nav-badge" id="atRiskBadge">0</span>
                 </a>
-                <a href="#emails" class="nav-item">
-                    <span>📧 Emails</span>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">COMUNICACIÓN</div>
+                <a href="#emails" class="nav-item" data-page="emails">
+                    <span class="nav-icon">📧</span>
+                    <span>Gestión de Emails</span>
                 </a>
-                <a href="#settings" class="nav-item">
-                    <span>⚙️ Configuración</span>
+                <a href="#alerts" class="nav-item" data-page="alerts">
+                    <span class="nav-icon">🔔</span>
+                    <span>Alertas Automáticas</span>
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">CONFIGURACIÓN</div>
+                <a href="#simulations" class="nav-item" data-page="simulations">
+                    <span class="nav-icon">🎯</span>
+                    <span>Simulacros</span>
+                </a>
+                <a href="#reports" class="nav-item" data-page="reports">
+                    <span class="nav-icon">📊</span>
+                    <span>Informes</span>
+                </a>
+                <a href="#settings" class="nav-item" data-page="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configuración</span>
+                </a>
+            </nav>
+            
+            <nav class="nav-section" style="margin-top: auto; padding-bottom: 2rem;">
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>Cerrar Sesión</span>
                 </a>
             </nav>
         </aside>
         
-        <!-- Main Content -->
+        <!-- Overlay para móvil -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        
+        <!-- Contenido principal -->
         <main class="main-content">
-            <!-- Header -->
-            <div class="content-header">
-                <h1 class="page-title">Dashboard Administrativo</h1>
+            <!-- Header principal -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
+                    <h1 class="page-title" id="pageTitle">Vista General</h1>
+                    <nav class="breadcrumb">
+                        <span>Dashboard</span>
+                        <span>/</span>
+                        <span id="breadcrumbCurrent">Vista General</span>
+                    </nav>
+                </div>
                 <div class="header-actions">
-                    <button class="btn btn-secondary">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        🔄 Actualizar
+                    </button>
+                    <button class="btn btn-primary" onclick="showExportModal()">
                         📥 Exportar Datos
                     </button>
-                    <a href="/admin/bulk-users.html" class="btn btn-primary" style="text-decoration: none;">
-                    👥 Cargar Alumnos
-                    </a>
-                    <button class="btn btn-primary" onclick="showEmailModal()">
-                        📧 Enviar Emails
-                    </button>
+                </div>
+            </header>
+            
+            <!-- Barra de filtros -->
+            <div class="filters-bar" id="filtersBar">
+                <div class="filter-group">
+                    <label class="filter-label">Periodo:</label>
+                    <select id="periodFilter" class="btn btn-secondary" onchange="applyFilters()">
+                        <option value="week">Esta semana</option>
+                        <option value="month">Este mes</option>
+                        <option value="all">Todo</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Cohorte:</label>
+                    <select id="cohortFilter" class="btn btn-secondary" onchange="applyFilters()">
+                        <option value="all">Todas</option>
+                        <option value="20h">20h - Base</option>
+                        <option value="36h">36h - Intensivo</option>
+                        <option value="48h">48h - Élite</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Nivel de riesgo:</label>
+                    <select id="riskFilter" class="btn btn-secondary" onchange="applyFilters()">
+                        <option value="all">Todos</option>
+                        <option value="critical">Crítico</option>
+                        <option value="high">Alto</option>
+                        <option value="medium">Medio</option>
+                        <option value="low">Bajo</option>
+                    </select>
                 </div>
             </div>
             
-            <!-- Stats Overview -->
-            <div class="stats-grid">
-                <div class="stat-card primary">
-                    <div class="stat-label">Total Estudiantes</div>
-                    <div class="stat-value">245</div>
-                    <div class="stat-change change-positive">
-                        <span>↑</span> 12 nuevos esta semana
-                    </div>
-                </div>
-                
-                <div class="stat-card success">
-                    <div class="stat-label">Prob. Media Aprobar</div>
-                    <div class="stat-value">68.4%</div>
-                    <div class="stat-change change-positive">
-                        <span>↑</span> +2.3% vs semana anterior
-                    </div>
-                </div>
-                
-                <div class="stat-card warning">
-                    <div class="stat-label">Estudiantes en Riesgo</div>
-                    <div class="stat-value">37</div>
-                    <div class="stat-change change-negative">
-                        <span>↑</span> +5 vs semana anterior
-                    </div>
-                </div>
-                
-                <div class="stat-card danger">
-                    <div class="stat-label">Abandonos</div>
-                    <div class="stat-value">8</div>
-                    <div class="stat-change">
-                        <span>→</span> Sin cambios
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Charts -->
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <h3 class="chart-title">Distribución por Probabilidad de Aprobar</h3>
-                    <canvas id="probabilityChart" height="200"></canvas>
-                    <div style="margin-top: 1rem;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span style="font-size: 0.875rem;">Alta (>70%)</span>
-                            <span style="font-weight: 600;">124 estudiantes</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill success" style="width: 50.6%"></div>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-                            <span style="font-size: 0.875rem;">Media (50-70%)</span>
-                            <span style="font-weight: 600;">84 estudiantes</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill warning" style="width: 34.3%"></div>
-                        </div>
-                        
-                        <div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
-                            <span style="font-size: 0.875rem;">Baja (<50%)</span>
-                            <span style="font-weight: 600;">37 estudiantes</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill danger" style="width: 15.1%"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="chart-container">
-                    <h3 class="chart-title">Rendimiento por Cohorte</h3>
-                    <canvas id="cohortChart" height="200"></canvas>
-                    <div style="margin-top: 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
-                        <div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">75.2</div>
-                            <div style="font-size: 0.875rem; color: var(--gray-500);">Cohorte 20h</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">78.6</div>
-                            <div style="font-size: 0.875rem; color: var(--gray-500);">Cohorte 36h</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">82.1</div>
-                            <div style="font-size: 0.875rem; color: var(--gray-500);">Cohorte 48h</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Students at Risk Table -->
-            <div class="table-container">
-                <div class="table-header">
-                    <h2 class="table-title">⚠️ Estudiantes en Riesgo (Requieren Atención)</h2>
-                    <div class="table-actions">
-                        <div class="search-box">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" class="search-input" placeholder="Buscar estudiante...">
-                        </div>
-                        <button class="btn btn-secondary">
-                            📧 Email a todos
-                        </button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th>
-                            <th>Cohorte</th>
-                            <th>Score</th>
-                            <th>Z-Score</th>
-                            <th>P(Aprobar)</th>
-                            <th>Riesgo</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div>
-                                    <div style="font-weight: 600;">Juan Pérez</div>
-                                    <div style="font-size: 0.875rem; color: var(--gray-500);">juan.perez@email.com</div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-info">20h</span></td>
-                            <td>62/100</td>
-                            <td><span style="color: var(--danger);">-1.43</span></td>
-                            <td>
-                                <div class="risk-indicator risk-high">
-                                    <span>⚠️</span> 23%
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.75rem;">
-                                    <div class="badge badge-danger">Prob. muy baja</div>
-                                    <div class="badge badge-warning" style="margin-top: 0.25rem;">Tendencia negativa</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-icon" title="Ver detalles">👁️</button>
-                                    <button class="btn-icon" title="Enviar email">📧</button>
-                                    <button class="btn-icon" title="Añadir nota">📝</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div>
-                                    <div style="font-weight: 600;">María García</div>
-                                    <div style="font-size: 0.875rem; color: var(--gray-500);">maria.garcia@email.com</div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-info">36h</span></td>
-                            <td>68/100</td>
-                            <td><span style="color: var(--warning);">-0.87</span></td>
-                            <td>
-                                <div class="risk-indicator risk-medium">
-                                    <span>⚠️</span> 41%
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.75rem;">
-                                    <div class="badge badge-warning">Prob. baja</div>
-                                    <div class="badge badge-danger" style="margin-top: 0.25rem;">Racha rota</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-icon" title="Ver detalles">👁️</button>
-                                    <button class="btn-icon" title="Enviar email">📧</button>
-                                    <button class="btn-icon" title="Añadir nota">📝</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div>
-                                    <div style="font-weight: 600;">Carlos López</div>
-                                    <div style="font-size: 0.875rem; color: var(--gray-500);">carlos.lopez@email.com</div>
-                                </div>
-                            </td>
-                            <td><span class="badge badge-info">20h</span></td>
-                            <td>65/100</td>
-                            <td><span style="color: var(--warning);">-1.12</span></td>
-                            <td>
-                                <div class="risk-indicator risk-high">
-                                    <span>⚠️</span> 31%
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.75rem;">
-                                    <div class="badge badge-danger">Z-score bajo</div>
-                                    <div class="badge badge-warning" style="margin-top: 0.25rem;">Delta Z negativo</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn-icon" title="Ver detalles">👁️</button>
-                                    <button class="btn-icon" title="Enviar email">📧</button>
-                                    <button class="btn-icon" title="Añadir nota">📝</button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- All Students Table -->
-            <div class="table-container">
-                <div class="table-header">
-                    <h2 class="table-title">📊 Todos los Estudiantes</h2>
-                    <div class="table-actions">
-                        <select class="btn btn-secondary">
-                            <option>Todos los cohortes</option>
-                            <option>Cohorte 20h</option>
-                            <option>Cohorte 36h</option>
-                            <option>Cohorte 48h</option>
-                        </select>
-                        <button class="btn btn-primary">
-                            📊 Exportar Analytics
-                        </button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th>
-                            <th>Email</th>
-                            <th>Cohorte</th>
-                            <th>Score</th>
-                            <th>ELO</th>
-                            <th>Z-Score</th>
-                            <th>P(Aprobar)</th>
-                            <th>Tendencia</th>
-                            <th>Racha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: 600;">Carlos Martínez</td>
-                            <td style="font-size: 0.875rem;">carlos.martinez@email.com</td>
-                            <td><span class="badge badge-info">48h</span></td>
-                            <td>93/100</td>
-                            <td style="font-weight: 600; color: var(--primary);">1,847</td>
-                            <td><span style="color: var(--success);">+1.84</span></td>
-                            <td>
-                                <div class="risk-indicator risk-low">
-                                    <span>✅</span> 94%
-                                </div>
-                            </td>
-                            <td><span style="color: var(--success);">↗ +0.23</span></td>
-                            <td><span class="badge badge-danger">🔥 15</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">Laura Rodríguez</td>
-                            <td style="font-size: 0.875rem;">laura.rodriguez@email.com</td>
-                            <td><span class="badge badge-info">36h</span></td>
-                            <td>91/100</td>
-                            <td style="font-weight: 600; color: var(--primary);">1,765</td>
-                            <td><span style="color: var(--success);">+1.56</span></td>
-                            <td>
-                                <div class="risk-indicator risk-low">
-                                    <span>✅</span> 89%
-                                </div>
-                            </td>
-                            <td><span style="color: var(--success);">↗ +0.18</span></td>
-                            <td><span class="badge badge-danger">🔥 12</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">Miguel Sánchez</td>
-                            <td style="font-size: 0.875rem;">miguel.sanchez@email.com</td>
-                            <td><span class="badge badge-info">20h</span></td>
-                            <td>78/100</td>
-                            <td style="font-weight: 600; color: var(--primary);">1,342</td>
-                            <td><span style="color: var(--warning);">+0.34</span></td>
-                            <td>
-                                <div class="risk-indicator risk-medium">
-                                    <span>⚠️</span> 63%
-                                </div>
-                            </td>
-                            <td><span style="color: var(--danger);">↘ -0.12</span></td>
-                            <td><span class="badge badge-warning">⭐ 4</span></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Contenido dinámico -->
+            <div class="content-wrapper" id="contentWrapper">
+                <!-- El contenido se cargará dinámicamente -->
             </div>
         </main>
     </div>
     
-    <!-- Email Modal -->
+    <!-- Modal de Email -->
     <div class="modal" id="emailModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Enviar Email Personalizado</h2>
-                <button class="close-btn" onclick="hideEmailModal()">×</button>
+                <h2 class="modal-title">Enviar Email</h2>
+                <button class="btn btn-icon" onclick="hideModal('emailModal')">✕</button>
             </div>
-            <form>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Destinatarios</label>
-                    <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 6px;">
-                        <option>Todos los estudiantes</option>
-                        <option>Solo estudiantes en riesgo</option>
-                        <option>Cohorte 20h</option>
-                        <option>Cohorte 36h</option>
-                        <option>Cohorte 48h</option>
-                        <option>Personalizado...</option>
+            <div class="modal-body">
+                <div class="form-group mb-4">
+                    <label class="form-label">Destinatarios</label>
+                    <select id="emailRecipients" class="form-control">
+                        <option value="all">Todos los alumnos</option>
+                        <option value="at-risk">Solo alumnos en riesgo</option>
+                        <option value="cohort-20h">Cohorte 20h</option>
+                        <option value="cohort-36h">Cohorte 36h</option>
+                        <option value="cohort-48h">Cohorte 48h</option>
+                        <option value="custom">Selección personalizada...</option>
                     </select>
                 </div>
                 
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Tipo de Email</label>
-                    <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 6px;">
-                        <option>Reporte semanal estándar</option>
-                        <option>Alerta de bajo rendimiento</option>
-                        <option>Felicitación por mejora</option>
-                        <option>Recordatorio de simulacro</option>
-                        <option>Mensaje personalizado</option>
+                <div class="form-group mb-4">
+                    <label class="form-label">Plantilla de Email</label>
+                    <select id="emailTemplate" class="form-control" onchange="updateEmailPreview()">
+                        <option value="weekly_report">Informe Semanal Estándar</option>
+                        <option value="performance_alert">Alerta de Bajo Rendimiento</option>
+                        <option value="improvement_congrats">Felicitación por Mejora</option>
+                        <option value="simulation_reminder">Recordatorio de Simulacro</option>
+                        <option value="custom">Mensaje Personalizado</option>
                     </select>
                 </div>
                 
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Asunto</label>
-                    <input type="text" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 6px;" 
+                <div class="form-group mb-4">
+                    <label class="form-label">Asunto</label>
+                    <input type="text" id="emailSubject" class="form-control" 
                            value="📊 Tu progreso semanal - IZETA 2025">
                 </div>
                 
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Mensaje adicional (opcional)</label>
-                    <textarea style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 6px; min-height: 100px;"
-                              placeholder="Este mensaje se añadirá al email estándar..."></textarea>
+                <div class="form-group mb-4">
+                    <label class="form-label">Vista previa del mensaje</label>
+                    <div id="emailPreview" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; min-height: 200px;">
+                        <!-- Vista previa se actualizará dinámicamente -->
+                    </div>
                 </div>
                 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="hideEmailModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar Emails</button>
+                <div class="form-group mb-4">
+                    <label class="form-label">Mensaje adicional (opcional)</label>
+                    <textarea id="emailAdditionalMessage" class="form-control" rows="3"
+                              placeholder="Este mensaje se añadirá al email estándar..."></textarea>
                 </div>
-            </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('emailModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="sendEmails()">
+                    📧 Enviar Emails
+                </button>
+            </div>
         </div>
     </div>
     
+    <!-- Modal de Exportación -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Exportar Datos</h2>
+                <button class="btn btn-icon" onclick="hideModal('exportModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-4">
+                    <label class="form-label">Tipo de datos</label>
+                    <select id="exportType" class="form-control">
+                        <option value="students">Lista de estudiantes</option>
+                        <option value="results">Resultados de simulacros</option>
+                        <option value="analytics">Análisis completo</option>
+                        <option value="at-risk">Informe de alumnos en riesgo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label class="form-label">Formato</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="exportFormat" value="csv" checked>
+                            <span>CSV</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="exportFormat" value="excel">
+                            <span>Excel</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="exportFormat" value="pdf">
+                            <span>PDF</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label class="form-label">Filtros aplicados</label>
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                        <p id="exportFiltersPreview">Se exportarán todos los datos según los filtros actuales</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('exportModal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="exportData()">
+                    📥 Descargar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalles de Estudiante -->
+    <div class="modal" id="studentDetailModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Detalles del Estudiante</h2>
+                <button class="btn btn-icon" onclick="hideModal('studentDetailModal')">✕</button>
+            </div>
+            <div class="modal-body" id="studentDetailContent">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('studentDetailModal')">Cerrar</button>
+                <button class="btn btn-primary" onclick="editStudent()">
+                    ✏️ Editar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/assets/js/config.js"></script>
     <script>
-        // Modal functions
-        function showEmailModal() {
-            document.getElementById('emailModal').classList.add('active');
+        // Variables globales del dashboard
+        let currentUser = null;
+        let currentPage = 'overview';
+        let dashboardData = {
+            students: [],
+            results: [],
+            simulations: [],
+            cohortStats: [],
+            atRiskStudents: [],
+            emailQueue: []
+        };
+        let chartInstances = {};
+        let filters = {
+            period: 'week',
+            cohort: 'all',
+            risk: 'all'
+        };
+
+        // Inicialización del dashboard
+        async function initDashboard() {
+            try {
+                // Verificar autenticación
+                const user = await checkAuth();
+                if (!user) {
+                    window.location.href = '/admin/login.html';
+                    return;
+                }
+
+                // Verificar permisos de admin
+                const isAdminUser = await isAdmin();
+                if (!isAdminUser) {
+                    showNotification('error', 'No tienes permisos de administrador');
+                    window.location.href = '/public/index.html';
+                    return;
+                }
+
+                currentUser = user;
+                document.getElementById('currentUserEmail').textContent = user.email;
+
+                // Cargar datos iniciales
+                await loadDashboardData();
+
+                // Configurar navegación
+                setupNavigation();
+
+                // Mostrar página inicial
+                showPage('overview');
+
+                // Configurar actualización automática
+                setInterval(updateRealTimeMetrics, 30000); // Cada 30 segundos
+
+            } catch (error) {
+                console.error('Error iniciando dashboard:', error);
+                showNotification('error', 'Error al cargar el dashboard');
+            }
         }
-        
-        function hideEmailModal() {
-            document.getElementById('emailModal').classList.remove('active');
+
+        // Cargar todos los datos del dashboard
+        async function loadDashboardData() {
+            showLoading(true);
+            
+            try {
+                // Cargar datos en paralelo para mejor rendimiento
+                const [
+                    students,
+                    cohortStats,
+                    atRiskData,
+                    activeSimulation,
+                    recentResults,
+                    emailQueueData
+                ] = await Promise.all([
+                    // Todos los estudiantes
+                    supabaseClient
+                        .from('users')
+                        .select('*')
+                        .order('created_at', { ascending: false }),
+                    
+                    // Estadísticas por cohorte
+                    supabaseClient
+                        .from('cohort_statistics')
+                        .select('*'),
+                    
+                    // Estudiantes en riesgo con detalles
+                    supabaseClient
+                        .from('admin_dashboard')
+                        .select('*')
+                        .in('risk_level', ['high', 'critical'])
+                        .order('probability_pass', { ascending: true }),
+                    
+                    // Simulacro activo
+                    supabaseClient
+                        .from('weekly_simulations')
+                        .select('*')
+                        .eq('status', 'active')
+                        .single(),
+                    
+                    // Resultados recientes
+                    supabaseClient
+                        .from('user_results')
+                        .select(`
+                            *,
+                            users!inner(slug, username, email, cohort),
+                            weekly_simulations!inner(week_number)
+                        `)
+                        .order('submitted_at', { ascending: false })
+                        .limit(100),
+                    
+                    // Cola de emails
+                    supabaseClient
+                        .from('email_queue')
+                        .select('*')
+                        .eq('status', 'pending')
+                ]);
+
+                // Procesar y almacenar datos
+                dashboardData = {
+                    students: students.data || [],
+                    cohortStats: cohortStats.data || [],
+                    atRiskStudents: atRiskData.data || [],
+                    activeSimulation: activeSimulation.data,
+                    recentResults: recentResults.data || [],
+                    emailQueue: emailQueueData.data || []
+                };
+
+                // Actualizar badges
+                updateBadges();
+
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                showNotification('error', 'Error al cargar los datos del dashboard');
+                showLoading(false);
+            }
         }
-        
-        // Navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                this.classList.add('active');
+
+        // Configurar navegación entre páginas
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    showPage(page);
+                    
+                    // Actualizar estado activo
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                });
             });
-        });
-        
-        // Simulación de gráficos (en producción usarías Chart.js)
-        console.log('Dashboard cargado. En producción, aquí se cargarían los gráficos con Chart.js');
-        
-        // Simulación de actualización en tiempo real
-        setInterval(() => {
-            // En producción, esto haría polling a Supabase
-            console.log('Actualizando datos...');
-        }, 30000);
-    </script>
-    <!-- Antes del </body> en Dashboard_rendimiento.html -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/assets/js/config.js"></script>
-<script>
-// Variables globales
-let currentUser = null;
-let chartInstances = {};
-
-// Verificar autenticación y permisos
-async function checkAdminAccess() {
-    try {
-        console.log('Verificando autenticación...');
-        const user = await checkAuth();
-        console.log('Usuario:', user);
-        
-        if (!user) {
-            console.log('No hay usuario autenticado');
-            window.location.href = '/admin/login.html'; // Cambiar a login.html
-            return;
         }
 
-        console.log('Verificando permisos de admin...');
-        const admin = await isAdmin();
-        console.log('Es admin:', admin);
-        
-        if (!admin) {
-            alert('No tienes permisos para acceder a esta página');
-            window.location.href = '/public/Leaderboard.html';
-            return;
+        // Mostrar página específica
+        function showPage(page) {
+            currentPage = page;
+            const contentWrapper = document.getElementById('contentWrapper');
+            
+            // Actualizar título y breadcrumb
+            const titles = {
+                'overview': 'Vista General',
+                'analytics': 'Analytics Avanzado',
+                'students': 'Gestión de Alumnos',
+                'at-risk': 'Alumnos en Riesgo',
+                'emails': 'Gestión de Emails',
+                'alerts': 'Alertas Automáticas',
+                'simulations': 'Gestión de Simulacros',
+                'reports': 'Informes',
+                'settings': 'Configuración'
+            };
+            
+            document.getElementById('pageTitle').textContent = titles[page];
+            document.getElementById('breadcrumbCurrent').textContent = titles[page];
+            
+            // Mostrar/ocultar filtros según la página
+            document.getElementById('filtersBar').style.display = 
+                ['overview', 'analytics', 'students', 'at-risk'].includes(page) ? 'flex' : 'none';
+            
+            // Cargar contenido de la página
+            switch(page) {
+                case 'overview':
+                    renderOverviewPage();
+                    break;
+                case 'analytics':
+                    renderAnalyticsPage();
+                    break;
+                case 'students':
+                    renderStudentsPage();
+                    break;
+                case 'at-risk':
+                    renderAtRiskPage();
+                    break;
+                case 'emails':
+                    renderEmailsPage();
+                    break;
+                case 'alerts':
+                    renderAlertsPage();
+                    break;
+                case 'simulations':
+                    renderSimulationsPage();
+                    break;
+                case 'reports':
+                    renderReportsPage();
+                    break;
+                case 'settings':
+                    renderSettingsPage();
+                    break;
+            }
         }
 
-        currentUser = user;
-        console.log('Cargando datos del dashboard...');
-        loadDashboardData();
-    } catch (error) {
-        console.error('Error en checkAdminAccess:', error);
-        window.location.href = '/admin/login.html';
-    }
-}
+        // Renderizar página de vista general
+        function renderOverviewPage() {
+            const filteredData = applyDataFilters(dashboardData);
+            
+            const html = `
+                <!-- Estadísticas principales -->
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div class="stat-icon primary">👥</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Estudiantes</div>
+                                <div class="stat-value">${filteredData.students.length}</div>
+                                <div class="stat-change change-positive">
+                                    <span>↑</span> ${getNewStudentsCount()} nuevos esta semana
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="studentsSparkline"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-icon success">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Probabilidad Media de Aprobar</div>
+                                <div class="stat-value">${calculateAverageProbability(filteredData.students)}%</div>
+                                <div class="stat-change ${getProbabilityTrend() > 0 ? 'change-positive' : 'change-negative'}">
+                                    <span>${getProbabilityTrend() > 0 ? '↑' : '↓'}</span> 
+                                    ${Math.abs(getProbabilityTrend())}% vs semana anterior
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="probabilitySparkline"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-icon warning">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Estudiantes en Riesgo</div>
+                                <div class="stat-value">${filteredData.atRiskStudents.length}</div>
+                                <div class="stat-change change-negative">
+                                    <span>↑</span> +${getNewAtRiskCount()} vs semana anterior
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="riskSparkline"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div class="stat-icon danger">📉</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Tasa de Abandono</div>
+                                <div class="stat-value">${calculateDropoutRate()}%</div>
+                                <div class="stat-change">
+                                    <span>→</span> Sin cambios
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="dropoutSparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-// Cargar datos del dashboard
-async function loadDashboardData() {
-    try {
-        // Cargar estadísticas generales
-        const { data: stats, error: statsError } = await supabaseClient
-            .from('cohort_statistics')
-            .select('*');
+                <!-- Gráficos principales -->
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Distribución por Probabilidad de Aprobar</h3>
+                            <div class="chart-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="updateChart('probability')">
+                                    🔄
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="probabilityDistributionChart" height="300"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Rendimiento por Cohorte</h3>
+                            <div class="chart-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="updateChart('cohort')">
+                                    🔄
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="cohortPerformanceChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-        if (statsError) throw statsError;
+                <!-- Tabla de estudiantes en riesgo -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">⚠️ Estudiantes que Requieren Atención Inmediata</h2>
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" class="search-input" placeholder="Buscar estudiante..." 
+                                       onkeyup="filterTable('atRiskTable', this.value)">
+                            </div>
+                            <button class="btn btn-primary" onclick="showEmailModal('at-risk')">
+                                📧 Email a todos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="atRiskTable">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Cohorte</th>
+                                    <th>Score Promedio</th>
+                                    <th>Z-Score</th>
+                                    <th>P(Aprobar)</th>
+                                    <th>Tendencia</th>
+                                    <th>Riesgo</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${renderAtRiskStudentsRows(filteredData.atRiskStudents.slice(0, 10))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-        updateGeneralStats(stats);
+                <!-- Timeline de actividad reciente -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">📅 Actividad Reciente</h2>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div class="timeline">
+                            ${renderActivityTimeline()}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentWrapper').innerHTML = html;
+            
+            // Inicializar gráficos
+            setTimeout(() => {
+                createSparklines();
+                createMainCharts();
+            }, 100);
+        }
 
-        // Cargar usuarios en riesgo
-        const { data: atRiskUsers, error: riskError } = await supabaseClient
-            .from('admin_dashboard')
-            .select('*')
-            .in('risk_level', ['high', 'critical'])
-            .order('probability_pass', { ascending: true });
+        // Renderizar página de analytics avanzado
+        function renderAnalyticsPage() {
+            const html = `
+                <div class="tabs">
+                    <button class="tab active" onclick="showAnalyticsTab('trends')">Tendencias</button>
+                    <button class="tab" onclick="showAnalyticsTab('predictions')">Predicciones</button>
+                    <button class="tab" onclick="showAnalyticsTab('cohorts')">Análisis por Cohortes</button>
+                    <button class="tab" onclick="showAnalyticsTab('topics')">Análisis por Temas</button>
+                </div>
 
-        if (riskError) throw riskError;
+                <div id="analyticsContent">
+                    <!-- Contenido dinámico según tab -->
+                </div>
+            `;
+            
+            document.getElementById('contentWrapper').innerHTML = html;
+            showAnalyticsTab('trends');
+        }
 
-        renderAtRiskStudents(atRiskUsers);
+        // Renderizar página de gestión de estudiantes
+        function renderStudentsPage() {
+            const filteredStudents = applyDataFilters(dashboardData).students;
+            
+            const html = `
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">📊 Todos los Estudiantes (${filteredStudents.length})</h2>
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" class="search-input" placeholder="Buscar por nombre, email o slug..." 
+                                       onkeyup="filterTable('studentsTable', this.value)">
+                            </div>
+                            <button class="btn btn-secondary" onclick="showBulkActions()">
+                                ⚡ Acciones masivas
+                            </button>
+                            <button class="btn btn-primary" onclick="window.location.href='/admin/bulk-users.html'">
+                                ➕ Añadir alumnos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
+                                    <th>Estudiante</th>
+                                    <th>Email</th>
+                                    <th>Slug</th>
+                                    <th>Cohorte</th>
+                                    <th>ELO</th>
+                                    <th>Simulacros</th>
+                                    <th>Promedio</th>
+                                    <th>P(Aprobar)</th>
+                                    <th>Racha</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${renderAllStudentsRows(filteredStudents)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-        // Cargar todos los estudiantes
-        const { data: allStudents, error: studentsError } = await supabaseClient
-            .from('admin_dashboard')
-            .select('*')
-            .order('current_elo', { ascending: false });
+                <!-- Acciones masivas (oculto por defecto) -->
+                <div id="bulkActionsPanel" style="display: none;" class="table-card mt-4">
+                    <div class="table-header">
+                        <h3 class="table-title">⚡ Acciones Masivas</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="hideBulkActions()">✕ Cerrar</button>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div class="filter-group mb-3">
+                            <label class="filter-label">Para los estudiantes seleccionados:</label>
+                        </div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="bulkChangeCohorte()">
+                                🔄 Cambiar cohorte
+                            </button>
+                            <button class="btn btn-success" onclick="bulkSendEmail()">
+                                📧 Enviar email
+                            </button>
+                            <button class="btn btn-warning" onclick="bulkAddNote()">
+                                📝 Añadir nota
+                            </button>
+                            <button class="btn btn-danger" onclick="bulkDeactivate()">
+                                ❌ Desactivar
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-muted">
+                                <span id="selectedCount">0</span> estudiantes seleccionados
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentWrapper').innerHTML = html;
+        }
 
-        if (studentsError) throw studentsError;
+        // Renderizar página de estudiantes en riesgo
+        function renderAtRiskPage() {
+            const atRiskStudents = dashboardData.atRiskStudents;
+            
+            const html = `
+                <div class="stats-grid mb-4">
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div class="stat-icon danger">🚨</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Riesgo Crítico</div>
+                                <div class="stat-value">${atRiskStudents.filter(s => s.risk_level === 'critical').length}</div>
+                                <div class="text-muted text-small">P(Aprobar) < 30%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-icon warning">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Riesgo Alto</div>
+                                <div class="stat-value">${atRiskStudents.filter(s => s.risk_level === 'high').length}</div>
+                                <div class="text-muted text-small">P(Aprobar) 30-50%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div class="stat-icon primary">📊</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Z-Score Medio</div>
+                                <div class="stat-value">${calculateAverageZScore(atRiskStudents)}</div>
+                                <div class="text-muted text-small">Desviación del grupo</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-header">
+                            <div class="stat-icon primary">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Mejorando</div>
+                                <div class="stat-value">${atRiskStudents.filter(s => s.trend_direction === 'up').length}</div>
+                                <div class="text-muted text-small">Tendencia positiva</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        renderAllStudents(allStudents);
-        
-        // Crear gráficos
-        createCharts(stats, allStudents);
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">🚨 Análisis Detallado de Estudiantes en Riesgo</h2>
+                        <div class="table-controls">
+                            <button class="btn btn-danger" onclick="generateRiskReport()">
+                                📄 Generar informe
+                            </button>
+                            <button class="btn btn-primary" onclick="showRiskInterventionModal()">
+                                🎯 Plan de intervención
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="atRiskDetailTable">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Diagnóstico</th>
+                                    <th>Métricas Clave</th>
+                                    <th>Factores de Riesgo</th>
+                                    <th>Recomendaciones</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${renderDetailedAtRiskRows(atRiskStudents)}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('contentWrapper').innerHTML = html;
+        }
 
-    } catch (error) {
-        console.error('Error cargando dashboard:', error);
-    }
-}
+        // Funciones auxiliares para renderizar filas de tablas
+        function renderAtRiskStudentsRows(students) {
+            return students.map(student => {
+                const riskClass = student.risk_level === 'critical' ? 'risk-critical' : 
+                                 student.risk_level === 'high' ? 'risk-high' : 'risk-medium';
+                const trendIcon = student.trend_direction === 'up' ? '↗' : 
+                                 student.trend_direction === 'down' ? '↘' : '→';
+                const trendClass = student.trend_direction === 'up' ? 'change-positive' : 
+                                  student.trend_direction === 'down' ? 'change-negative' : '';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="font-semibold">${student.username}</div>
+                                <div class="text-small text-muted">${student.email}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">${student.cohort}</span>
+                        </td>
+                        <td>${student.average_score?.toFixed(1) || 'N/A'}/100</td>
+                        <td>
+                            <span style="color: ${student.z_score < 0 ? 'var(--danger)' : 'var(--success)'}">
+                                ${student.z_score?.toFixed(2) || 'N/A'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="risk-indicator ${riskClass}">
+                                <span>⚠️</span> ${student.probability_pass?.toFixed(0) || 0}%
+                            </div>
+                        </td>
+                        <td>
+                            <span class="${trendClass}">
+                                ${trendIcon} ${Math.abs(student.delta_z || 0).toFixed(2)}
+                            </span>
+                        </td>
+                        <td>
+                            ${getRiskBadges(student)}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-icon btn-sm" onclick="viewStudentDetails('${student.id}')" title="Ver detalles">
+                                    👁️
+                                </button>
+                                <button class="btn btn-icon btn-sm" onclick="sendPersonalEmail('${student.id}')" title="Enviar email">
+                                    📧
+                                </button>
+                                <button class="btn btn-icon btn-sm" onclick="addStudentNote('${student.id}')" title="Añadir nota">
+                                    📝
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
-// Actualizar estadísticas generales
-function updateGeneralStats(stats) {
-    // Calcular totales
-    const totalStudents = stats.reduce((sum, s) => sum + s.total_students, 0);
-    const totalAtRisk = stats.reduce((sum, s) => sum + s.at_risk_count, 0);
-    const avgProbability = stats.reduce((sum, s) => sum + (s.average_pass_probability * s.total_students), 0) / totalStudents;
-    
-    // Actualizar UI
-    document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalStudents;
-    document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = avgProbability.toFixed(1) + '%';
-    document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = totalAtRisk;
-    
-    // Calcular abandonos (estudiantes inactivos > 2 semanas)
-    // Esto requeriría una query adicional
-}
+        function renderAllStudentsRows(students) {
+            return students.map(student => {
+                const streakEmoji = student.current_streak >= 8 ? '🔥' : '⭐';
+                const isActive = student.active ? '✅' : '❌';
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="student-checkbox" value="${student.id}">
+                        </td>
+                        <td class="font-semibold">${student.username}</td>
+                        <td class="text-small">${student.email}</td>
+                        <td><code>${student.slug}</code></td>
+                        <td>
+                            <span class="badge badge-info">${student.cohort}</span>
+                        </td>
+                        <td class="font-semibold" style="color: var(--primary);">
+                            ${student.current_elo}
+                        </td>
+                        <td>${student.total_simulations}</td>
+                        <td>${student.average_score?.toFixed(1) || 'N/A'}</td>
+                        <td>
+                            <div class="risk-indicator ${getProbabilityClass(student.probability_pass)}">
+                                ${student.probability_pass?.toFixed(0) || 0}%
+                            </div>
+                        </td>
+                        <td>
+                            ${student.current_streak > 0 ? 
+                                `<span class="badge badge-danger">${streakEmoji} ${student.current_streak}</span>` : 
+                                '-'}
+                        </td>
+                        <td>${isActive} ${student.active ? 'Activo' : 'Inactivo'}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-icon btn-sm" onclick="viewStudentDetails('${student.id}')" title="Ver detalles">
+                                    👁️
+                                </button>
+                                <button class="btn btn-icon btn-sm" onclick="editStudent('${student.id}')" title="Editar">
+                                    ✏️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
-// Renderizar estudiantes en riesgo
-function renderAtRiskStudents(students) {
-    const tbody = document.querySelector('#at-risk-table tbody');
-    if (!tbody) return;
+        function renderDetailedAtRiskRows(students) {
+            return students.map(student => {
+                const diagnosis = getStudentDiagnosis(student);
+                const riskFactors = getRiskFactors(student);
+                const recommendations = getRecommendations(student);
+                
+                return `
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="font-semibold">${student.username}</div>
+                                <div class="text-small text-muted">${student.email}</div>
+                                <div class="text-xs text-muted mt-1">Slug: ${student.slug}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="badge badge-${diagnosis.severity}">
+                                ${diagnosis.icon} ${diagnosis.text}
+                            </div>
+                            <div class="text-small text-muted mt-1">
+                                Última actividad: ${formatDate(student.last_participation)}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-small">
+                                <div>📊 Score: ${student.average_score?.toFixed(1) || 'N/A'}</div>
+                                <div>📈 Z-Score: ${student.z_score?.toFixed(2) || 'N/A'}</div>
+                                <div>🎯 P(Aprobar): ${student.probability_pass?.toFixed(0)}%</div>
+                                <div>🔥 Racha: ${student.current_streak}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-small">
+                                ${riskFactors.map(factor => 
+                                    `<div class="mb-1">${factor.icon} ${factor.text}</div>`
+                                ).join('')}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-small">
+                                ${recommendations.map(rec => 
+                                    `<div class="mb-1">• ${rec}</div>`
+                                ).join('')}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <button class="btn btn-sm btn-primary" onclick="createIntervention('${student.id}')">
+                                    🎯 Intervención
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="scheduleFollowUp('${student.id}')">
+                                    📅 Seguimiento
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
-    tbody.innerHTML = students.map(student => {
-        const riskClass = student.risk_level === 'critical' ? 'risk-high' : 'risk-medium';
-        const zScoreClass = student.z_score < -1 ? 'danger' : 'warning';
-        
-        return `
-            <tr>
-                <td>
+        // Funciones de análisis y cálculo
+        function calculateAverageProbability(students) {
+            if (!students.length) return 0;
+            const sum = students.reduce((acc, s) => acc + (s.probability_pass || 50), 0);
+            return (sum / students.length).toFixed(1);
+        }
+
+        function calculateDropoutRate() {
+            const inactiveCount = dashboardData.students.filter(s => !s.active).length;
+            const total = dashboardData.students.length;
+            return total ? ((inactiveCount / total) * 100).toFixed(1) : 0;
+        }
+
+        function calculateAverageZScore(students) {
+            if (!students.length) return 0;
+            const sum = students.reduce((acc, s) => acc + (s.z_score || 0), 0);
+            return (sum / students.length).toFixed(2);
+        }
+
+        function getNewStudentsCount() {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            return dashboardData.students.filter(s => 
+                new Date(s.created_at) > oneWeekAgo
+            ).length;
+        }
+
+        function getNewAtRiskCount() {
+            // Esto requeriría histórico, por ahora simulamos
+            return Math.floor(Math.random() * 5) + 1;
+        }
+
+        function getProbabilityTrend() {
+            // Simulación, en producción vendría de datos históricos
+            return (Math.random() * 4 - 2).toFixed(1);
+        }
+
+        function getRiskBadges(student) {
+            const badges = [];
+            
+            if (student.probability_pass < 30) {
+                badges.push('<span class="badge badge-danger">Prob. muy baja</span>');
+            } else if (student.probability_pass < 50) {
+                badges.push('<span class="badge badge-warning">Prob. baja</span>');
+            }
+            
+            if (student.trend_direction === 'down') {
+                badges.push('<span class="badge badge-warning">Tendencia ↓</span>');
+            }
+            
+            if (student.current_streak === 0) {
+                badges.push('<span class="badge badge-danger">Racha rota</span>');
+            }
+            
+            if (student.z_score < -1.5) {
+                badges.push('<span class="badge badge-danger">Z-score crítico</span>');
+            }
+            
+            return badges.join(' ');
+        }
+
+        function getProbabilityClass(probability) {
+            if (probability >= 70) return 'risk-low';
+            if (probability >= 50) return 'risk-medium';
+            if (probability >= 30) return 'risk-high';
+            return 'risk-critical';
+        }
+
+        function getStudentDiagnosis(student) {
+            if (student.probability_pass < 30) {
+                return { icon: '🚨', text: 'Crítico', severity: 'danger' };
+            } else if (student.probability_pass < 50) {
+                return { icon: '⚠️', text: 'Alto riesgo', severity: 'warning' };
+            } else if (student.trend_direction === 'down') {
+                return { icon: '📉', text: 'En declive', severity: 'warning' };
+            }
+            return { icon: '📊', text: 'Monitorizar', severity: 'info' };
+        }
+
+        function getRiskFactors(student) {
+            const factors = [];
+            
+            if (student.average_score < 70) {
+                factors.push({ icon: '📊', text: 'Score bajo constante' });
+            }
+            
+            if (student.current_streak === 0) {
+                factors.push({ icon: '💔', text: 'Racha interrumpida' });
+            }
+            
+            if (student.z_score < -1) {
+                factors.push({ icon: '📉', text: 'Muy por debajo de la media' });
+            }
+            
+            if (student.total_simulations < 5) {
+                factors.push({ icon: '🎯', text: 'Poca práctica' });
+            }
+            
+            if (student.trend_direction === 'down') {
+                factors.push({ icon: '⬇️', text: 'Tendencia negativa' });
+            }
+            
+            return factors;
+        }
+
+        function getRecommendations(student) {
+            const recommendations = [];
+            
+            if (student.average_score < 70) {
+                recommendations.push('Reforzar conceptos básicos');
+                recommendations.push('Sesiones de repaso adicionales');
+            }
+            
+            if (student.current_streak === 0) {
+                recommendations.push('Recuperar rutina de estudio');
+                recommendations.push('Establecer horario fijo');
+            }
+            
+            if (student.z_score < -1) {
+                recommendations.push('Tutoría personalizada');
+                recommendations.push('Material de apoyo extra');
+            }
+            
+            if (student.cohort === '20h' && student.probability_pass < 50) {
+                recommendations.push('Considerar cambio a 36h');
+            }
+            
+            return recommendations;
+        }
+
+        // Crear gráficos sparkline
+        function createSparklines() {
+            // Destruir gráficos existentes
+            Object.keys(chartInstances).forEach(key => {
+                if (key.includes('Sparkline') && chartInstances[key]) {
+                    chartInstances[key].destroy();
+                }
+            });
+
+            // Datos de ejemplo para sparklines (en producción vendrían de la BD)
+            const last7Days = Array.from({length: 7}, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (6 - i));
+                return date.toLocaleDateString();
+            });
+
+            // Sparkline de estudiantes
+            const studentsCtx = document.getElementById('studentsSparkline');
+            if (studentsCtx) {
+                chartInstances.studentsSparkline = new Chart(studentsCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            data: [240, 241, 241, 243, 244, 245, 245],
+                            borderColor: '#1E3A8A',
+                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Sparkline de probabilidad
+            const probabilityCtx = document.getElementById('probabilitySparkline');
+            if (probabilityCtx) {
+                chartInstances.probabilitySparkline = new Chart(probabilityCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            data: [66.2, 66.5, 67.1, 67.8, 68.0, 68.2, 68.4],
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Sparkline de riesgo
+            const riskCtx = document.getElementById('riskSparkline');
+            if (riskCtx) {
+                chartInstances.riskSparkline = new Chart(riskCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            data: [32, 33, 34, 35, 36, 36, 37],
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Sparkline de abandono
+            const dropoutCtx = document.getElementById('dropoutSparkline');
+            if (dropoutCtx) {
+                chartInstances.dropoutSparkline = new Chart(dropoutCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            data: [3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2],
+                            borderColor: '#DC2626',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Crear gráficos principales
+        function createMainCharts() {
+            // Destruir gráficos existentes
+            if (chartInstances.probabilityDistribution) {
+                chartInstances.probabilityDistribution.destroy();
+            }
+            if (chartInstances.cohortPerformance) {
+                chartInstances.cohortPerformance.destroy();
+            }
+
+            // Gráfico de distribución de probabilidad
+            const probCtx = document.getElementById('probabilityDistributionChart');
+            if (probCtx) {
+                const students = dashboardData.students;
+                const high = students.filter(s => s.probability_pass >= 70).length;
+                const medium = students.filter(s => s.probability_pass >= 50 && s.probability_pass < 70).length;
+                const low = students.filter(s => s.probability_pass < 50).length;
+
+                chartInstances.probabilityDistribution = new Chart(probCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Alta (>70%)', 'Media (50-70%)', 'Baja (<50%)'],
+                        datasets: [{
+                            data: [high, medium, low],
+                            backgroundColor: ['#10B981', '#F59E0B', '#DC2626'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: { size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                        return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de rendimiento por cohorte
+            const cohortCtx = document.getElementById('cohortPerformanceChart');
+            if (cohortCtx) {
+                const cohortData = dashboardData.cohortStats;
+                
+                chartInstances.cohortPerformance = new Chart(cohortCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: cohortData.map(c => c.cohort),
+                        datasets: [
+                            {
+                                label: 'Score Promedio',
+                                data: cohortData.map(c => c.average_score || 0),
+                                backgroundColor: '#3B82F6',
+                                borderRadius: 8
+                            },
+                            {
+                                label: 'Probabilidad de Aprobar',
+                                data: cohortData.map(c => c.average_pass_probability || 0),
+                                backgroundColor: '#10B981',
+                                borderRadius: 8
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: { size: 12 }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Funciones de interacción
+        function showEmailModal(recipients = 'all') {
+            document.getElementById('emailRecipients').value = recipients;
+            updateEmailPreview();
+            showModal('emailModal');
+        }
+
+        function showExportModal() {
+            updateExportPreview();
+            showModal('exportModal');
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function updateEmailPreview() {
+            const template = document.getElementById('emailTemplate').value;
+            const preview = document.getElementById('emailPreview');
+            
+            // Plantillas de ejemplo
+            const templates = {
+                'weekly_report': `
+                    <h3>Informe Semanal de Progreso</h3>
+                    <p>Estimado/a [Nombre],</p>
+                    <p>Te enviamos tu informe de progreso de esta semana:</p>
+                    <ul>
+                        <li>📊 Score promedio: [Score]</li>
+                        <li>📈 Probabilidad de aprobar: [Probabilidad]%</li>
+                        <li>🔥 Racha actual: [Racha] semanas</li>
+                    </ul>
+                    <p>Sigue así y alcanzarás tus objetivos.</p>
+                `,
+                'performance_alert': `
+                    <h3>⚠️ Alerta de Rendimiento</h3>
+                    <p>Hola [Nombre],</p>
+                    <p>Hemos detectado que tu rendimiento ha bajado en las últimas semanas.</p>
+                    <p>Tu probabilidad actual de aprobar es del [Probabilidad]%, lo cual te sitúa en zona de riesgo.</p>
+                    <p><strong>Te recomendamos:</strong></p>
+                    <ul>
+                        <li>Aumentar las horas de estudio semanales</li>
+                        <li>Revisar los temas más débiles</li>
+                        <li>Contactar con tu tutor para apoyo adicional</li>
+                    </ul>
+                `,
+                'improvement_congrats': `
+                    <h3>🎉 ¡Felicidades por tu Mejora!</h3>
+                    <p>¡Excelente trabajo, [Nombre]!</p>
+                    <p>Has mejorado significativamente en las últimas semanas:</p>
+                    <ul>
+                        <li>✅ Tu score ha aumentado en [Mejora] puntos</li>
+                        <li>✅ Tu probabilidad de aprobar ahora es del [Probabilidad]%</li>
+                    </ul>
+                    <p>¡Sigue con este excelente ritmo!</p>
+                `
+            };
+            
+            preview.innerHTML = templates[template] || '<p>Selecciona una plantilla...</p>';
+        }
+
+        async function sendEmails() {
+            const recipients = document.getElementById('emailRecipients').value;
+            const template = document.getElementById('emailTemplate').value;
+            const subject = document.getElementById('emailSubject').value;
+            const additionalMessage = document.getElementById('emailAdditionalMessage').value;
+            
+            showLoading(true);
+            
+            try {
+                // Determinar destinatarios
+                let targetUsers = [];
+                switch(recipients) {
+                    case 'all':
+                        targetUsers = dashboardData.students;
+                        break;
+                    case 'at-risk':
+                        targetUsers = dashboardData.atRiskStudents;
+                        break;
+                    case 'cohort-20h':
+                        targetUsers = dashboardData.students.filter(s => s.cohort === '20h');
+                        break;
+                    case 'cohort-36h':
+                        targetUsers = dashboardData.students.filter(s => s.cohort === '36h');
+                        break;
+                    case 'cohort-48h':
+                        targetUsers = dashboardData.students.filter(s => s.cohort === '48h');
+                        break;
+                }
+                
+                // Preparar emails para la cola
+                const emailPromises = targetUsers.map(user => {
+                    return supabaseClient
+                        .from('email_queue')
+                        .insert({
+                            to_email: user.email,
+                            subject: subject,
+                            template_id: template,
+                            template_data: {
+                                username: user.username,
+                                score: user.average_score,
+                                probability: user.probability_pass,
+                                streak: user.current_streak,
+                                additional_message: additionalMessage
+                            }
+                        });
+                });
+                
+                await Promise.all(emailPromises);
+                
+                showNotification('success', `${targetUsers.length} emails añadidos a la cola de envío`);
+                hideModal('emailModal');
+                
+            } catch (error) {
+                console.error('Error enviando emails:', error);
+                showNotification('error', 'Error al enviar los emails');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateExportPreview() {
+            const filters = `
+                • Periodo: ${document.getElementById('periodFilter').value}
+                • Cohorte: ${document.getElementById('cohortFilter').value}
+                • Nivel de riesgo: ${document.getElementById('riskFilter').value}
+            `;
+            document.getElementById('exportFiltersPreview').textContent = filters;
+        }
+
+        async function exportData() {
+            const exportType = document.getElementById('exportType').value;
+            const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
+            
+            showLoading(true);
+            
+            try {
+                let data = [];
+                let filename = '';
+                
+                switch(exportType) {
+                    case 'students':
+                        data = dashboardData.students;
+                        filename = 'estudiantes';
+                        break;
+                    case 'results':
+                        data = dashboardData.recentResults;
+                        filename = 'resultados';
+                        break;
+                    case 'analytics':
+                        data = prepareAnalyticsExport();
+                        filename = 'analytics';
+                        break;
+                    case 'at-risk':
+                        data = dashboardData.atRiskStudents;
+                        filename = 'estudiantes_riesgo';
+                        break;
+                }
+                
+                // Aplicar filtros
+                data = applyDataFilters({ [exportType]: data })[exportType] || data;
+                
+                // Generar archivo según formato
+                if (exportFormat === 'csv') {
+                    downloadCSV(data, `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+                } else if (exportFormat === 'excel') {
+                    // En producción, usar una librería como SheetJS
+                    showNotification('info', 'Exportación Excel no implementada en esta demo');
+                } else if (exportFormat === 'pdf') {
+                    // En producción, usar una librería como jsPDF
+                    showNotification('info', 'Exportación PDF no implementada en esta demo');
+                }
+                
+                hideModal('exportModal');
+                
+            } catch (error) {
+                console.error('Error exportando datos:', error);
+                showNotification('error', 'Error al exportar los datos');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function downloadCSV(data, filename) {
+            if (!data || data.length === 0) {
+                showNotification('warning', 'No hay datos para exportar');
+                return;
+            }
+            
+            // Obtener headers
+            const headers = Object.keys(data[0]);
+            
+            // Crear CSV
+            let csv = headers.join(',') + '\n';
+            
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header];
+                    // Escapar comillas y manejar valores con comas
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value || '';
+                });
+                csv += values.join(',') + '\n';
+            });
+            
+            // Descargar
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            
+            showNotification('success', 'Archivo descargado correctamente');
+        }
+
+        function prepareAnalyticsExport() {
+            // Preparar datos agregados para exportación
+            return dashboardData.students.map(student => ({
+                ...student,
+                risk_level: student.probability_pass < 30 ? 'critical' : 
+                           student.probability_pass < 50 ? 'high' : 
+                           student.probability_pass < 70 ? 'medium' : 'low',
+                last_simulation_score: dashboardData.recentResults
+                    .find(r => r.user_id === student.id)?.score || 'N/A'
+            }));
+        }
+
+        // Aplicar filtros a los datos
+        function applyDataFilters(data) {
+            let filtered = { ...data };
+            
+            // Filtro por periodo
+            if (filters.period !== 'all') {
+                const dateLimit = new Date();
+                if (filters.period === 'week') {
+                    dateLimit.setDate(dateLimit.getDate() - 7);
+                } else if (filters.period === 'month') {
+                    dateLimit.setMonth(dateLimit.getMonth() - 1);
+                }
+                
+                // Aplicar filtro de fecha donde sea relevante
+                if (filtered.students) {
+                    filtered.students = filtered.students.filter(s => 
+                        !s.last_participation || new Date(s.last_participation) > dateLimit
+                    );
+                }
+            }
+            
+            // Filtro por cohorte
+            if (filters.cohort !== 'all') {
+                if (filtered.students) {
+                    filtered.students = filtered.students.filter(s => s.cohort === filters.cohort);
+                }
+                if (filtered.atRiskStudents) {
+                    filtered.atRiskStudents = filtered.atRiskStudents.filter(s => s.cohort === filters.cohort);
+                }
+            }
+            
+            // Filtro por nivel de riesgo
+            if (filters.risk !== 'all') {
+                if (filtered.students) {
+                    filtered.students = filtered.students.filter(s => {
+                        const level = s.probability_pass < 30 ? 'critical' : 
+                                     s.probability_pass < 50 ? 'high' : 
+                                     s.probability_pass < 70 ? 'medium' : 'low';
+                        return level === filters.risk;
+                    });
+                }
+                if (filtered.atRiskStudents) {
+                    filtered.atRiskStudents = filtered.atRiskStudents.filter(s => 
+                        s.risk_level === filters.risk
+                    );
+                }
+            }
+            
+            return filtered;
+        }
+
+        // Funciones de utilidad
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-icon ${type}">
+                    ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}
+                </div>
+                <div>
+                    <div class="font-semibold">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                    <div class="text-small">${message}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            // En producción, mostrar un spinner global
+            if (show) {
+                console.log('Cargando...');
+            } else {
+                console.log('Carga completa');
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('es-ES').format(num);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        function filterTable(tableId, searchTerm) {
+            const table = document.getElementById(tableId);
+            const rows = table.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('.student-checkbox:checked').length;
+            document.getElementById('selectedCount').textContent = selected;
+        }
+
+        function showBulkActions() {
+            document.getElementById('bulkActionsPanel').style.display = 'block';
+        }
+
+        function hideBulkActions() {
+            document.getElementById('bulkActionsPanel').style.display = 'none';
+        }
+
+        async function refreshData() {
+            showNotification('info', 'Actualizando datos...');
+            await loadDashboardData();
+            showPage(currentPage);
+            showNotification('success', 'Datos actualizados');
+        }
+
+        function updateBadges() {
+            document.getElementById('totalStudentsBadge').textContent = dashboardData.students.length;
+            document.getElementById('atRiskBadge').textContent = dashboardData.atRiskStudents.length;
+        }
+
+        function applyFilters() {
+            filters.period = document.getElementById('periodFilter').value;
+            filters.cohort = document.getElementById('cohortFilter').value;
+            filters.risk = document.getElementById('riskFilter').value;
+            
+            showPage(currentPage);
+        }
+
+        async function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                await supabaseClient.auth.signOut();
+                window.location.href = '/admin/login.html';
+            }
+        }
+
+        // Funciones placeholder para acciones de estudiantes
+        async function viewStudentDetails(studentId) {
+            const student = dashboardData.students.find(s => s.id === studentId) || 
+                           dashboardData.atRiskStudents.find(s => s.id === studentId);
+            
+            if (!student) return;
+            
+            const content = `
+                <div style="display: grid; gap: 1.5rem;">
                     <div>
-                        <div style="font-weight: 600;">${student.username}</div>
-                        <div style="font-size: 0.875rem; color: var(--gray-500);">${student.email}</div>
+                        <h3>${student.username}</h3>
+                        <p class="text-muted">${student.email}</p>
+                        <p class="text-small">Slug: <code>${student.slug}</code></p>
                     </div>
-                </td>
-                <td><span class="badge badge-info">${student.cohort}</span></td>
-                <td>${student.average_score?.toFixed(0) || 'N/A'}/100</td>
-                <td><span style="color: var(--${zScoreClass});">${student.z_score?.toFixed(2) || 'N/A'}</span></td>
-                <td>
-                    <div class="risk-indicator ${riskClass}">
-                        <span>⚠️</span> ${student.probability_pass?.toFixed(0) || 0}%
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div class="stat-card">
+                            <div class="stat-label">Cohorte</div>
+                            <div class="stat-value text-small">${student.cohort}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">ELO Actual</div>
+                            <div class="stat-value text-small">${student.current_elo}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Promedio</div>
+                            <div class="stat-value text-small">${student.average_score?.toFixed(1) || 'N/A'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">P(Aprobar)</div>
+                            <div class="stat-value text-small">${student.probability_pass?.toFixed(0)}%</div>
+                        </div>
                     </div>
-                </td>
-                <td>
-                    <div style="font-size: 0.75rem;">
-                        ${student.risk_level === 'critical' ? 
-                            '<div class="badge badge-danger">Prob. muy baja</div>' : 
-                            '<div class="badge badge-warning">Prob. baja</div>'}
-                        ${student.trend_direction === 'down' ? 
-                            '<div class="badge badge-warning" style="margin-top: 0.25rem;">Tendencia negativa</div>' : ''}
+                    
+                    <div>
+                        <h4>Historial de Simulacros</h4>
+                        <div class="table-wrapper">
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Simulacro</th>
+                                        <th>Score</th>
+                                        <th>Posición</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dashboardData.recentResults
+                                        .filter(r => r.user_id === studentId)
+                                        .slice(0, 5)
+                                        .map(r => `
+                                            <tr>
+                                                <td>${formatDate(r.submitted_at)}</td>
+                                                <td>RF${r.weekly_simulations.week_number}</td>
+                                                <td>${r.score}/100</td>
+                                                <td>${r.position || 'N/A'}</td>
+                                            </tr>
+                                        `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-icon" title="Ver detalles" onclick="viewStudentDetails('${student.id}')">👁️</button>
-                        <button class="btn-icon" title="Enviar email" onclick="sendEmail('${student.id}')">📧</button>
-                        <button class="btn-icon" title="Añadir nota" onclick="addNote('${student.id}')">📝</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
+                </div>
+            `;
+            
+            document.getElementById('studentDetailContent').innerHTML = content;
+            showModal('studentDetailModal');
+        }
 
-// Renderizar todos los estudiantes
-function renderAllStudents(students) {
-    const tbody = document.querySelector('#all-students-table tbody');
-    if (!tbody) return;
+        function editStudent(studentId) {
+            // Implementar edición
+            showNotification('info', 'Función de edición en desarrollo');
+        }
 
-    tbody.innerHTML = students.slice(0, 50).map(student => { // Limitar a 50 para performance
-        const streakEmoji = student.current_streak >= 8 ? '🔥' : '⭐';
-        const multiplier = student.current_streak >= 16 ? 'x2.0' : 
-                          student.current_streak >= 8 ? 'x1.5' : 'x1.0';
-        
-        return `
-            <tr>
-                <td style="font-weight: 600;">${student.username}</td>
-                <td style="font-size: 0.875rem;">${student.email}</td>
-                <td><span class="badge badge-info">${student.cohort}</span></td>
-                <td>${student.recent_average?.toFixed(0) || 'N/A'}/100</td>
-                <td style="font-weight: 600; color: var(--primary);">${formatNumber(student.current_elo)}</td>
-                <td><span style="color: var(--${student.z_score > 0 ? 'success' : 'danger'});">${student.z_score?.toFixed(2) || 'N/A'}</span></td>
-                <td>
-                    <div class="risk-indicator risk-${student.probability_pass >= 70 ? 'low' : student.probability_pass >= 50 ? 'medium' : 'high'}">
-                        <span>${student.probability_pass >= 70 ? '✅' : '⚠️'}</span> ${student.probability_pass?.toFixed(0) || 0}%
-                    </div>
-                </td>
-                <td>
-                    <span style="color: var(--${student.trend_direction === 'up' ? 'success' : student.trend_direction === 'down' ? 'danger' : 'gray-500'});">
-                        ${student.trend_direction === 'up' ? '↗' : student.trend_direction === 'down' ? '↘' : '→'} 
-                        ${student.z_score ? (student.z_score > 0 ? '+' : '') + student.z_score.toFixed(2) : 'N/A'}
-                    </span>
-                </td>
-                <td>
-                    ${student.current_streak > 0 ? 
-                        `<span class="badge badge-danger">${streakEmoji} ${student.current_streak}</span>` : 
-                        '<span>-</span>'}
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
+        function sendPersonalEmail(studentId) {
+            // Implementar email personal
+            showEmailModal();
+        }
 
-// Crear gráficos
-function createCharts(stats, students) {
-    // Gráfico de distribución por probabilidad
-    const probChart = document.getElementById('probabilityChart');
-    if (probChart) {
-        const ctx = probChart.getContext('2d');
-        
-        // Calcular distribución
-        const high = students.filter(s => s.probability_pass >= 70).length;
-        const medium = students.filter(s => s.probability_pass >= 50 && s.probability_pass < 70).length;
-        const low = students.filter(s => s.probability_pass < 50).length;
-        
-        if (chartInstances.probability) chartInstances.probability.destroy();
-        
-        chartInstances.probability = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Alta (>70%)', 'Media (50-70%)', 'Baja (<50%)'],
-                datasets: [{
-                    data: [high, medium, low],
-                    backgroundColor: ['#10B981', '#FBBF24', '#DC2626']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
+        function addStudentNote(studentId) {
+            const note = prompt('Añadir nota para el estudiante:');
+            if (note) {
+                showNotification('success', 'Nota añadida correctamente');
             }
-        });
-    }
+        }
 
-    // Gráfico de rendimiento por cohorte
-    const cohortChart = document.getElementById('cohortChart');
-    if (cohortChart) {
-        const ctx = cohortChart.getContext('2d');
-        
-        if (chartInstances.cohort) chartInstances.cohort.destroy();
-        
-        chartInstances.cohort = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: stats.map(s => s.cohort),
-                datasets: [{
-                    label: 'Promedio de Score',
-                    data: stats.map(s => s.average_score || 0),
-                    backgroundColor: '#3B82F6'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
+        function createIntervention(studentId) {
+            // Implementar creación de intervención
+            showNotification('info', 'Creando plan de intervención...');
+        }
+
+        function scheduleFollowUp(studentId) {
+            // Implementar programación de seguimiento
+            showNotification('info', 'Programando seguimiento...');
+        }
+
+        function generateRiskReport() {
+            // Generar informe de riesgo
+            showNotification('info', 'Generando informe de estudiantes en riesgo...');
+        }
+
+        function showRiskInterventionModal() {
+            // Mostrar modal de intervención
+            showNotification('info', 'Abriendo plan de intervención...');
+        }
+
+        // Timeline de actividad
+        function renderActivityTimeline() {
+            const activities = [
+                { time: 'Hace 5 min', text: 'María García envió resultados del simulacro RF15', type: 'success' },
+                { time: 'Hace 23 min', text: 'Carlos López mejoró su probabilidad al 75%', type: 'info' },
+                { time: 'Hace 1 hora', text: 'Se detectaron 3 nuevos estudiantes en riesgo', type: 'warning' },
+                { time: 'Hace 2 horas', text: '15 emails enviados automáticamente', type: 'info' },
+                { time: 'Hace 3 horas', text: 'Juan Pérez rompió su racha de 8 semanas', type: 'danger' }
+            ];
+            
+            return activities.map(activity => `
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div>
+                        <div class="text-small text-muted">${activity.time}</div>
+                        <div>${activity.text}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Tabs de analytics
+        function showAnalyticsTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const content = document.getElementById('analyticsContent');
+            
+            switch(tab) {
+                case 'trends':
+                    content.innerHTML = renderTrendsTab();
+                    break;
+                case 'predictions':
+                    content.innerHTML = renderPredictionsTab();
+                    break;
+                case 'cohorts':
+                    content.innerHTML = renderCohortsTab();
+                    break;
+                case 'topics':
+                    content.innerHTML = renderTopicsTab();
+                    break;
             }
-        });
-    }
-}
+        }
 
-// Funciones de acción
-function viewStudentDetails(studentId) {
-    // Implementar vista detallada
-    console.log('Ver detalles de:', studentId);
-}
+        function renderTrendsTab() {
+            return `
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Evolución del Rendimiento General</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="trendsChart" height="400"></canvas>
+                    </div>
+                </div>
+            `;
+        }
 
-function sendEmail(studentId) {
-    // Implementar envío de email
-    showEmailModal();
-}
+        function renderPredictionsTab() {
+            return `
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">🔮 Predicciones de Aprobación</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <p>Análisis predictivo basado en tendencias actuales...</p>
+                    </div>
+                </div>
+            `;
+        }
 
-function addNote(studentId) {
-    // Implementar añadir nota
-    const note = prompt('Añadir nota para el estudiante:');
-    if (note) {
-        // Guardar nota en la base de datos
-        console.log('Nota para', studentId, ':', note);
-    }
-}
+        function renderCohortsTab() {
+            return `
+                <div class="stats-grid">
+                    ${dashboardData.cohortStats.map(cohort => `
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-content">
+                                    <div class="stat-label">Cohorte ${cohort.cohort}</div>
+                                    <div class="stat-value">${cohort.total_students} estudiantes</div>
+                                    <div class="text-small mt-2">
+                                        <div>Score medio: ${cohort.average_score?.toFixed(1) || 'N/A'}</div>
+                                        <div>P(Aprobar): ${cohort.average_pass_probability?.toFixed(1) || 'N/A'}%</div>
+                                        <div>En riesgo: ${cohort.at_risk_count}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
 
-// Modal de email
-function showEmailModal() {
-    document.getElementById('emailModal').classList.add('active');
-}
+        function renderTopicsTab() {
+            return `
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">📚 Análisis por Temas Débiles</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <p>Análisis de los temas más problemáticos...</p>
+                    </div>
+                </div>
+            `;
+        }
 
-function hideEmailModal() {
-    document.getElementById('emailModal').classList.remove('active');
-}
-
-// Cerrar modal al hacer clic fuera
-document.getElementById('emailModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hideEmailModal();
-    }
-});
-
-// Auto-actualizar cada minuto
-setInterval(loadDashboardData, 60000);
-
-// Iniciar al cargar
-document.addEventListener('DOMContentLoaded', checkAdminAccess);
-</script>
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
 </body>
 </html>
