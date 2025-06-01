@@ -298,11 +298,6 @@
         .change-positive { color: var(--success); }
         .change-negative { color: var(--danger); }
         
-        .stat-chart {
-            margin-top: 1rem;
-            height: 60px;
-        }
-        
         /* Gráficos mejorados */
         .charts-section {
             display: grid;
@@ -330,11 +325,6 @@
             font-size: 1.125rem;
             font-weight: 600;
             color: var(--text-primary);
-        }
-        
-        .chart-actions {
-            display: flex;
-            gap: 0.5rem;
         }
         
         .chart-body {
@@ -485,21 +475,6 @@
             background: var(--bg-light);
         }
         
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8125rem;
-        }
-        
         .btn-icon {
             padding: 0.5rem;
             background: transparent;
@@ -526,187 +501,40 @@
         .risk-medium { color: var(--warning); }
         .risk-low { color: var(--success); }
         
-        /* Modal mejorado */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
         }
         
-        .modal.active {
-            display: flex;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow: hidden;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-            max-height: calc(90vh - 200px);
-            overflow-y: auto;
-        }
-        
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-        }
-        
-        /* Tabs mejorados */
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid var(--border-color);
-            margin-bottom: 2rem;
-        }
-        
-        .tab {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background: none;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.2s;
-            position: relative;
-        }
-        
-        .tab:hover {
-            color: var(--text-primary);
-        }
-        
-        .tab.active {
-            color: var(--primary);
-        }
-        
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary);
-        }
-        
-        /* Timeline */
-        .timeline {
-            position: relative;
-            padding-left: 2rem;
-        }
-        
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: var(--border-color);
-        }
-        
-        .timeline-item {
-            position: relative;
-            padding-bottom: 1.5rem;
-        }
-        
-        .timeline-marker {
-            position: absolute;
-            left: -2.5rem;
-            width: 12px;
-            height: 12px;
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
-            background: white;
-            border: 2px solid var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
         
-        /* Tooltips */
-        [data-tooltip] {
-            position: relative;
-            cursor: help;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
-        [data-tooltip]:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg-dark);
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            z-index: 10;
+        /* Error message */
+        .error-container {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            color: #991b1b;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
+        .error-title {
+            font-weight: 600;
             margin-bottom: 0.5rem;
-        }
-        
-        /* Loading states */
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* Progress bars */
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--border-color);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            transition: width 0.3s ease;
         }
         
         /* Notificaciones */
@@ -731,26 +559,6 @@
             to { transform: translateX(0); }
         }
         
-        .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-        
-        .notification.success .notification-icon {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-        
-        .notification.error .notification-icon {
-            background: rgba(220, 38, 38, 0.1);
-            color: var(--danger);
-        }
-        
         /* Responsive */
         @media (max-width: 1024px) {
             .dashboard-layout {
@@ -767,25 +575,6 @@
             .sidebar.open {
                 left: 0;
             }
-            
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-                z-index: 99;
-            }
-            
-            .sidebar-overlay.show {
-                display: block;
-            }
-            
-            .mobile-menu-toggle {
-                display: flex;
-            }
         }
         
         @media (max-width: 768px) {
@@ -797,11 +586,6 @@
                 grid-template-columns: 1fr;
             }
             
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
             .search-input {
                 width: 100%;
             }
@@ -810,46 +594,9 @@
         /* Utility classes */
         .text-muted { color: var(--text-secondary); }
         .text-small { font-size: 0.875rem; }
-        .text-xs { font-size: 0.75rem; }
-        .font-medium { font-weight: 500; }
         .font-semibold { font-weight: 600; }
-        .font-bold { font-weight: 700; }
-        
-        .mt-1 { margin-top: 0.25rem; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-3 { margin-top: 0.75rem; }
         .mt-4 { margin-top: 1rem; }
-        
-        .mb-1 { margin-bottom: 0.25rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-3 { margin-bottom: 0.75rem; }
         .mb-4 { margin-bottom: 1rem; }
-        
-        .hidden { display: none; }
-        
-        /* Spinner mejorado */
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Mobile menu toggle (hidden by default) */
-        .mobile-menu-toggle {
-            display: none;
-            padding: 0.5rem;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
     </style>
 </head>
 <body>
@@ -863,7 +610,7 @@
                 </div>
                 <div class="sidebar-user">
                     <span>👤</span>
-                    <span id="currentUserEmail">admin@izeta.com</span>
+                    <span id="currentUserEmail">Cargando...</span>
                 </div>
             </div>
             
@@ -873,47 +620,18 @@
                     <span class="nav-icon">📊</span>
                     <span>Vista General</span>
                 </a>
-                <a href="#analytics" class="nav-item" data-page="analytics">
-                    <span class="nav-icon">📈</span>
-                    <span>Analytics Avanzado</span>
-                </a>
                 <a href="#students" class="nav-item" data-page="students">
                     <span class="nav-icon">👥</span>
                     <span>Gestión de Alumnos</span>
                     <span class="nav-badge" id="totalStudentsBadge">0</span>
                 </a>
-                <a href="#at-risk" class="nav-item" data-page="at-risk">
-                    <span class="nav-icon">⚠️</span>
-                    <span>Alumnos en Riesgo</span>
-                    <span class="nav-badge" id="atRiskBadge">0</span>
+                <a href="#results" class="nav-item" data-page="results">
+                    <span class="nav-icon">📈</span>
+                    <span>Resultados</span>
                 </a>
-            </nav>
-            
-            <nav class="nav-section">
-                <div class="nav-section-title">COMUNICACIÓN</div>
-                <a href="#emails" class="nav-item" data-page="emails">
-                    <span class="nav-icon">📧</span>
-                    <span>Gestión de Emails</span>
-                </a>
-                <a href="#alerts" class="nav-item" data-page="alerts">
-                    <span class="nav-icon">🔔</span>
-                    <span>Alertas Automáticas</span>
-                </a>
-            </nav>
-            
-            <nav class="nav-section">
-                <div class="nav-section-title">CONFIGURACIÓN</div>
                 <a href="#simulations" class="nav-item" data-page="simulations">
                     <span class="nav-icon">🎯</span>
                     <span>Simulacros</span>
-                </a>
-                <a href="#reports" class="nav-item" data-page="reports">
-                    <span class="nav-icon">📊</span>
-                    <span>Informes</span>
-                </a>
-                <a href="#settings" class="nav-item" data-page="settings">
-                    <span class="nav-icon">⚙️</span>
-                    <span>Configuración</span>
                 </a>
             </nav>
             
@@ -925,15 +643,11 @@
             </nav>
         </aside>
         
-        <!-- Overlay para móvil -->
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-        
         <!-- Contenido principal -->
         <main class="main-content">
             <!-- Header principal -->
             <header class="main-header">
                 <div class="header-left">
-                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
                     <h1 class="page-title" id="pageTitle">Vista General</h1>
                     <nav class="breadcrumb">
                         <span>Dashboard</span>
@@ -945,8 +659,8 @@
                     <button class="btn btn-secondary" onclick="refreshData()">
                         🔄 Actualizar
                     </button>
-                    <button class="btn btn-primary" onclick="showExportModal()">
-                        📥 Exportar Datos
+                    <button class="btn btn-primary" onclick="window.location.href='/admin/bulk-users.html'">
+                        ➕ Añadir alumnos
                     </button>
                 </div>
             </header>
@@ -954,169 +668,33 @@
             <!-- Barra de filtros -->
             <div class="filters-bar" id="filtersBar">
                 <div class="filter-group">
-                    <label class="filter-label">Periodo:</label>
-                    <select id="periodFilter" class="btn btn-secondary" onchange="applyFilters()">
-                        <option value="week">Esta semana</option>
-                        <option value="month">Este mes</option>
-                        <option value="all">Todo</option>
-                    </select>
-                </div>
-                <div class="filter-group">
                     <label class="filter-label">Cohorte:</label>
                     <select id="cohortFilter" class="btn btn-secondary" onchange="applyFilters()">
                         <option value="all">Todas</option>
                         <option value="20h">20h - Base</option>
                         <option value="36h">36h - Intensivo</option>
                         <option value="48h">48h - Élite</option>
+                        <option value="sin_asignar">Sin asignar</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">Nivel de riesgo:</label>
-                    <select id="riskFilter" class="btn btn-secondary" onchange="applyFilters()">
+                    <label class="filter-label">Estado:</label>
+                    <select id="statusFilter" class="btn btn-secondary" onchange="applyFilters()">
                         <option value="all">Todos</option>
-                        <option value="critical">Crítico</option>
-                        <option value="high">Alto</option>
-                        <option value="medium">Medio</option>
-                        <option value="low">Bajo</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
                     </select>
                 </div>
             </div>
             
             <!-- Contenido dinámico -->
             <div class="content-wrapper" id="contentWrapper">
-                <!-- El contenido se cargará dinámicamente -->
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem;">Cargando dashboard...</p>
+                </div>
             </div>
         </main>
-    </div>
-    
-    <!-- Modal de Email -->
-    <div class="modal" id="emailModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Enviar Email</h2>
-                <button class="btn btn-icon" onclick="hideModal('emailModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-4">
-                    <label class="form-label">Destinatarios</label>
-                    <select id="emailRecipients" class="form-control">
-                        <option value="all">Todos los alumnos</option>
-                        <option value="at-risk">Solo alumnos en riesgo</option>
-                        <option value="cohort-20h">Cohorte 20h</option>
-                        <option value="cohort-36h">Cohorte 36h</option>
-                        <option value="cohort-48h">Cohorte 48h</option>
-                        <option value="custom">Selección personalizada...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Plantilla de Email</label>
-                    <select id="emailTemplate" class="form-control" onchange="updateEmailPreview()">
-                        <option value="weekly_report">Informe Semanal Estándar</option>
-                        <option value="performance_alert">Alerta de Bajo Rendimiento</option>
-                        <option value="improvement_congrats">Felicitación por Mejora</option>
-                        <option value="simulation_reminder">Recordatorio de Simulacro</option>
-                        <option value="custom">Mensaje Personalizado</option>
-                    </select>
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Asunto</label>
-                    <input type="text" id="emailSubject" class="form-control" 
-                           value="📊 Tu progreso semanal - IZETA 2025">
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Vista previa del mensaje</label>
-                    <div id="emailPreview" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; min-height: 200px;">
-                        <!-- Vista previa se actualizará dinámicamente -->
-                    </div>
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Mensaje adicional (opcional)</label>
-                    <textarea id="emailAdditionalMessage" class="form-control" rows="3"
-                              placeholder="Este mensaje se añadirá al email estándar..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="hideModal('emailModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="sendEmails()">
-                    📧 Enviar Emails
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal de Exportación -->
-    <div class="modal" id="exportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Exportar Datos</h2>
-                <button class="btn btn-icon" onclick="hideModal('exportModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-4">
-                    <label class="form-label">Tipo de datos</label>
-                    <select id="exportType" class="form-control">
-                        <option value="students">Lista de estudiantes</option>
-                        <option value="results">Resultados de simulacros</option>
-                        <option value="analytics">Análisis completo</option>
-                        <option value="at-risk">Informe de alumnos en riesgo</option>
-                    </select>
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Formato</label>
-                    <div style="display: flex; gap: 1rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="exportFormat" value="csv" checked>
-                            <span>CSV</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="exportFormat" value="excel">
-                            <span>Excel</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="exportFormat" value="pdf">
-                            <span>PDF</span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="form-group mb-4">
-                    <label class="form-label">Filtros aplicados</label>
-                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
-                        <p id="exportFiltersPreview">Se exportarán todos los datos según los filtros actuales</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="hideModal('exportModal')">Cancelar</button>
-                <button class="btn btn-primary" onclick="exportData()">
-                    📥 Descargar
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal de Detalles de Estudiante -->
-    <div class="modal" id="studentDetailModal">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h2 class="modal-title">Detalles del Estudiante</h2>
-                <button class="btn btn-icon" onclick="hideModal('studentDetailModal')">✕</button>
-            </div>
-            <div class="modal-body" id="studentDetailContent">
-                <!-- Contenido dinámico -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="hideModal('studentDetailModal')">Cerrar</button>
-                <button class="btn btn-primary" onclick="editStudent()">
-                    ✏️ Editar
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Scripts -->
@@ -1131,32 +709,37 @@
             students: [],
             results: [],
             simulations: [],
-            cohortStats: [],
-            atRiskStudents: [],
-            emailQueue: []
+            cohortStats: {}
         };
-        let chartInstances = {};
         let filters = {
-            period: 'week',
             cohort: 'all',
-            risk: 'all'
+            status: 'all'
         };
 
         // Inicialización del dashboard
         async function initDashboard() {
             try {
+                console.log('Iniciando dashboard...');
+                
                 // Verificar autenticación
                 const user = await checkAuth();
                 if (!user) {
+                    console.log('No hay usuario autenticado');
                     window.location.href = '/admin/login.html';
                     return;
                 }
 
-                // Verificar permisos de admin
-                const isAdminUser = await isAdmin();
+                // Verificar permisos de admin de forma simple
+                // Como no tenemos la función RPC, verificamos por email
+                const adminEmails = ['chus@iz.academy']; // Añade aquí los emails de administradores
+                const isAdminUser = adminEmails.includes(user.email);
+                
                 if (!isAdminUser) {
-                    showNotification('error', 'No tienes permisos de administrador');
-                    window.location.href = '/public/index.html';
+                    console.log('Usuario no es administrador');
+                    showError('No tienes permisos de administrador');
+                    setTimeout(() => {
+                        window.location.href = '/public/index.html';
+                    }, 2000);
                     return;
                 }
 
@@ -1172,28 +755,22 @@
                 // Mostrar página inicial
                 showPage('overview');
 
-                // Configurar actualización automática
-                setInterval(updateRealTimeMetrics, 30000); // Cada 30 segundos
-
             } catch (error) {
                 console.error('Error iniciando dashboard:', error);
-                showNotification('error', 'Error al cargar el dashboard');
+                showError('Error al cargar el dashboard: ' + error.message);
             }
         }
 
         // Cargar todos los datos del dashboard
         async function loadDashboardData() {
-            showLoading(true);
-            
             try {
-                // Cargar datos en paralelo para mejor rendimiento
+                console.log('Cargando datos del dashboard...');
+                
+                // Cargar datos básicos que sabemos que existen
                 const [
-                    students,
-                    cohortStats,
-                    atRiskData,
-                    activeSimulation,
-                    recentResults,
-                    emailQueueData
+                    studentsResponse,
+                    simulationsResponse,
+                    resultsResponse
                 ] = await Promise.all([
                     // Todos los estudiantes
                     supabaseClient
@@ -1201,63 +778,68 @@
                         .select('*')
                         .order('created_at', { ascending: false }),
                     
-                    // Estadísticas por cohorte
-                    supabaseClient
-                        .from('cohort_statistics')
-                        .select('*'),
-                    
-                    // Estudiantes en riesgo con detalles
-                    supabaseClient
-                        .from('admin_dashboard')
-                        .select('*')
-                        .in('risk_level', ['high', 'critical'])
-                        .order('probability_pass', { ascending: true }),
-                    
-                    // Simulacro activo
+                    // Simulacros
                     supabaseClient
                         .from('weekly_simulations')
                         .select('*')
-                        .eq('status', 'active')
-                        .single(),
+                        .order('week_number', { ascending: false }),
                     
-                    // Resultados recientes
+                    // Resultados recientes (con información de usuarios)
                     supabaseClient
                         .from('user_results')
                         .select(`
                             *,
-                            users!inner(slug, username, email, cohort),
-                            weekly_simulations!inner(week_number)
+                            users!inner(slug, username, email, cohort)
                         `)
                         .order('submitted_at', { ascending: false })
-                        .limit(100),
-                    
-                    // Cola de emails
-                    supabaseClient
-                        .from('email_queue')
-                        .select('*')
-                        .eq('status', 'pending')
+                        .limit(100)
                 ]);
 
+                // Verificar errores
+                if (studentsResponse.error) {
+                    console.error('Error cargando estudiantes:', studentsResponse.error);
+                    throw new Error('Error al cargar estudiantes');
+                }
+
                 // Procesar y almacenar datos
-                dashboardData = {
-                    students: students.data || [],
-                    cohortStats: cohortStats.data || [],
-                    atRiskStudents: atRiskData.data || [],
-                    activeSimulation: activeSimulation.data,
-                    recentResults: recentResults.data || [],
-                    emailQueue: emailQueueData.data || []
-                };
+                dashboardData.students = studentsResponse.data || [];
+                dashboardData.simulations = simulationsResponse.data || [];
+                dashboardData.results = resultsResponse.data || [];
+
+                // Calcular estadísticas por cohorte manualmente
+                dashboardData.cohortStats = calculateCohortStats(dashboardData.students);
 
                 // Actualizar badges
                 updateBadges();
 
-                showLoading(false);
+                console.log('Datos cargados correctamente', dashboardData);
                 
             } catch (error) {
                 console.error('Error cargando datos:', error);
-                showNotification('error', 'Error al cargar los datos del dashboard');
-                showLoading(false);
+                showError('Error al cargar los datos: ' + error.message);
             }
+        }
+
+        // Calcular estadísticas por cohorte
+        function calculateCohortStats(students) {
+            const stats = {};
+            const cohorts = ['20h', '36h', '48h', 'sin_asignar'];
+            
+            cohorts.forEach(cohort => {
+                const cohortStudents = students.filter(s => s.cohort === cohort);
+                stats[cohort] = {
+                    total: cohortStudents.length,
+                    active: cohortStudents.filter(s => s.active).length,
+                    avgElo: cohortStudents.length > 0 
+                        ? Math.round(cohortStudents.reduce((sum, s) => sum + s.current_elo, 0) / cohortStudents.length)
+                        : 0,
+                    avgScore: cohortStudents.length > 0
+                        ? (cohortStudents.reduce((sum, s) => sum + (s.average_score || 0), 0) / cohortStudents.length).toFixed(1)
+                        : 0
+                };
+            });
+            
+            return stats;
         }
 
         // Configurar navegación entre páginas
@@ -1283,14 +865,9 @@
             // Actualizar título y breadcrumb
             const titles = {
                 'overview': 'Vista General',
-                'analytics': 'Analytics Avanzado',
                 'students': 'Gestión de Alumnos',
-                'at-risk': 'Alumnos en Riesgo',
-                'emails': 'Gestión de Emails',
-                'alerts': 'Alertas Automáticas',
-                'simulations': 'Gestión de Simulacros',
-                'reports': 'Informes',
-                'settings': 'Configuración'
+                'results': 'Resultados',
+                'simulations': 'Gestión de Simulacros'
             };
             
             document.getElementById('pageTitle').textContent = titles[page];
@@ -1298,36 +875,21 @@
             
             // Mostrar/ocultar filtros según la página
             document.getElementById('filtersBar').style.display = 
-                ['overview', 'analytics', 'students', 'at-risk'].includes(page) ? 'flex' : 'none';
+                ['overview', 'students', 'results'].includes(page) ? 'flex' : 'none';
             
             // Cargar contenido de la página
             switch(page) {
                 case 'overview':
                     renderOverviewPage();
                     break;
-                case 'analytics':
-                    renderAnalyticsPage();
-                    break;
                 case 'students':
                     renderStudentsPage();
                     break;
-                case 'at-risk':
-                    renderAtRiskPage();
-                    break;
-                case 'emails':
-                    renderEmailsPage();
-                    break;
-                case 'alerts':
-                    renderAlertsPage();
+                case 'results':
+                    renderResultsPage();
                     break;
                 case 'simulations':
                     renderSimulationsPage();
-                    break;
-                case 'reports':
-                    renderReportsPage();
-                    break;
-                case 'settings':
-                    renderSettingsPage();
                     break;
             }
         }
@@ -1335,6 +897,14 @@
         // Renderizar página de vista general
         function renderOverviewPage() {
             const filteredData = applyDataFilters(dashboardData);
+            
+            // Calcular estadísticas
+            const totalStudents = filteredData.students.length;
+            const activeStudents = filteredData.students.filter(s => s.active).length;
+            const avgProbability = totalStudents > 0
+                ? (filteredData.students.reduce((sum, s) => sum + (s.probability_pass || 50), 0) / totalStudents).toFixed(1)
+                : 0;
+            const atRiskCount = filteredData.students.filter(s => (s.probability_pass || 50) < 50).length;
             
             const html = `
                 <!-- Estadísticas principales -->
@@ -1344,14 +914,11 @@
                             <div class="stat-icon primary">👥</div>
                             <div class="stat-content">
                                 <div class="stat-label">Total Estudiantes</div>
-                                <div class="stat-value">${filteredData.students.length}</div>
-                                <div class="stat-change change-positive">
-                                    <span>↑</span> ${getNewStudentsCount()} nuevos esta semana
+                                <div class="stat-value">${totalStudents}</div>
+                                <div class="stat-change">
+                                    <span>${activeStudents} activos</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="stat-chart">
-                            <canvas id="studentsSparkline"></canvas>
                         </div>
                     </div>
                     
@@ -1359,16 +926,12 @@
                         <div class="stat-header">
                             <div class="stat-icon success">📈</div>
                             <div class="stat-content">
-                                <div class="stat-label">Probabilidad Media de Aprobar</div>
-                                <div class="stat-value">${calculateAverageProbability(filteredData.students)}%</div>
-                                <div class="stat-change ${getProbabilityTrend() > 0 ? 'change-positive' : 'change-negative'}">
-                                    <span>${getProbabilityTrend() > 0 ? '↑' : '↓'}</span> 
-                                    ${Math.abs(getProbabilityTrend())}% vs semana anterior
+                                <div class="stat-label">Probabilidad Media</div>
+                                <div class="stat-value">${avgProbability}%</div>
+                                <div class="stat-change">
+                                    <span>De aprobar</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="stat-chart">
-                            <canvas id="probabilitySparkline"></canvas>
                         </div>
                     </div>
                     
@@ -1376,144 +939,96 @@
                         <div class="stat-header">
                             <div class="stat-icon warning">⚠️</div>
                             <div class="stat-content">
-                                <div class="stat-label">Estudiantes en Riesgo</div>
-                                <div class="stat-value">${filteredData.atRiskStudents.length}</div>
-                                <div class="stat-change change-negative">
-                                    <span>↑</span> +${getNewAtRiskCount()} vs semana anterior
+                                <div class="stat-label">En Riesgo</div>
+                                <div class="stat-value">${atRiskCount}</div>
+                                <div class="stat-change">
+                                    <span>P(Aprobar) < 50%</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="stat-chart">
-                            <canvas id="riskSparkline"></canvas>
                         </div>
                     </div>
                     
                     <div class="stat-card danger">
                         <div class="stat-header">
-                            <div class="stat-icon danger">📉</div>
+                            <div class="stat-icon danger">📊</div>
                             <div class="stat-content">
-                                <div class="stat-label">Tasa de Abandono</div>
-                                <div class="stat-value">${calculateDropoutRate()}%</div>
+                                <div class="stat-label">Simulacros</div>
+                                <div class="stat-value">${dashboardData.simulations.length}</div>
                                 <div class="stat-change">
-                                    <span>→</span> Sin cambios
+                                    <span>Totales realizados</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="stat-chart">
-                            <canvas id="dropoutSparkline"></canvas>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Gráficos principales -->
-                <div class="charts-section">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Distribución por Probabilidad de Aprobar</h3>
-                            <div class="chart-actions">
-                                <button class="btn btn-sm btn-secondary" onclick="updateChart('probability')">
-                                    🔄
-                                </button>
-                            </div>
-                        </div>
-                        <div class="chart-body">
-                            <canvas id="probabilityDistributionChart" height="300"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Rendimiento por Cohorte</h3>
-                            <div class="chart-actions">
-                                <button class="btn btn-sm btn-secondary" onclick="updateChart('cohort')">
-                                    🔄
-                                </button>
-                            </div>
-                        </div>
-                        <div class="chart-body">
-                            <canvas id="cohortPerformanceChart" height="300"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tabla de estudiantes en riesgo -->
+                <!-- Estadísticas por cohorte -->
                 <div class="table-card">
                     <div class="table-header">
-                        <h2 class="table-title">⚠️ Estudiantes que Requieren Atención Inmediata</h2>
-                        <div class="table-controls">
-                            <div class="search-box">
-                                <span class="search-icon">🔍</span>
-                                <input type="text" class="search-input" placeholder="Buscar estudiante..." 
-                                       onkeyup="filterTable('atRiskTable', this.value)">
-                            </div>
-                            <button class="btn btn-primary" onclick="showEmailModal('at-risk')">
-                                📧 Email a todos
-                            </button>
-                        </div>
+                        <h2 class="table-title">📊 Estadísticas por Cohorte</h2>
                     </div>
                     <div class="table-wrapper">
-                        <table id="atRiskTable">
+                        <table>
                             <thead>
                                 <tr>
-                                    <th>Estudiante</th>
                                     <th>Cohorte</th>
+                                    <th>Total</th>
+                                    <th>Activos</th>
+                                    <th>ELO Promedio</th>
                                     <th>Score Promedio</th>
-                                    <th>Z-Score</th>
-                                    <th>P(Aprobar)</th>
-                                    <th>Tendencia</th>
-                                    <th>Riesgo</th>
-                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${renderAtRiskStudentsRows(filteredData.atRiskStudents.slice(0, 10))}
+                                ${Object.entries(dashboardData.cohortStats).map(([cohort, stats]) => `
+                                    <tr>
+                                        <td><span class="badge badge-info">${cohort}</span></td>
+                                        <td>${stats.total}</td>
+                                        <td>${stats.active}</td>
+                                        <td>${stats.avgElo}</td>
+                                        <td>${stats.avgScore}/10</td>
+                                    </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Timeline de actividad reciente -->
+                <!-- Últimos resultados -->
                 <div class="table-card">
                     <div class="table-header">
-                        <h2 class="table-title">📅 Actividad Reciente</h2>
+                        <h2 class="table-title">📝 Últimos Resultados Enviados</h2>
                     </div>
-                    <div style="padding: 1.5rem;">
-                        <div class="timeline">
-                            ${renderActivityTimeline()}
-                        </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Estudiante</th>
+                                    <th>Cohorte</th>
+                                    <th>Score</th>
+                                    <th>Simulacro</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dashboardData.results.slice(0, 10).map(result => `
+                                    <tr>
+                                        <td>${formatDate(result.submitted_at)}</td>
+                                        <td>${result.users?.username || 'N/A'}</td>
+                                        <td><span class="badge badge-info">${result.users?.cohort || 'N/A'}</span></td>
+                                        <td><strong>${result.score}/10</strong></td>
+                                        <td>Simulacro ${result.simulation_id ? '#' + result.simulation_id.substring(0, 8) : 'N/A'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             `;
             
             document.getElementById('contentWrapper').innerHTML = html;
-            
-            // Inicializar gráficos
-            setTimeout(() => {
-                createSparklines();
-                createMainCharts();
-            }, 100);
         }
 
-        // Renderizar página de analytics avanzado
-        function renderAnalyticsPage() {
-            const html = `
-                <div class="tabs">
-                    <button class="tab active" onclick="showAnalyticsTab('trends')">Tendencias</button>
-                    <button class="tab" onclick="showAnalyticsTab('predictions')">Predicciones</button>
-                    <button class="tab" onclick="showAnalyticsTab('cohorts')">Análisis por Cohortes</button>
-                    <button class="tab" onclick="showAnalyticsTab('topics')">Análisis por Temas</button>
-                </div>
-
-                <div id="analyticsContent">
-                    <!-- Contenido dinámico según tab -->
-                </div>
-            `;
-            
-            document.getElementById('contentWrapper').innerHTML = html;
-            showAnalyticsTab('trends');
-        }
-
-        // Renderizar página de gestión de estudiantes
+        // Renderizar página de estudiantes
         function renderStudentsPage() {
             const filteredStudents = applyDataFilters(dashboardData).students;
             
@@ -1527,9 +1042,6 @@
                                 <input type="text" class="search-input" placeholder="Buscar por nombre, email o slug..." 
                                        onkeyup="filterTable('studentsTable', this.value)">
                             </div>
-                            <button class="btn btn-secondary" onclick="showBulkActions()">
-                                ⚡ Acciones masivas
-                            </button>
                             <button class="btn btn-primary" onclick="window.location.href='/admin/bulk-users.html'">
                                 ➕ Añadir alumnos
                             </button>
@@ -1539,7 +1051,6 @@
                         <table id="studentsTable">
                             <thead>
                                 <tr>
-                                    <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
                                     <th>Estudiante</th>
                                     <th>Email</th>
                                     <th>Slug</th>
@@ -1550,45 +1061,37 @@
                                     <th>P(Aprobar)</th>
                                     <th>Racha</th>
                                     <th>Estado</th>
-                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${renderAllStudentsRows(filteredStudents)}
+                                ${filteredStudents.map(student => `
+                                    <tr>
+                                        <td class="font-semibold">${student.username}</td>
+                                        <td class="text-small">${student.email}</td>
+                                        <td><code>${student.slug}</code></td>
+                                        <td>
+                                            <span class="badge badge-info">${student.cohort}</span>
+                                        </td>
+                                        <td class="font-semibold" style="color: var(--primary);">
+                                            ${student.current_elo}
+                                        </td>
+                                        <td>${student.total_simulations}</td>
+                                        <td>${student.average_score?.toFixed(1) || 'N/A'}/10</td>
+                                        <td>
+                                            <div class="risk-indicator ${getProbabilityClass(student.probability_pass)}">
+                                                ${student.probability_pass?.toFixed(0) || 50}%
+                                            </div>
+                                        </td>
+                                        <td>
+                                            ${student.current_streak > 0 ? 
+                                                `<span class="badge badge-danger">🔥 ${student.current_streak}</span>` : 
+                                                '-'}
+                                        </td>
+                                        <td>${student.active ? '✅ Activo' : '❌ Inactivo'}</td>
+                                    </tr>
+                                `).join('')}
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <!-- Acciones masivas (oculto por defecto) -->
-                <div id="bulkActionsPanel" style="display: none;" class="table-card mt-4">
-                    <div class="table-header">
-                        <h3 class="table-title">⚡ Acciones Masivas</h3>
-                        <button class="btn btn-sm btn-secondary" onclick="hideBulkActions()">✕ Cerrar</button>
-                    </div>
-                    <div style="padding: 1.5rem;">
-                        <div class="filter-group mb-3">
-                            <label class="filter-label">Para los estudiantes seleccionados:</label>
-                        </div>
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <button class="btn btn-primary" onclick="bulkChangeCohorte()">
-                                🔄 Cambiar cohorte
-                            </button>
-                            <button class="btn btn-success" onclick="bulkSendEmail()">
-                                📧 Enviar email
-                            </button>
-                            <button class="btn btn-warning" onclick="bulkAddNote()">
-                                📝 Añadir nota
-                            </button>
-                            <button class="btn btn-danger" onclick="bulkDeactivate()">
-                                ❌ Desactivar
-                            </button>
-                        </div>
-                        <div class="mt-3">
-                            <span class="text-muted">
-                                <span id="selectedCount">0</span> estudiantes seleccionados
-                            </span>
-                        </div>
                     </div>
                 </div>
             `;
@@ -1596,83 +1099,49 @@
             document.getElementById('contentWrapper').innerHTML = html;
         }
 
-        // Renderizar página de estudiantes en riesgo
-        function renderAtRiskPage() {
-            const atRiskStudents = dashboardData.atRiskStudents;
+        // Renderizar página de resultados
+        function renderResultsPage() {
+            const filteredResults = dashboardData.results.filter(r => {
+                if (filters.cohort !== 'all' && r.users?.cohort !== filters.cohort) return false;
+                return true;
+            });
             
             const html = `
-                <div class="stats-grid mb-4">
-                    <div class="stat-card danger">
-                        <div class="stat-header">
-                            <div class="stat-icon danger">🚨</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Riesgo Crítico</div>
-                                <div class="stat-value">${atRiskStudents.filter(s => s.risk_level === 'critical').length}</div>
-                                <div class="text-muted text-small">P(Aprobar) < 30%</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card warning">
-                        <div class="stat-header">
-                            <div class="stat-icon warning">⚠️</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Riesgo Alto</div>
-                                <div class="stat-value">${atRiskStudents.filter(s => s.risk_level === 'high').length}</div>
-                                <div class="text-muted text-small">P(Aprobar) 30-50%</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card primary">
-                        <div class="stat-header">
-                            <div class="stat-icon primary">📊</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Z-Score Medio</div>
-                                <div class="stat-value">${calculateAverageZScore(atRiskStudents)}</div>
-                                <div class="text-muted text-small">Desviación del grupo</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-card info">
-                        <div class="stat-header">
-                            <div class="stat-icon primary">📈</div>
-                            <div class="stat-content">
-                                <div class="stat-label">Mejorando</div>
-                                <div class="stat-value">${atRiskStudents.filter(s => s.trend_direction === 'up').length}</div>
-                                <div class="text-muted text-small">Tendencia positiva</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="table-card">
                     <div class="table-header">
-                        <h2 class="table-title">🚨 Análisis Detallado de Estudiantes en Riesgo</h2>
-                        <div class="table-controls">
-                            <button class="btn btn-danger" onclick="generateRiskReport()">
-                                📄 Generar informe
-                            </button>
-                            <button class="btn btn-primary" onclick="showRiskInterventionModal()">
-                                🎯 Plan de intervención
-                            </button>
-                        </div>
+                        <h2 class="table-title">📈 Todos los Resultados (${filteredResults.length})</h2>
                     </div>
                     <div class="table-wrapper">
-                        <table id="atRiskDetailTable">
+                        <table>
                             <thead>
                                 <tr>
+                                    <th>Fecha</th>
                                     <th>Estudiante</th>
-                                    <th>Diagnóstico</th>
-                                    <th>Métricas Clave</th>
-                                    <th>Factores de Riesgo</th>
-                                    <th>Recomendaciones</th>
-                                    <th>Acciones</th>
+                                    <th>Email</th>
+                                    <th>Cohorte</th>
+                                    <th>Score</th>
+                                    <th>Aciertos</th>
+                                    <th>Fallos</th>
+                                    <th>Blancos</th>
+                                    <th>En directo</th>
+                                    <th>Tiempo</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${renderDetailedAtRiskRows(atRiskStudents)}
+                                ${filteredResults.map(result => `
+                                    <tr>
+                                        <td>${formatDate(result.submitted_at)}</td>
+                                        <td class="font-semibold">${result.users?.username || 'N/A'}</td>
+                                        <td class="text-small">${result.users?.email || 'N/A'}</td>
+                                        <td><span class="badge badge-info">${result.users?.cohort || 'N/A'}</span></td>
+                                        <td><strong>${result.score}/10</strong></td>
+                                        <td>${result.correct_answers || 0}</td>
+                                        <td>${result.wrong_answers || 0}</td>
+                                        <td>${result.blank_answers || 0}</td>
+                                        <td>${result.is_saturday_live ? '🔴 Sí' : '⚪ No'}</td>
+                                        <td>${result.time_taken ? Math.round(result.time_taken/60) + ' min' : 'N/A'}</td>
+                                    </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                     </div>
@@ -1682,849 +1151,86 @@
             document.getElementById('contentWrapper').innerHTML = html;
         }
 
-        // Funciones auxiliares para renderizar filas de tablas
-        function renderAtRiskStudentsRows(students) {
-            return students.map(student => {
-                const riskClass = student.risk_level === 'critical' ? 'risk-critical' : 
-                                 student.risk_level === 'high' ? 'risk-high' : 'risk-medium';
-                const trendIcon = student.trend_direction === 'up' ? '↗' : 
-                                 student.trend_direction === 'down' ? '↘' : '→';
-                const trendClass = student.trend_direction === 'up' ? 'change-positive' : 
-                                  student.trend_direction === 'down' ? 'change-negative' : '';
-                
-                return `
-                    <tr>
-                        <td>
-                            <div>
-                                <div class="font-semibold">${student.username}</div>
-                                <div class="text-small text-muted">${student.email}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge badge-info">${student.cohort}</span>
-                        </td>
-                        <td>${student.average_score?.toFixed(1) || 'N/A'}/100</td>
-                        <td>
-                            <span style="color: ${student.z_score < 0 ? 'var(--danger)' : 'var(--success)'}">
-                                ${student.z_score?.toFixed(2) || 'N/A'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="risk-indicator ${riskClass}">
-                                <span>⚠️</span> ${student.probability_pass?.toFixed(0) || 0}%
-                            </div>
-                        </td>
-                        <td>
-                            <span class="${trendClass}">
-                                ${trendIcon} ${Math.abs(student.delta_z || 0).toFixed(2)}
-                            </span>
-                        </td>
-                        <td>
-                            ${getRiskBadges(student)}
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-icon btn-sm" onclick="viewStudentDetails('${student.id}')" title="Ver detalles">
-                                    👁️
-                                </button>
-                                <button class="btn btn-icon btn-sm" onclick="sendPersonalEmail('${student.id}')" title="Enviar email">
-                                    📧
-                                </button>
-                                <button class="btn btn-icon btn-sm" onclick="addStudentNote('${student.id}')" title="Añadir nota">
-                                    📝
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function renderAllStudentsRows(students) {
-            return students.map(student => {
-                const streakEmoji = student.current_streak >= 8 ? '🔥' : '⭐';
-                const isActive = student.active ? '✅' : '❌';
-                
-                return `
-                    <tr>
-                        <td>
-                            <input type="checkbox" class="student-checkbox" value="${student.id}">
-                        </td>
-                        <td class="font-semibold">${student.username}</td>
-                        <td class="text-small">${student.email}</td>
-                        <td><code>${student.slug}</code></td>
-                        <td>
-                            <span class="badge badge-info">${student.cohort}</span>
-                        </td>
-                        <td class="font-semibold" style="color: var(--primary);">
-                            ${student.current_elo}
-                        </td>
-                        <td>${student.total_simulations}</td>
-                        <td>${student.average_score?.toFixed(1) || 'N/A'}</td>
-                        <td>
-                            <div class="risk-indicator ${getProbabilityClass(student.probability_pass)}">
-                                ${student.probability_pass?.toFixed(0) || 0}%
-                            </div>
-                        </td>
-                        <td>
-                            ${student.current_streak > 0 ? 
-                                `<span class="badge badge-danger">${streakEmoji} ${student.current_streak}</span>` : 
-                                '-'}
-                        </td>
-                        <td>${isActive} ${student.active ? 'Activo' : 'Inactivo'}</td>
-                        <td>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-icon btn-sm" onclick="viewStudentDetails('${student.id}')" title="Ver detalles">
-                                    👁️
-                                </button>
-                                <button class="btn btn-icon btn-sm" onclick="editStudent('${student.id}')" title="Editar">
-                                    ✏️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function renderDetailedAtRiskRows(students) {
-            return students.map(student => {
-                const diagnosis = getStudentDiagnosis(student);
-                const riskFactors = getRiskFactors(student);
-                const recommendations = getRecommendations(student);
-                
-                return `
-                    <tr>
-                        <td>
-                            <div>
-                                <div class="font-semibold">${student.username}</div>
-                                <div class="text-small text-muted">${student.email}</div>
-                                <div class="text-xs text-muted mt-1">Slug: ${student.slug}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="badge badge-${diagnosis.severity}">
-                                ${diagnosis.icon} ${diagnosis.text}
-                            </div>
-                            <div class="text-small text-muted mt-1">
-                                Última actividad: ${formatDate(student.last_participation)}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="text-small">
-                                <div>📊 Score: ${student.average_score?.toFixed(1) || 'N/A'}</div>
-                                <div>📈 Z-Score: ${student.z_score?.toFixed(2) || 'N/A'}</div>
-                                <div>🎯 P(Aprobar): ${student.probability_pass?.toFixed(0)}%</div>
-                                <div>🔥 Racha: ${student.current_streak}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="text-small">
-                                ${riskFactors.map(factor => 
-                                    `<div class="mb-1">${factor.icon} ${factor.text}</div>`
-                                ).join('')}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="text-small">
-                                ${recommendations.map(rec => 
-                                    `<div class="mb-1">• ${rec}</div>`
-                                ).join('')}
-                            </div>
-                        </td>
-                        <td>
-                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                <button class="btn btn-sm btn-primary" onclick="createIntervention('${student.id}')">
-                                    🎯 Intervención
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="scheduleFollowUp('${student.id}')">
-                                    📅 Seguimiento
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Funciones de análisis y cálculo
-        function calculateAverageProbability(students) {
-            if (!students.length) return 0;
-            const sum = students.reduce((acc, s) => acc + (s.probability_pass || 50), 0);
-            return (sum / students.length).toFixed(1);
-        }
-
-        function calculateDropoutRate() {
-            const inactiveCount = dashboardData.students.filter(s => !s.active).length;
-            const total = dashboardData.students.length;
-            return total ? ((inactiveCount / total) * 100).toFixed(1) : 0;
-        }
-
-        function calculateAverageZScore(students) {
-            if (!students.length) return 0;
-            const sum = students.reduce((acc, s) => acc + (s.z_score || 0), 0);
-            return (sum / students.length).toFixed(2);
-        }
-
-        function getNewStudentsCount() {
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            return dashboardData.students.filter(s => 
-                new Date(s.created_at) > oneWeekAgo
-            ).length;
-        }
-
-        function getNewAtRiskCount() {
-            // Esto requeriría histórico, por ahora simulamos
-            return Math.floor(Math.random() * 5) + 1;
-        }
-
-        function getProbabilityTrend() {
-            // Simulación, en producción vendría de datos históricos
-            return (Math.random() * 4 - 2).toFixed(1);
-        }
-
-        function getRiskBadges(student) {
-            const badges = [];
-            
-            if (student.probability_pass < 30) {
-                badges.push('<span class="badge badge-danger">Prob. muy baja</span>');
-            } else if (student.probability_pass < 50) {
-                badges.push('<span class="badge badge-warning">Prob. baja</span>');
-            }
-            
-            if (student.trend_direction === 'down') {
-                badges.push('<span class="badge badge-warning">Tendencia ↓</span>');
-            }
-            
-            if (student.current_streak === 0) {
-                badges.push('<span class="badge badge-danger">Racha rota</span>');
-            }
-            
-            if (student.z_score < -1.5) {
-                badges.push('<span class="badge badge-danger">Z-score crítico</span>');
-            }
-            
-            return badges.join(' ');
-        }
-
-        function getProbabilityClass(probability) {
-            if (probability >= 70) return 'risk-low';
-            if (probability >= 50) return 'risk-medium';
-            if (probability >= 30) return 'risk-high';
-            return 'risk-critical';
-        }
-
-        function getStudentDiagnosis(student) {
-            if (student.probability_pass < 30) {
-                return { icon: '🚨', text: 'Crítico', severity: 'danger' };
-            } else if (student.probability_pass < 50) {
-                return { icon: '⚠️', text: 'Alto riesgo', severity: 'warning' };
-            } else if (student.trend_direction === 'down') {
-                return { icon: '📉', text: 'En declive', severity: 'warning' };
-            }
-            return { icon: '📊', text: 'Monitorizar', severity: 'info' };
-        }
-
-        function getRiskFactors(student) {
-            const factors = [];
-            
-            if (student.average_score < 70) {
-                factors.push({ icon: '📊', text: 'Score bajo constante' });
-            }
-            
-            if (student.current_streak === 0) {
-                factors.push({ icon: '💔', text: 'Racha interrumpida' });
-            }
-            
-            if (student.z_score < -1) {
-                factors.push({ icon: '📉', text: 'Muy por debajo de la media' });
-            }
-            
-            if (student.total_simulations < 5) {
-                factors.push({ icon: '🎯', text: 'Poca práctica' });
-            }
-            
-            if (student.trend_direction === 'down') {
-                factors.push({ icon: '⬇️', text: 'Tendencia negativa' });
-            }
-            
-            return factors;
-        }
-
-        function getRecommendations(student) {
-            const recommendations = [];
-            
-            if (student.average_score < 70) {
-                recommendations.push('Reforzar conceptos básicos');
-                recommendations.push('Sesiones de repaso adicionales');
-            }
-            
-            if (student.current_streak === 0) {
-                recommendations.push('Recuperar rutina de estudio');
-                recommendations.push('Establecer horario fijo');
-            }
-            
-            if (student.z_score < -1) {
-                recommendations.push('Tutoría personalizada');
-                recommendations.push('Material de apoyo extra');
-            }
-            
-            if (student.cohort === '20h' && student.probability_pass < 50) {
-                recommendations.push('Considerar cambio a 36h');
-            }
-            
-            return recommendations;
-        }
-
-        // Crear gráficos sparkline
-        function createSparklines() {
-            // Destruir gráficos existentes
-            Object.keys(chartInstances).forEach(key => {
-                if (key.includes('Sparkline') && chartInstances[key]) {
-                    chartInstances[key].destroy();
-                }
-            });
-
-            // Datos de ejemplo para sparklines (en producción vendrían de la BD)
-            const last7Days = Array.from({length: 7}, (_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() - (6 - i));
-                return date.toLocaleDateString();
-            });
-
-            // Sparkline de estudiantes
-            const studentsCtx = document.getElementById('studentsSparkline');
-            if (studentsCtx) {
-                chartInstances.studentsSparkline = new Chart(studentsCtx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: last7Days,
-                        datasets: [{
-                            data: [240, 241, 241, 243, 244, 245, 245],
-                            borderColor: '#1E3A8A',
-                            backgroundColor: 'rgba(30, 58, 138, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        }
-                    }
-                });
-            }
-
-            // Sparkline de probabilidad
-            const probabilityCtx = document.getElementById('probabilitySparkline');
-            if (probabilityCtx) {
-                chartInstances.probabilitySparkline = new Chart(probabilityCtx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: last7Days,
-                        datasets: [{
-                            data: [66.2, 66.5, 67.1, 67.8, 68.0, 68.2, 68.4],
-                            borderColor: '#10B981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        }
-                    }
-                });
-            }
-
-            // Sparkline de riesgo
-            const riskCtx = document.getElementById('riskSparkline');
-            if (riskCtx) {
-                chartInstances.riskSparkline = new Chart(riskCtx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: last7Days,
-                        datasets: [{
-                            data: [32, 33, 34, 35, 36, 36, 37],
-                            borderColor: '#F59E0B',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        }
-                    }
-                });
-            }
-
-            // Sparkline de abandono
-            const dropoutCtx = document.getElementById('dropoutSparkline');
-            if (dropoutCtx) {
-                chartInstances.dropoutSparkline = new Chart(dropoutCtx.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: last7Days,
-                        datasets: [{
-                            data: [3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2],
-                            borderColor: '#DC2626',
-                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 0,
-                            pointHoverRadius: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { enabled: false }
-                        },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Crear gráficos principales
-        function createMainCharts() {
-            // Destruir gráficos existentes
-            if (chartInstances.probabilityDistribution) {
-                chartInstances.probabilityDistribution.destroy();
-            }
-            if (chartInstances.cohortPerformance) {
-                chartInstances.cohortPerformance.destroy();
-            }
-
-            // Gráfico de distribución de probabilidad
-            const probCtx = document.getElementById('probabilityDistributionChart');
-            if (probCtx) {
-                const students = dashboardData.students;
-                const high = students.filter(s => s.probability_pass >= 70).length;
-                const medium = students.filter(s => s.probability_pass >= 50 && s.probability_pass < 70).length;
-                const low = students.filter(s => s.probability_pass < 50).length;
-
-                chartInstances.probabilityDistribution = new Chart(probCtx.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Alta (>70%)', 'Media (50-70%)', 'Baja (<50%)'],
-                        datasets: [{
-                            data: [high, medium, low],
-                            backgroundColor: ['#10B981', '#F59E0B', '#DC2626'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    font: { size: 12 }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                        return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Gráfico de rendimiento por cohorte
-            const cohortCtx = document.getElementById('cohortPerformanceChart');
-            if (cohortCtx) {
-                const cohortData = dashboardData.cohortStats;
-                
-                chartInstances.cohortPerformance = new Chart(cohortCtx.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: cohortData.map(c => c.cohort),
-                        datasets: [
-                            {
-                                label: 'Score Promedio',
-                                data: cohortData.map(c => c.average_score || 0),
-                                backgroundColor: '#3B82F6',
-                                borderRadius: 8
-                            },
-                            {
-                                label: 'Probabilidad de Aprobar',
-                                data: cohortData.map(c => c.average_pass_probability || 0),
-                                backgroundColor: '#10B981',
-                                borderRadius: 8
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    font: { size: 12 }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                ticks: {
-                                    callback: function(value) {
-                                        return value + '%';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Funciones de interacción
-        function showEmailModal(recipients = 'all') {
-            document.getElementById('emailRecipients').value = recipients;
-            updateEmailPreview();
-            showModal('emailModal');
-        }
-
-        function showExportModal() {
-            updateExportPreview();
-            showModal('exportModal');
-        }
-
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-
-        function hideModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        function updateEmailPreview() {
-            const template = document.getElementById('emailTemplate').value;
-            const preview = document.getElementById('emailPreview');
-            
-            // Plantillas de ejemplo
-            const templates = {
-                'weekly_report': `
-                    <h3>Informe Semanal de Progreso</h3>
-                    <p>Estimado/a [Nombre],</p>
-                    <p>Te enviamos tu informe de progreso de esta semana:</p>
-                    <ul>
-                        <li>📊 Score promedio: [Score]</li>
-                        <li>📈 Probabilidad de aprobar: [Probabilidad]%</li>
-                        <li>🔥 Racha actual: [Racha] semanas</li>
-                    </ul>
-                    <p>Sigue así y alcanzarás tus objetivos.</p>
-                `,
-                'performance_alert': `
-                    <h3>⚠️ Alerta de Rendimiento</h3>
-                    <p>Hola [Nombre],</p>
-                    <p>Hemos detectado que tu rendimiento ha bajado en las últimas semanas.</p>
-                    <p>Tu probabilidad actual de aprobar es del [Probabilidad]%, lo cual te sitúa en zona de riesgo.</p>
-                    <p><strong>Te recomendamos:</strong></p>
-                    <ul>
-                        <li>Aumentar las horas de estudio semanales</li>
-                        <li>Revisar los temas más débiles</li>
-                        <li>Contactar con tu tutor para apoyo adicional</li>
-                    </ul>
-                `,
-                'improvement_congrats': `
-                    <h3>🎉 ¡Felicidades por tu Mejora!</h3>
-                    <p>¡Excelente trabajo, [Nombre]!</p>
-                    <p>Has mejorado significativamente en las últimas semanas:</p>
-                    <ul>
-                        <li>✅ Tu score ha aumentado en [Mejora] puntos</li>
-                        <li>✅ Tu probabilidad de aprobar ahora es del [Probabilidad]%</li>
-                    </ul>
-                    <p>¡Sigue con este excelente ritmo!</p>
-                `
-            };
-            
-            preview.innerHTML = templates[template] || '<p>Selecciona una plantilla...</p>';
-        }
-
-        async function sendEmails() {
-            const recipients = document.getElementById('emailRecipients').value;
-            const template = document.getElementById('emailTemplate').value;
-            const subject = document.getElementById('emailSubject').value;
-            const additionalMessage = document.getElementById('emailAdditionalMessage').value;
-            
-            showLoading(true);
-            
-            try {
-                // Determinar destinatarios
-                let targetUsers = [];
-                switch(recipients) {
-                    case 'all':
-                        targetUsers = dashboardData.students;
-                        break;
-                    case 'at-risk':
-                        targetUsers = dashboardData.atRiskStudents;
-                        break;
-                    case 'cohort-20h':
-                        targetUsers = dashboardData.students.filter(s => s.cohort === '20h');
-                        break;
-                    case 'cohort-36h':
-                        targetUsers = dashboardData.students.filter(s => s.cohort === '36h');
-                        break;
-                    case 'cohort-48h':
-                        targetUsers = dashboardData.students.filter(s => s.cohort === '48h');
-                        break;
-                }
-                
-                // Preparar emails para la cola
-                const emailPromises = targetUsers.map(user => {
-                    return supabaseClient
-                        .from('email_queue')
-                        .insert({
-                            to_email: user.email,
-                            subject: subject,
-                            template_id: template,
-                            template_data: {
-                                username: user.username,
-                                score: user.average_score,
-                                probability: user.probability_pass,
-                                streak: user.current_streak,
-                                additional_message: additionalMessage
-                            }
-                        });
-                });
-                
-                await Promise.all(emailPromises);
-                
-                showNotification('success', `${targetUsers.length} emails añadidos a la cola de envío`);
-                hideModal('emailModal');
-                
-            } catch (error) {
-                console.error('Error enviando emails:', error);
-                showNotification('error', 'Error al enviar los emails');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function updateExportPreview() {
-            const filters = `
-                • Periodo: ${document.getElementById('periodFilter').value}
-                • Cohorte: ${document.getElementById('cohortFilter').value}
-                • Nivel de riesgo: ${document.getElementById('riskFilter').value}
+        // Renderizar página de simulacros
+        function renderSimulationsPage() {
+            const html = `
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">🎯 Gestión de Simulacros</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Semana</th>
+                                    <th>Fechas</th>
+                                    <th>Estado</th>
+                                    <th>Participantes</th>
+                                    <th>Score Promedio</th>
+                                    <th>Score Máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dashboardData.simulations.map(sim => `
+                                    <tr>
+                                        <td><strong>RF${sim.week_number}</strong></td>
+                                        <td>${formatDate(sim.start_date)} - ${formatDate(sim.end_date)}</td>
+                                        <td>
+                                            <span class="badge badge-${sim.status === 'active' ? 'success' : 'secondary'}">
+                                                ${sim.status === 'active' ? '🟢 Activo' : '⚪ Finalizado'}
+                                            </span>
+                                        </td>
+                                        <td>${sim.total_participants || 0}</td>
+                                        <td>${sim.average_score?.toFixed(1) || 'N/A'}/10</td>
+                                        <td>${sim.top_score ? (sim.top_score/10).toFixed(1) : 'N/A'}/10</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             `;
-            document.getElementById('exportFiltersPreview').textContent = filters;
-        }
-
-        async function exportData() {
-            const exportType = document.getElementById('exportType').value;
-            const exportFormat = document.querySelector('input[name="exportFormat"]:checked').value;
             
-            showLoading(true);
-            
-            try {
-                let data = [];
-                let filename = '';
-                
-                switch(exportType) {
-                    case 'students':
-                        data = dashboardData.students;
-                        filename = 'estudiantes';
-                        break;
-                    case 'results':
-                        data = dashboardData.recentResults;
-                        filename = 'resultados';
-                        break;
-                    case 'analytics':
-                        data = prepareAnalyticsExport();
-                        filename = 'analytics';
-                        break;
-                    case 'at-risk':
-                        data = dashboardData.atRiskStudents;
-                        filename = 'estudiantes_riesgo';
-                        break;
-                }
-                
-                // Aplicar filtros
-                data = applyDataFilters({ [exportType]: data })[exportType] || data;
-                
-                // Generar archivo según formato
-                if (exportFormat === 'csv') {
-                    downloadCSV(data, `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
-                } else if (exportFormat === 'excel') {
-                    // En producción, usar una librería como SheetJS
-                    showNotification('info', 'Exportación Excel no implementada en esta demo');
-                } else if (exportFormat === 'pdf') {
-                    // En producción, usar una librería como jsPDF
-                    showNotification('info', 'Exportación PDF no implementada en esta demo');
-                }
-                
-                hideModal('exportModal');
-                
-            } catch (error) {
-                console.error('Error exportando datos:', error);
-                showNotification('error', 'Error al exportar los datos');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function downloadCSV(data, filename) {
-            if (!data || data.length === 0) {
-                showNotification('warning', 'No hay datos para exportar');
-                return;
-            }
-            
-            // Obtener headers
-            const headers = Object.keys(data[0]);
-            
-            // Crear CSV
-            let csv = headers.join(',') + '\n';
-            
-            data.forEach(row => {
-                const values = headers.map(header => {
-                    const value = row[header];
-                    // Escapar comillas y manejar valores con comas
-                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-                        return `"${value.replace(/"/g, '""')}"`;
-                    }
-                    return value || '';
-                });
-                csv += values.join(',') + '\n';
-            });
-            
-            // Descargar
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            link.click();
-            
-            showNotification('success', 'Archivo descargado correctamente');
-        }
-
-        function prepareAnalyticsExport() {
-            // Preparar datos agregados para exportación
-            return dashboardData.students.map(student => ({
-                ...student,
-                risk_level: student.probability_pass < 30 ? 'critical' : 
-                           student.probability_pass < 50 ? 'high' : 
-                           student.probability_pass < 70 ? 'medium' : 'low',
-                last_simulation_score: dashboardData.recentResults
-                    .find(r => r.user_id === student.id)?.score || 'N/A'
-            }));
+            document.getElementById('contentWrapper').innerHTML = html;
         }
 
         // Aplicar filtros a los datos
         function applyDataFilters(data) {
             let filtered = { ...data };
             
-            // Filtro por periodo
-            if (filters.period !== 'all') {
-                const dateLimit = new Date();
-                if (filters.period === 'week') {
-                    dateLimit.setDate(dateLimit.getDate() - 7);
-                } else if (filters.period === 'month') {
-                    dateLimit.setMonth(dateLimit.getMonth() - 1);
-                }
-                
-                // Aplicar filtro de fecha donde sea relevante
-                if (filtered.students) {
-                    filtered.students = filtered.students.filter(s => 
-                        !s.last_participation || new Date(s.last_participation) > dateLimit
-                    );
-                }
-            }
-            
             // Filtro por cohorte
             if (filters.cohort !== 'all') {
-                if (filtered.students) {
-                    filtered.students = filtered.students.filter(s => s.cohort === filters.cohort);
-                }
-                if (filtered.atRiskStudents) {
-                    filtered.atRiskStudents = filtered.atRiskStudents.filter(s => s.cohort === filters.cohort);
-                }
+                filtered.students = filtered.students.filter(s => s.cohort === filters.cohort);
             }
             
-            // Filtro por nivel de riesgo
-            if (filters.risk !== 'all') {
-                if (filtered.students) {
-                    filtered.students = filtered.students.filter(s => {
-                        const level = s.probability_pass < 30 ? 'critical' : 
-                                     s.probability_pass < 50 ? 'high' : 
-                                     s.probability_pass < 70 ? 'medium' : 'low';
-                        return level === filters.risk;
-                    });
-                }
-                if (filtered.atRiskStudents) {
-                    filtered.atRiskStudents = filtered.atRiskStudents.filter(s => 
-                        s.risk_level === filters.risk
-                    );
-                }
+            // Filtro por estado
+            if (filters.status === 'active') {
+                filtered.students = filtered.students.filter(s => s.active);
+            } else if (filters.status === 'inactive') {
+                filtered.students = filtered.students.filter(s => !s.active);
             }
             
             return filtered;
         }
 
         // Funciones de utilidad
+        function showError(message) {
+            const contentWrapper = document.getElementById('contentWrapper');
+            contentWrapper.innerHTML = `
+                <div class="error-container">
+                    <div class="error-title">❌ Error</div>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
         function showNotification(type, message) {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.innerHTML = `
-                <div class="notification-icon ${type}">
-                    ${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}
-                </div>
                 <div>
-                    <div class="font-semibold">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                    <div class="text-small">${message}</div>
+                    ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+                    ${message}
                 </div>
             `;
             
@@ -2534,15 +1240,6 @@
                 notification.style.animation = 'slideInRight 0.3s ease reverse';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
-        }
-
-        function showLoading(show) {
-            // En producción, mostrar un spinner global
-            if (show) {
-                console.log('Cargando...');
-            } else {
-                console.log('Carga completa');
-            }
         }
 
         function formatDate(dateString) {
@@ -2555,45 +1252,33 @@
             });
         }
 
-        function formatNumber(num) {
-            return new Intl.NumberFormat('es-ES').format(num);
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
+        function getProbabilityClass(probability) {
+            if (!probability) probability = 50;
+            if (probability >= 70) return 'risk-low';
+            if (probability >= 50) return 'risk-medium';
+            if (probability >= 30) return 'risk-high';
+            return 'risk-critical';
         }
 
         function filterTable(tableId, searchTerm) {
             const table = document.getElementById(tableId);
-            const rows = table.querySelectorAll('tbody tr');
+            if (!table) return;
             
+            const rows = table.querySelectorAll('tbody tr');
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
             });
         }
 
-        function toggleSelectAll(checkbox) {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(cb => cb.checked = checkbox.checked);
-            updateSelectedCount();
+        function updateBadges() {
+            document.getElementById('totalStudentsBadge').textContent = dashboardData.students.length;
         }
 
-        function updateSelectedCount() {
-            const selected = document.querySelectorAll('.student-checkbox:checked').length;
-            document.getElementById('selectedCount').textContent = selected;
-        }
-
-        function showBulkActions() {
-            document.getElementById('bulkActionsPanel').style.display = 'block';
-        }
-
-        function hideBulkActions() {
-            document.getElementById('bulkActionsPanel').style.display = 'none';
+        function applyFilters() {
+            filters.cohort = document.getElementById('cohortFilter').value;
+            filters.status = document.getElementById('statusFilter').value;
+            showPage(currentPage);
         }
 
         async function refreshData() {
@@ -2603,19 +1288,6 @@
             showNotification('success', 'Datos actualizados');
         }
 
-        function updateBadges() {
-            document.getElementById('totalStudentsBadge').textContent = dashboardData.students.length;
-            document.getElementById('atRiskBadge').textContent = dashboardData.atRiskStudents.length;
-        }
-
-        function applyFilters() {
-            filters.period = document.getElementById('periodFilter').value;
-            filters.cohort = document.getElementById('cohortFilter').value;
-            filters.risk = document.getElementById('riskFilter').value;
-            
-            showPage(currentPage);
-        }
-
         async function logout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 await supabaseClient.auth.signOut();
@@ -2623,218 +1295,7 @@
             }
         }
 
-        // Funciones placeholder para acciones de estudiantes
-        async function viewStudentDetails(studentId) {
-            const student = dashboardData.students.find(s => s.id === studentId) || 
-                           dashboardData.atRiskStudents.find(s => s.id === studentId);
-            
-            if (!student) return;
-            
-            const content = `
-                <div style="display: grid; gap: 1.5rem;">
-                    <div>
-                        <h3>${student.username}</h3>
-                        <p class="text-muted">${student.email}</p>
-                        <p class="text-small">Slug: <code>${student.slug}</code></p>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                        <div class="stat-card">
-                            <div class="stat-label">Cohorte</div>
-                            <div class="stat-value text-small">${student.cohort}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">ELO Actual</div>
-                            <div class="stat-value text-small">${student.current_elo}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Promedio</div>
-                            <div class="stat-value text-small">${student.average_score?.toFixed(1) || 'N/A'}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">P(Aprobar)</div>
-                            <div class="stat-value text-small">${student.probability_pass?.toFixed(0)}%</div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4>Historial de Simulacros</h4>
-                        <div class="table-wrapper">
-                            <table style="width: 100%;">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Simulacro</th>
-                                        <th>Score</th>
-                                        <th>Posición</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${dashboardData.recentResults
-                                        .filter(r => r.user_id === studentId)
-                                        .slice(0, 5)
-                                        .map(r => `
-                                            <tr>
-                                                <td>${formatDate(r.submitted_at)}</td>
-                                                <td>RF${r.weekly_simulations.week_number}</td>
-                                                <td>${r.score}/100</td>
-                                                <td>${r.position || 'N/A'}</td>
-                                            </tr>
-                                        `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('studentDetailContent').innerHTML = content;
-            showModal('studentDetailModal');
-        }
-
-        function editStudent(studentId) {
-            // Implementar edición
-            showNotification('info', 'Función de edición en desarrollo');
-        }
-
-        function sendPersonalEmail(studentId) {
-            // Implementar email personal
-            showEmailModal();
-        }
-
-        function addStudentNote(studentId) {
-            const note = prompt('Añadir nota para el estudiante:');
-            if (note) {
-                showNotification('success', 'Nota añadida correctamente');
-            }
-        }
-
-        function createIntervention(studentId) {
-            // Implementar creación de intervención
-            showNotification('info', 'Creando plan de intervención...');
-        }
-
-        function scheduleFollowUp(studentId) {
-            // Implementar programación de seguimiento
-            showNotification('info', 'Programando seguimiento...');
-        }
-
-        function generateRiskReport() {
-            // Generar informe de riesgo
-            showNotification('info', 'Generando informe de estudiantes en riesgo...');
-        }
-
-        function showRiskInterventionModal() {
-            // Mostrar modal de intervención
-            showNotification('info', 'Abriendo plan de intervención...');
-        }
-
-        // Timeline de actividad
-        function renderActivityTimeline() {
-            const activities = [
-                { time: 'Hace 5 min', text: 'María García envió resultados del simulacro RF15', type: 'success' },
-                { time: 'Hace 23 min', text: 'Carlos López mejoró su probabilidad al 75%', type: 'info' },
-                { time: 'Hace 1 hora', text: 'Se detectaron 3 nuevos estudiantes en riesgo', type: 'warning' },
-                { time: 'Hace 2 horas', text: '15 emails enviados automáticamente', type: 'info' },
-                { time: 'Hace 3 horas', text: 'Juan Pérez rompió su racha de 8 semanas', type: 'danger' }
-            ];
-            
-            return activities.map(activity => `
-                <div class="timeline-item">
-                    <div class="timeline-marker"></div>
-                    <div>
-                        <div class="text-small text-muted">${activity.time}</div>
-                        <div>${activity.text}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Tabs de analytics
-        function showAnalyticsTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            const content = document.getElementById('analyticsContent');
-            
-            switch(tab) {
-                case 'trends':
-                    content.innerHTML = renderTrendsTab();
-                    break;
-                case 'predictions':
-                    content.innerHTML = renderPredictionsTab();
-                    break;
-                case 'cohorts':
-                    content.innerHTML = renderCohortsTab();
-                    break;
-                case 'topics':
-                    content.innerHTML = renderTopicsTab();
-                    break;
-            }
-        }
-
-        function renderTrendsTab() {
-            return `
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Evolución del Rendimiento General</h3>
-                    </div>
-                    <div class="chart-body">
-                        <canvas id="trendsChart" height="400"></canvas>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderPredictionsTab() {
-            return `
-                <div class="table-card">
-                    <div class="table-header">
-                        <h3 class="table-title">🔮 Predicciones de Aprobación</h3>
-                    </div>
-                    <div style="padding: 1.5rem;">
-                        <p>Análisis predictivo basado en tendencias actuales...</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderCohortsTab() {
-            return `
-                <div class="stats-grid">
-                    ${dashboardData.cohortStats.map(cohort => `
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <div class="stat-content">
-                                    <div class="stat-label">Cohorte ${cohort.cohort}</div>
-                                    <div class="stat-value">${cohort.total_students} estudiantes</div>
-                                    <div class="text-small mt-2">
-                                        <div>Score medio: ${cohort.average_score?.toFixed(1) || 'N/A'}</div>
-                                        <div>P(Aprobar): ${cohort.average_pass_probability?.toFixed(1) || 'N/A'}%</div>
-                                        <div>En riesgo: ${cohort.at_risk_count}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        function renderTopicsTab() {
-            return `
-                <div class="table-card">
-                    <div class="table-header">
-                        <h3 class="table-title">📚 Análisis por Temas Débiles</h3>
-                    </div>
-                    <div style="padding: 1.5rem;">
-                        <p>Análisis de los temas más problemáticos...</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Inicializar dashboard
+        // Inicializar dashboard cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
