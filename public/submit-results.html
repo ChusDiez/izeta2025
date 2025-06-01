@@ -430,7 +430,6 @@
                     <div class="form-group">
                         <label for="blank_answers">
                             Blancas <span class="required">*</span>
-
                         </label>
                         <input 
                             type="number" 
@@ -851,27 +850,10 @@
                 const selectedTopics = Array.from(document.querySelectorAll('input[name="weakest_topics"]:checked'))
                     .map(cb => cb.value);
                 
-                // Calcular score
-                const score = (correct - (wrong * 0.33)) / 10;
+                // Calcular score según fórmula oficial
+                const scoreDecimal = (correct - (wrong * 0.33)) / 10;
+                const scoreInt = Math.round(scoreDecimal * 100); // Para BD: 855 = 8.55
                 
-                // Obtener datos del formulario
-                const formData = {
-                    email: document.getElementById('email').value,
-                    simulation_id: document.getElementById('simulacro').value,
-                    score: parseFloat(score.toFixed(2)),
-                    correct_answers: correct,
-                    wrong_answers: wrong,
-                    blank_answers: blank,
-                    confidence_score: parseInt(document.getElementById('confidence').value),
-                    time_taken: document.getElementById('time').value ? parseInt(document.getElementById('time').value) * 60 : null,
-                    is_saturday_live: document.getElementById('is_saturday').checked,
-                    device_type: getDeviceType(),
-                    stress_level: parseInt(document.querySelector('input[name="stress_level"]:checked').value),
-                    review_time: parseInt(document.getElementById('review_time').value),
-                    weakest_topics: selectedTopics,
-                    difficulty_note: document.getElementById('difficulty_note').value || null
-                };
-
                 // Validación de fecha
                 const simulacroSelect = document.getElementById('simulacro');
                 const selectedOption = simulacroSelect.options[simulacroSelect.selectedIndex];
@@ -889,7 +871,7 @@
                 const { data: userData, error: userError } = await supabaseClient
                     .from('users')
                     .select('id, slug')
-                    .eq('email', formData.email)
+                    .eq('email', document.getElementById('email').value)
                     .single();
 
                 if (userError || !userData) {
@@ -901,52 +883,55 @@
                     .from('user_results')
                     .select('id')
                     .eq('user_id', userData.id)
-                    .eq('simulation_id', formData.simulation_id)
+                    .eq('simulation_id', document.getElementById('simulacro').value)
                     .single();
 
                 if (existingResult) {
                     throw new Error('Ya has enviado resultados para este simulacro');
                 }
 
-                // Enviar resultados (sin el campo score, se calculará automáticamente)
+                // Enviar resultados
                 const { error: insertError } = await supabaseClient
                     .from('user_results')
                     .insert({
                         user_id: userData.id,
-                        simulation_id: formData.simulation_id,
-                        score: formData.score,
-                        correct_answers: formData.correct_answers,
-                        wrong_answers: formData.wrong_answers,
-                        blank_answers: formData.blank_answers,
-                        confidence_score: formData.confidence_score,
-                        time_taken: formData.time_taken,
-                        is_saturday_live: formData.is_saturday_live,
-                        device_type: formData.device_type,
-                        stress_level: formData.stress_level,
-                        review_time: formData.review_time,
-                        weakest_topics: formData.weakest_topics,
-                        difficulty_note: formData.difficulty_note
+                        simulation_id: document.getElementById('simulacro').value,
+                        score: scoreInt, // 855 para 8.55
+                        correct_answers: correct,
+                        wrong_answers: wrong,
+                        blank_answers: blank,
+                        confidence_score: parseInt(document.getElementById('confidence').value),
+                        time_taken: document.getElementById('time').value ? 
+                            parseInt(document.getElementById('time').value) * 60 : null,
+                        is_saturday_live: document.getElementById('is_saturday').checked,
+                        device_type: getDeviceType(),
+                        stress_level: parseInt(document.querySelector('input[name="stress_level"]:checked').value),
+                        review_time: parseInt(document.getElementById('review_time').value),
+                        weakest_topics: selectedTopics,
+                        difficulty_note: document.getElementById('difficulty_note').value || null,
+                        error_percentage: parseFloat(((wrong / (correct + wrong)) * 100).toFixed(2))
                     });
 
                 if (insertError) throw insertError;
 
                 // Agregar email a la cola
-                const weekNumber = document.querySelector('#simulacro option:checked').textContent.match(/RF(\d+)/)[1];
+                const weekNumber = document.querySelector('#simulacro option:checked')
+                    .textContent.match(/RF(\d+)/)[1];
                 
                 const { error: emailError } = await supabaseClient
                     .from('email_queue')
                     .insert({
-                        to_email: formData.email,
-                        subject: `Resultados recibidos - Simulacro Recta Final ${weekNumber}`,
+                        to_email: document.getElementById('email').value,
+                        subject: `Resultados recibidos - Simulacro RF${weekNumber}`,
                         template_id: 'result_confirmation',
                         template_data: {
                             week_number: weekNumber,
-                            score: formData.score,
-                            correct_answers: formData.correct_answers,
-                            wrong_answers: formData.wrong_answers,
-                            blank_answers: formData.blank_answers,
-                            error_percentage: ((formData.wrong_answers / (formData.correct_answers + formData.wrong_answers)) * 100).toFixed(2),
-                            review_time: formData.review_time,
+                            score: scoreDecimal.toFixed(2),
+                            correct_answers: correct,
+                            wrong_answers: wrong,
+                            blank_answers: blank,
+                            error_percentage: ((wrong / (correct + wrong)) * 100).toFixed(2),
+                            review_time: document.getElementById('review_time').value,
                             weakest_topics: selectedTopics,
                             user_slug: userData.slug
                         }
@@ -956,20 +941,22 @@
                     console.error('Error al programar email:', emailError);
                 }
 
-                // Mostrar éxito con el identificador del usuario
+                // Mostrar éxito
                 successMsg.innerHTML = `
                     <strong>✅ Resultados enviados correctamente.</strong><br>
-                    Tu identificador en el ranking es: <span class="user-identifier">${userData.slug}</span><br>
-                    Tu puntuación: <strong>${formData.score.toFixed(2)}/10</strong><br>
-                    Procesando...
+                    Tu identificador anónimo en el ranking es: <span class="user-identifier">${userData.slug}</span><br>
+                    <span style="font-size: 0.85rem; color: #666;">
+                        (Este código protege tu privacidad - solo tú sabes que es tuyo)
+                    </span><br>
+                    Procesando tus datos para generar recomendaciones personalizadas...
                 `;
                 
                 // Añadir mensajes específicos según los datos
                 let additionalMsg = '';
-                if (formData.blank_answers > 10) {
+                if (blank > 10) {
                     additionalMsg += '<br>• Detectamos varias respuestas en blanco. Considera revisar estrategias de gestión del tiempo.';
                 }
-                if (formData.stress_level > 75) {
+                if (parseInt(document.querySelector('input[name="stress_level"]:checked').value) > 75) {
                     additionalMsg += '<br>• Tu nivel de estrés fue elevado. Te recomendamos técnicas de relajación pre-examen.';
                 }
                 if (selectedTopics.length > 0) {

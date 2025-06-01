@@ -1,8 +1,18 @@
+// .vscode/settings.json
 {
+  // CRÍTICO: Esta línea activa Deno
+  "deno.enable": true,
+  
+  // Rutas donde Deno está habilitado
   "deno.enablePaths": [
-    "supabase/functions"
+    "supabase/functions",
+    "./supabase/functions"
   ],
+  
+  // Linting de Deno
   "deno.lint": true,
+  
+  // Features inestables de Deno
   "deno.unstable": [
     "bare-node-builtins",
     "byonm",
@@ -18,7 +28,19 @@
     "http",
     "net"
   ],
+  
+  // Formatter para TypeScript
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  
+  // Opcional: Desactivar el servidor de TypeScript para evitar conflictos
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  
+  // Opcional: Auto-importar desde URLs de Deno
+  "deno.suggest.imports.hosts": {
+    "https://deno.land": true,
+    "https://esm.sh": true,
+    "https://cdn.skypack.dev": true
   }
 }

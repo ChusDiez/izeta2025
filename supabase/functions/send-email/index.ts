@@ -1,10 +1,17 @@
 // supabase/functions/send-email/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Tipos para los resultados
+interface EmailResult {
+  id: string;
+  status: string;
+  error?: string;
 }
 
 serve(async (req) => {
@@ -38,7 +45,8 @@ serve(async (req) => {
     }
 
     // Procesar cada email
-    const results = []
+    const results: EmailResult[] = []
+    
     for (const email of emails) {
       try {
         // Si no tienes Resend configurado, solo marca como enviado
@@ -86,7 +94,7 @@ serve(async (req) => {
           throw new Error(`Resend error: ${res.status}`)
         }
 
-      } catch (err) {
+      } catch (err: any) {
         await supabase
           .from('email_queue')
           .update({
@@ -110,7 +118,7 @@ serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -149,12 +157,21 @@ function generateEmailHTML(templateId: string, data: any): string {
       <p>Hola,</p>
       <p>Confirmamos la recepción de tus resultados del simulacro:</p>
       
-      <div class="stat-box">
-        <strong>🏷️ Tu identificador en el ranking:</strong> <span class="identifier">${data.user_slug || 'No disponible'}</span>
+      <div style="background: #EFF6FF; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0;">
+          <strong>🔐 Tu código anónimo:</strong> 
+          <span style="background: #1E3A8A; color: white; padding: 5px 15px; border-radius: 20px; font-size: 1.1rem; font-weight: bold; display: inline-block; margin: 5px 0;">
+            ${data.user_slug || 'No disponible'}
+          </span>
+        </p>
+        <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: #666;">
+          Este código de 2 letras + 4 números protege tu identidad en el ranking público. 
+          Solo tú conoces que este código te pertenece. Guárdalo para poder seguir tu evolución.
+        </p>
       </div>
       
       <div class="stat-box">
-        <strong>📊 Puntuación:</strong> ${data.score.toFixed(2).replace('.', ',')}/10
+        <strong>📊 Puntuación:</strong> ${data.score}/100
       </div>
       
       <div class="stat-box">
@@ -169,7 +186,7 @@ function generateEmailHTML(templateId: string, data: any): string {
       <div class="weak-topics">
         <strong>📚 Temas a reforzar:</strong><br>
         <ul style="margin: 10px 0 0 20px;">
-          ${data.weakest_topics.map(topic => `<li>${topic}</li>`).join('')}
+          ${data.weakest_topics.map((topic: string) => `<li>${topic}</li>`).join('')}
         </ul>
       </div>
       ` : ''}
@@ -188,8 +205,18 @@ function generateEmailHTML(templateId: string, data: any): string {
         </a>
       </center>
       
-      <p>Busca tu identificador <strong>${data.user_slug}</strong> en el ranking para ver tu posición y evolución.</p>
-      
+    <div style="background: #EFF6FF; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0;">
+            <strong>🔐 Tu código anónimo:</strong> 
+            <span style="background: #1E3A8A; color: white; padding: 5px 15px; border-radius: 20px; font-size: 1.1rem; font-weight: bold; display: inline-block; margin: 5px 0;">
+                ${data.user_slug}
+            </span>
+        </p>
+        <p style="margin: 10px 0 0 0; font-size: 0.9rem; color: #666;">
+            Este código de 2 letras + 4 números protege tu identidad en el ranking público. 
+            Solo tú conoces que este código te pertenece. Guárdalo para poder seguir tu evolución.
+        </p>
+    </div>
       <p><strong>Próximos pasos:</strong></p>
       <ul>
         <li>Revisa los temas señalados como débiles</li>
