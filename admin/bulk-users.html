@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga Masiva de Alumnos - IZETA 2025</title>
+    <style>
+        :root {
+            --primary: #1E3A8A;
+            --primary-dark: #0E2A6A;
+            --bg-light: #F9FAFB;
+            --text-dark: #212121;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --success: #10B981;
+            --danger: #DC2626;
+            --warning: #F59E0B;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .form-section {
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+        
+        textarea {
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: var(--text-dark);
+            margin-right: 1rem;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #dc2626;
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .preview-table th {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        .preview-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .preview-table tr:hover {
+            background: var(--bg-light);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-box {
+            background: var(--bg-light);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .help-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .format-example {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            background: rgba(30, 58, 138, 0.2);
+            transform: translateX(-5px);
+        }
+        
+        #processingLog {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .log-entry {
+            margin-bottom: 0.5rem;
+        }
+        
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/admin/dashboard.html" class="back-link">← Volver al Dashboard</a>
+        
+        <div class="header">
+            <h1>👥 Carga Masiva de Alumnos</h1>
+            <p>Añade múltiples alumnos al sistema de forma rápida</p>
+        </div>
+        
+        <div class="card">
+            <h2>Método 1: Carga desde texto</h2>
+            <p class="help-text">Pega la lista de emails o usa el formato completo con más datos</p>
+            
+            <div class="form-grid">
+                <div class="form-section">
+                    <h3>📧 Formato Simple (solo emails)</h3>
+                    <div class="form-group">
+                        <label for="emailList">Lista de emails (uno por línea)</label>
+                        <textarea id="emailList" placeholder="juan.perez@email.com
+maria.garcia@email.com
+carlos.lopez@email.com"></textarea>
+                        <div class="format-example">
+                            Ejemplo:<br>
+                            alumno1@gmail.com<br>
+                            alumno2@hotmail.com<br>
+                            alumno3@yahoo.es
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="defaultCohort">Cohorte por defecto</label>
+                        <select id="defaultCohort">
+                            <option value="sin_asignar">Sin asignar (pendiente)</option>
+                            <option value="20h">20h - Base</option>
+                            <option value="36h">36h - Intensivo</option>
+                            <option value="48h">48h - Élite</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>📋 Formato Completo (CSV)</h3>
+                    <div class="form-group">
+                        <label for="csvData">Datos CSV (email,nombre,cohorte)</label>
+                        <textarea id="csvData" placeholder="email,nombre,cohorte
+juan.perez@email.com,Juan Pérez,20h
+maria.garcia@email.com,María García,36h
+carlos.lopez@email.com,Carlos López,48h"></textarea>
+                        <div class="format-example">
+                            Formato: email,nombre,cohorte<br>
+                            Ejemplo:<br>
+                            juan@email.com,Juan Pérez,20h<br>
+                            maria@email.com,María García,36h
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button class="btn-secondary" onclick="previewUsers()">👁️ Vista Previa</button>
+                <button class="btn-primary" onclick="processUsers()">⬆️ Cargar Alumnos</button>
+            </div>
+            
+            <!-- Opciones avanzadas -->
+            <div style="margin-top: 2rem; padding: 1rem; background: #fef3c7; border-radius: 6px;">
+                <h4 style="margin-bottom: 1rem;">⚙️ Opciones Avanzadas</h4>
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="updateExisting" style="width: auto;">
+                        <span>Actualizar datos de usuarios existentes</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="onlyUpdateCohort" style="width: auto;">
+                        <span>Solo actualizar cohorte (mantener otros datos)</span>
+                    </label>
+                </div>
+                <p class="help-text" style="margin-top: 0.5rem;">
+                    Si está marcado, actualizará los datos de usuarios que ya existen en lugar de saltarlos.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Vista previa -->
+        <div id="previewSection" class="card" style="display: none;">
+            <h2>Vista Previa</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total alumnos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="cohort20h">0</div>
+                    <div class="stat-label">Cohorte 20h</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="cohort36h">0</div>
+                    <div class="stat-label">Cohorte 36h</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="cohort48h">0</div>
+                    <div class="stat-label">Cohorte 48h</div>
+                </div>
+            </div>
+            
+            <table class="preview-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>Cohorte</th>
+                    </tr>
+                </thead>
+                <tbody id="previewTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Mensajes -->
+        <div id="successMessage" class="message success"></div>
+        <div id="errorMessage" class="message error"></div>
+        
+        <!-- Log de procesamiento -->
+        <div id="processingLog"></div>
+        
+        <!-- Lista actual -->
+        <div class="card">
+            <h2>👥 Alumnos Actuales en el Sistema</h2>
+            <div id="currentStats" class="stats-grid" style="margin-bottom: 2rem;">
+                <div class="stat-box">
+                    <div class="stat-number" id="currentTotal">...</div>
+                    <div class="stat-label">Total actual</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="currentActive">...</div>
+                    <div class="stat-label">Activos</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="searchInput" placeholder="Buscar por email, nombre o slug..." 
+                       style="max-width: 400px; flex: 1;" onkeyup="filterUsers()">
+                
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <label style="margin: 0;">Cambiar cohorte seleccionados:</label>
+                    <select id="bulkCohortChange" style="width: auto;">
+                        <option value="">-- Seleccionar --</option>
+                        <option value="sin_asignar">Sin asignar</option>
+                        <option value="20h">20h - Base</option>
+                        <option value="36h">36h - Intensivo</option>
+                        <option value="48h">48h - Élite</option>
+                    </select>
+                    <button class="btn-primary" style="padding: 0.5rem 1rem;" onclick="bulkChangeCohort()">
+                        Aplicar
+                    </button>
+                </div>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="width: auto;">
+                            </th>
+                            <th>Email</th>
+                            <th>Nombre</th>
+                            <th>Slug</th>
+                            <th>Cohorte</th>
+                            <th>ELO</th>
+                            <th>Simulacros</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="currentUsersBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center;">Cargando...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/config.js"></script>
+    <script>
+        let previewData = [];
+        let currentUsers = [];
+
+        // Verificar admin
+        async function checkAdminAccess() {
+            const user = await checkAuth();
+            if (!user) {
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            
+            const admin = await isAdmin();
+            if (!admin) {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = '/public/index.html';
+                return;
+            }
+            
+            loadCurrentUsers();
+        }
+
+        // Generar slug único
+        function generateSlug(name, existingSlugs = []) {
+            // Limpiar y formatear el nombre
+            const baseName = name
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+                .replace(/[^a-z0-9\s]/g, '') // Solo letras y números
+                .trim()
+                .split(' ')
+                .slice(0, 2) // Tomar solo primeras 2 palabras
+                .join('-');
+            
+            // Generar número aleatorio
+            let slug;
+            let attempts = 0;
+            do {
+                const randomNum = Math.floor(Math.random() * 9000) + 1000;
+                slug = `${baseName}-${randomNum}`;
+                attempts++;
+            } while (existingSlugs.includes(slug) && attempts < 100);
+            
+            return slug;
+        }
+
+        // Vista previa
+        function previewUsers() {
+            const emailList = document.getElementById('emailList').value.trim();
+            const csvData = document.getElementById('csvData').value.trim();
+            const defaultCohort = document.getElementById('defaultCohort').value;
+            
+            previewData = [];
+            
+            // Procesar formato simple (solo emails)
+            if (emailList) {
+                const emails = emailList.split('\n').filter(e => e.trim());
+                emails.forEach(email => {
+                    const trimmedEmail = email.trim().toLowerCase();
+                    if (validateEmail(trimmedEmail)) {
+                        const namePart = trimmedEmail.split('@')[0];
+                        const name = namePart.replace(/[._-]/g, ' ')
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                        
+                        previewData.push({
+                            email: trimmedEmail,
+                            username: name,
+                            cohort: defaultCohort
+                        });
+                    }
+                });
+            }
+            
+            // Procesar formato CSV
+            if (csvData) {
+                const lines = csvData.split('\n').filter(l => l.trim());
+                lines.forEach((line, index) => {
+                    if (index === 0 && line.includes('email,nombre,cohorte')) return; // Skip header
+                    
+                    const parts = line.split(',').map(p => p.trim());
+                    if (parts.length >= 2) {
+                        const email = parts[0].toLowerCase();
+                        if (validateEmail(email)) {
+                            previewData.push({
+                                email: email,
+                                username: parts[1] || email.split('@')[0],
+                                cohort: parts[2] || defaultCohort
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // Generar slugs únicos
+            const existingSlugs = currentUsers.map(u => u.slug);
+            previewData.forEach(user => {
+                user.slug = generateSlug(user.username, existingSlugs);
+                existingSlugs.push(user.slug);
+            });
+            
+            // Mostrar preview
+            showPreview();
+        }
+
+        // Mostrar vista previa
+        function showPreview() {
+            document.getElementById('previewSection').style.display = 'block';
+            
+            // Estadísticas
+            document.getElementById('totalCount').textContent = previewData.length;
+            document.getElementById('cohort20h').textContent = previewData.filter(u => u.cohort === '20h').length;
+            document.getElementById('cohort36h').textContent = previewData.filter(u => u.cohort === '36h').length;
+            document.getElementById('cohort48h').textContent = previewData.filter(u => u.cohort === '48h').length;
+            
+            // Tabla
+            const tbody = document.getElementById('previewTableBody');
+            tbody.innerHTML = previewData.map(user => `
+                <tr>
+                    <td>${user.email}</td>
+                    <td>${user.username}</td>
+                    <td><code>${user.slug}</code></td>
+                    <td><span style="background: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 4px;">${user.cohort}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Procesar y cargar usuarios
+        async function processUsers() {
+            if (previewData.length === 0) {
+                showError('Primero haz vista previa de los datos');
+                return;
+            }
+            
+            const updateExisting = document.getElementById('updateExisting').checked;
+            const onlyUpdateCohort = document.getElementById('onlyUpdateCohort').checked;
+            
+            const confirmMsg = updateExisting ? 
+                `¿Confirmas la carga/actualización de ${previewData.length} alumnos?` :
+                `¿Confirmas la carga de ${previewData.length} alumnos?`;
+            if (!confirm(confirmMsg)) return;
+            
+            // Mostrar log
+            const log = document.getElementById('processingLog');
+            log.style.display = 'block';
+            log.innerHTML = '<div class="log-entry">Iniciando procesamiento de alumnos...</div>';
+            
+            let successCount = 0;
+            let updateCount = 0;
+            let errorCount = 0;
+            
+            for (const userData of previewData) {
+                try {
+                    // Verificar si el email ya existe
+                    const { data: existing } = await supabaseClient
+                        .from('users')
+                        .select('id, username, cohort')
+                        .eq('email', userData.email)
+                        .single();
+                    
+                    if (existing) {
+                        if (!updateExisting) {
+                            addLogEntry(`⚠️ Email ya existe (saltado): ${userData.email}`, 'warning');
+                            errorCount++;
+                            continue;
+                        }
+                        
+                        // Actualizar usuario existente
+                        let updateData = {};
+                        
+                        if (onlyUpdateCohort) {
+                            // Solo actualizar cohorte
+                            updateData.cohort = userData.cohort;
+                            updateData.updated_at = new Date().toISOString();
+                        } else {
+                            // Actualizar todos los datos
+                            updateData = {
+                                username: userData.username,
+                                cohort: userData.cohort,
+                                updated_at: new Date().toISOString()
+                            };
+                        }
+                        
+                        const { error } = await supabaseClient
+                            .from('users')
+                            .update(updateData)
+                            .eq('id', existing.id);
+                        
+                        if (error) throw error;
+                        
+                        addLogEntry(`📝 Actualizado: ${userData.email} (cohorte: ${existing.cohort} → ${userData.cohort})`, 'success');
+                        updateCount++;
+                        
+                    } else {
+                        // Insertar nuevo usuario
+                        const { error } = await supabaseClient
+                            .from('users')
+                            .insert({
+                                email: userData.email,
+                                username: userData.username,
+                                slug: userData.slug,
+                                cohort: userData.cohort,
+                                current_elo: 1000,
+                                current_streak: 0,
+                                longest_streak: 0,
+                                total_simulations: 0,
+                                average_score: 0,
+                                active: true
+                            });
+                        
+                        if (error) throw error;
+                        
+                        addLogEntry(`✅ Creado: ${userData.email} (${userData.slug})`, 'success');
+                        successCount++;
+                    }
+                    
+                } catch (error) {
+                    addLogEntry(`❌ Error con ${userData.email}: ${error.message}`, 'error');
+                    errorCount++;
+                }
+            }
+            
+            // Resumen final
+            addLogEntry(`\n📊 Resumen: ${successCount} creados, ${updateCount} actualizados, ${errorCount} errores`, 
+                       (successCount + updateCount) > 0 ? 'success' : 'error');
+            
+            if (successCount > 0 || updateCount > 0) {
+                showSuccess(`Procesados: ${successCount} nuevos, ${updateCount} actualizados`);
+                // Limpiar formularios
+                document.getElementById('emailList').value = '';
+                document.getElementById('csvData').value = '';
+                document.getElementById('previewSection').style.display = 'none';
+                previewData = [];
+                // Recargar lista
+                loadCurrentUsers();
+            }
+        }
+
+        // Cargar usuarios actuales
+        async function loadCurrentUsers() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                currentUsers = data;
+                
+                // Actualizar estadísticas
+                document.getElementById('currentTotal').textContent = data.length;
+                document.getElementById('currentActive').textContent = data.filter(u => u.active).length;
+                
+                // Mostrar tabla
+                updateCurrentUsersTable(data);
+                
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+                showError('Error al cargar usuarios actuales');
+            }
+        }
+
+        // Actualizar tabla de usuarios
+        function updateCurrentUsersTable(users) {
+            const tbody = document.getElementById('currentUsersBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No hay usuarios</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = users.map(user => {
+                const cohortColor = {
+                    '20h': '#3b82f6',
+                    '36h': '#8b5cf6',
+                    '48h': '#dc2626',
+                    'sin_asignar': '#6b7280'
+                };
+                
+                return `
+                <tr>
+                    <td>
+                        <input type="checkbox" class="user-select" value="${user.id}" style="width: auto;">
+                    </td>
+                    <td>${user.email}</td>
+                    <td>${user.username}</td>
+                    <td><code>${user.slug}</code></td>
+                    <td>
+                        <span style="background: ${cohortColor[user.cohort] || '#e5e7eb'}; 
+                                   color: white; 
+                                   padding: 0.25rem 0.5rem; 
+                                   border-radius: 4px;">
+                            ${user.cohort === 'sin_asignar' ? 'Sin asignar' : user.cohort}
+                        </span>
+                    </td>
+                    <td><strong>${user.current_elo}</strong></td>
+                    <td>${user.total_simulations}</td>
+                    <td>
+                        <span style="color: ${user.active ? '#10b981' : '#dc2626'};">
+                            ${user.active ? '✅ Activo' : '❌ Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-danger" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;"
+                                onclick="toggleUserStatus('${user.id}', ${user.active})">
+                            ${user.active ? 'Desactivar' : 'Activar'}
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+        
+        // Toggle seleccionar todos
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.user-select').forEach(cb => {
+                cb.checked = selectAll;
+            });
+        }
+        
+        // Cambio masivo de cohorte
+        async function bulkChangeCohort() {
+            const newCohort = document.getElementById('bulkCohortChange').value;
+            if (!newCohort) {
+                showError('Selecciona una cohorte');
+                return;
+            }
+            
+            const selectedIds = Array.from(document.querySelectorAll('.user-select:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                showError('Selecciona al menos un usuario');
+                return;
+            }
+            
+            if (!confirm(`¿Cambiar cohorte a ${selectedIds.length} usuarios?`)) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ 
+                        cohort: newCohort,
+                        updated_at: new Date().toISOString()
+                    })
+                    .in('id', selectedIds);
+                
+                if (error) throw error;
+                
+                showSuccess(`Cohorte actualizada para ${selectedIds.length} usuarios`);
+                document.getElementById('bulkCohortChange').value = '';
+                document.getElementById('selectAll').checked = false;
+                loadCurrentUsers();
+                
+            } catch (error) {
+                showError('Error al actualizar cohortes: ' + error.message);
+            }
+        }
+
+        // Filtrar usuarios
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = currentUsers.filter(user => 
+                user.email.toLowerCase().includes(searchTerm) ||
+                user.username.toLowerCase().includes(searchTerm) ||
+                user.slug.toLowerCase().includes(searchTerm)
+            );
+            updateCurrentUsersTable(filtered);
+        }
+
+        // Toggle estado usuario
+        async function toggleUserStatus(userId, currentStatus) {
+            if (!confirm(`¿${currentStatus ? 'Desactivar' : 'Activar'} este usuario?`)) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ active: !currentStatus })
+                    .eq('id', userId);
+                
+                if (error) throw error;
+                
+                showSuccess(`Usuario ${!currentStatus ? 'activado' : 'desactivado'} correctamente`);
+                loadCurrentUsers();
+                
+            } catch (error) {
+                showError('Error al cambiar estado del usuario');
+            }
+        }
+
+        // Utilidades
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function addLogEntry(message, type = '') {
+            const log = document.getElementById('processingLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = message;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', checkAdminAccess);
+    </script>
+</body>
+</html>
