@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IZETA 2025 - Cronograma Caballo ♞ (36h/semana)</title>
+    <title>IZETA 2025 - Programa Intensivo ♗ (36h/semana)</title>
     <style>
         :root {
             --chess-black: #1a1a1a;
@@ -79,14 +79,14 @@
         
         .chess-piece {
             font-size: 3rem;
-            animation: knight-move 4s ease-in-out infinite;
+            animation: diagonal-move 4s ease-in-out infinite;
         }
         
-        @keyframes knight-move {
+        @keyframes diagonal-move {
             0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(10px, -15px); }
-            50% { transform: translate(20px, 0); }
-            75% { transform: translate(10px, 15px); }
+            25% { transform: translate(10px, -10px); }
+            50% { transform: translate(20px, -20px); }
+            75% { transform: translate(10px, -10px); }
         }
         
         .summary {
@@ -165,6 +165,11 @@
         .day-header.weekend {
             background: var(--chess-gold);
             color: var(--chess-black);
+        }
+        
+        .day-header.rest {
+            background: var(--warning-amber);
+            color: white;
         }
         
         .time-slot {
@@ -307,7 +312,7 @@
         }
         
         .chess-notation::before {
-            content: '♞';
+            content: '♗';
             position: absolute;
             right: 20px;
             top: 50%;
@@ -335,23 +340,23 @@
             margin-top: 0.5rem;
         }
         
-        .knight-pattern {
+        .bishop-pattern {
             display: grid;
-            grid-template-columns: repeat(3, 50px);
-            grid-template-rows: repeat(3, 50px);
+            grid-template-columns: repeat(5, 40px);
+            grid-template-rows: repeat(5, 40px);
             margin: 2rem auto;
             width: fit-content;
         }
         
-        .knight-cell {
+        .bishop-cell {
             border: 1px solid #ddd;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
         }
         
-        .knight-path {
+        .bishop-path {
             background: var(--accent-purple);
             color: white;
         }
@@ -376,12 +381,12 @@
         <!-- Header -->
         <div class="header">
             <h1>
-                <span class="chess-piece">♞</span>
-                Cronograma Semanal - Cohorte Caballo
-                <span class="chess-piece">♞</span>
+                <span class="chess-piece">♗</span>
+                Cronograma Semanal - Programa Intensivo
+                <span class="chess-piece">♗</span>
             </h1>
             <p style="font-size: 1.2rem; margin-top: 0.5rem;">36 horas semanales - Dedicación parcial intensiva</p>
-            <p style="margin-top: 1rem; opacity: 0.9;">"El caballo es la pieza más impredecible: salta obstáculos que otros no pueden"</p>
+            <p style="margin-top: 1rem; opacity: 0.9;">"El alfil domina las diagonales del tablero"</p>
         </div>
         
         <!-- Resumen semanal -->
@@ -401,8 +406,12 @@
                     <div>Bloques diarios</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-number">5</div>
-                    <div>Cajas Leitner</div>
+                    <div class="summary-number">11</div>
+                    <div>Temas por semana</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">Dual</div>
+                    <div>Leitner E+A</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-number">Top-10</div>
@@ -410,27 +419,38 @@
                 </div>
             </div>
             <div class="progress-bar">
-                <div class="progress-fill" style="width: 60%;"></div>
+                <div class="progress-fill" style="width: 75%;"></div>
             </div>
-            <p style="text-align: center; color: #666; font-size: 0.9rem;">Progreso: De Peón a Caballo (+80% de intensidad)</p>
+            <p style="text-align: center; color: #666; font-size: 0.9rem;">Progreso: De Caballo a Alfil (+80% de intensidad)</p>
         </div>
         
-        <!-- Notación ajedrecística -->
-        <div class="chess-notation">
-            <strong>Gambito del Caballo:</strong> 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5! (Ataque doble) 
-        </div>
-        
-        <!-- Patrón del caballo -->
-        <div class="knight-pattern">
-            <div class="knight-cell"></div>
-            <div class="knight-cell knight-path">2</div>
-            <div class="knight-cell"></div>
-            <div class="knight-cell knight-path">3</div>
-            <div class="knight-cell"></div>
-            <div class="knight-cell knight-path">1</div>
-            <div class="knight-cell"></div>
-            <div class="knight-cell knight-path">♞</div>
-            <div class="knight-cell"></div>
+       <!-- Patrón del alfil -->
+        <div class="bishop-pattern">
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">♗</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell"></div>
+            <div class="bishop-cell bishop-path">X</div>
         </div>
         
         <!-- Grid semanal -->
@@ -447,18 +467,18 @@
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">07:15-08:00</span>
+                    <span class="time">07:15-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 1-10 (lectura activa)</div>
+                        <div class="activity-detail">Temas 1-3 (lectura activa)</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">1h 15min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">13:00-13:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 1-2 (rápido en móvil)</div>
+                        <div class="activity-name">Leitner Esencial <span class="task-type type-flashcard">FICHAS-E</span></div>
+                        <div class="activity-detail">Cajas 1-2-3 (básico)</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
@@ -481,13 +501,13 @@
                 <div class="time-slot">
                     <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 3-5 (semanal/quincenal/mensual)</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5 (quincenal/mensual)</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 55min | 80 preguntas | 10 temas | Top-10 análisis
+                    Total día: 4h 25min | 80 preguntas | 3 temas | Top-10 análisis
                 </div>
             </div>
             
@@ -506,15 +526,15 @@
                     <span class="time">07:15-08:00</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 11-20</div>
+                        <div class="activity-detail">Temas 4-5</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">13:00-13:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 1-2 (diaria + 3 días)</div>
+                        <div class="activity-name">Leitner Esencial <span class="task-type type-flashcard">FICHAS-E</span></div>
+                        <div class="activity-detail">Cajas 1-2-3</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
@@ -537,13 +557,13 @@
                 <div class="time-slot">
                     <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión cajas 3-5</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 25min | 90 preguntas | 10 temas
+                    Total día: 3h 25min | 90 preguntas | 2 temas
                 </div>
             </div>
             
@@ -562,15 +582,15 @@
                     <span class="time">07:15-08:00</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 21-30</div>
+                        <div class="activity-detail">Temas 6-7</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">13:00-13:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 1-2</div>
+                        <div class="activity-name">Leitner Esencial <span class="task-type type-flashcard">FICHAS-E</span></div>
+                        <div class="activity-detail">Cajas 1-2-3</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
@@ -593,13 +613,13 @@
                 <div class="time-slot">
                     <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión cajas 3-5</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 40min | 80 preguntas | 10 temas | Casos prácticos
+                    Total día: 3h 40min | 80 preguntas | 2 temas | Casos prácticos
                 </div>
             </div>
             
@@ -615,18 +635,18 @@
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">07:15-08:00</span>
+                    <span class="time">07:15-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 31-40</div>
+                        <div class="activity-detail">Temas 8-11</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">1h 15min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">13:00-13:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 1-2</div>
+                        <div class="activity-name">Leitner Esencial <span class="task-type type-flashcard">FICHAS-E</span></div>
+                        <div class="activity-detail">Cajas 1-2-3</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
@@ -649,58 +669,34 @@
                 <div class="time-slot">
                     <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 3-5 + crear nuevas</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5 + crear nuevas</div>
                     </div>
                     <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 40min | 80 preguntas | 10 temas | Análisis estadístico
+                    Total día: 4h 10min | 80 preguntas | 4 temas | Análisis estadístico
                 </div>
             </div>
             
             <!-- VIERNES -->
-            <div class="day-card intensive">
-                <div class="day-header">VIERNES - Técnica Feynman</div>
+            <div class="day-card">
+                <div class="day-header rest">VIERNES - Descanso Activo</div>
                 <div class="time-slot">
                     <span class="time">06:30-07:15</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">07:15-08:00</span>
-                    <div class="activity">
-                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 41-44 + Legislación</div>
+                        <div class="activity-name">Test ligero AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">25-30 preguntas (50% carga)</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">13:00-13:10</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Cajas 1-2</div>
+                        <div class="activity-name">Leitner Esencial <span class="task-type type-flashcard">FICHAS-E</span></div>
+                        <div class="activity-detail">Solo Caja 1 (rápido)</div>
                     </div>
                     <span class="duration">10 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">15:00-15:45</span>
-                    <div class="activity">
-                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
-                        <div class="activity-detail">30-40 preguntas finales</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">17:00-17:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Técnica Feynman <span class="task-type type-technique">FEYNMAN</span></div>
-                        <div class="activity-detail">Explicar tema complejo en voz alta</div>
-                    </div>
-                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">18:00-18:30</span>
@@ -713,13 +709,13 @@
                 <div class="time-slot">
                     <span class="time">20:00-20:20</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Intensivo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión completa 5 cajas</div>
+                        <div class="activity-name">Leitner Revisión <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión completa ambos sistemas</div>
                     </div>
                     <span class="duration">20 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 4h 5min | 80 preguntas | 4 temas + Feynman
+                    Total día: 1h 45min | 30 preguntas | Descanso activo
                 </div>
             </div>
             
@@ -802,7 +798,7 @@
                     <span class="time">21:00-21:20</span>
                     <div class="activity">
                         <div class="activity-name">Sistema Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión integral 5 cajas</div>
+                        <div class="activity-detail">Revisión integral ambos sistemas</div>
                     </div>
                     <span class="duration">20 min</span>
                 </div>
@@ -827,15 +823,16 @@
                 <span class="task-type type-test">TEST</span> Práctica intensiva
                 <span class="task-type type-review">REPASO</span> Vuelta temario
                 <span class="task-type type-simulacro">EXAMEN</span> Simulacro oficial
-                <span class="task-type type-flashcard">FICHAS</span> Leitner 5 cajas
+                <span class="task-type type-flashcard">FICHAS-E</span> Leitner Esencial
+                <span class="task-type type-flashcard">FICHAS-A</span> Leitner Avanzado
                 <span class="task-type type-analysis">ANÁLISIS</span> Estudio profundo
-                <span class="task-type type-technique">FEYNMAN</span> Técnica activa
+                <span class="task-type type-rest">DESCANSO</span> Actividad ligera
             </div>
         </div>
         
         <!-- Tips estratégicos -->
         <div class="tips-section">
-            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">♞ Estrategias del Caballo</h2>
+            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">♗ Estrategias del Alfil</h2>
             <div class="tips-grid">
                 <div class="tip-card">
                     <div class="tip-title">
@@ -845,9 +842,9 @@
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        🎯 Leitner profesional
+                        🎯 Leitner dual profesional
                     </div>
-                    <p>Con 5 cajas manejas 500+ tarjetas eficientemente. Usa Anki con sincronización móvil para aprovechar cada momento.</p>
+                    <p>Sistema Esencial (3 cajas) para lo urgente + Sistema Avanzado (5 cajas) para consolidación a largo plazo. Usa Anki con sincronización móvil.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
@@ -857,9 +854,9 @@
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        🧠 Feynman semanal
+                        📐 Dominio diagonal
                     </div>
-                    <p>Graba tu explicación y escúchala. Las vacilaciones revelan lagunas que los tests no detectan.</p>
+                    <p>Como el alfil, tu fuerza está en las conexiones diagonales entre temas. Busca patrones cruzados y relaciones no obvias.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
@@ -869,17 +866,17 @@
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        🔄 Salto del caballo
+                        🔄 11 temas semanales
                     </div>
-                    <p>Como el caballo en ajedrez, tu ventaja es la flexibilidad. Adapta horarios según tu energía diaria.</p>
+                    <p>Completarás el temario cada 4 semanas. Esta frecuencia es óptima para mantener todo fresco sin saturación.</p>
                 </div>
             </div>
         </div>
         
         <!-- Nota final -->
         <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: #666;">
-            <p><strong>El movimiento del caballo:</strong> En "L", saltando obstáculos que otros no pueden. 🏇</p>
-            <p style="margin-top: 0.5rem;">Tu capacidad de adaptación y trabajo intensivo te distingue del resto.</p>
+            <p><strong>El movimiento del alfil:</strong> En diagonal, cruzando el tablero con elegancia. ⚔️</p>
+            <p style="margin-top: 0.5rem;">Tu capacidad de ver conexiones diagonales entre temas te distingue del resto.</p>
             <p style="margin-top: 1rem; font-size: 0.9rem;">Siguiente nivel: Torre (48h) - La pieza que domina filas y columnas completas.</p>
         </div>
     </div>
