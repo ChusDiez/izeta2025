@@ -677,7 +677,7 @@
                 totalCheck.classList.add('valid');
                 
                 // Calcular puntuación
-                const score = (correct - (wrong * 0.33)) / 10;
+                const score = (correct - (wrong * 0.5)) / 10;
                 document.getElementById('calculatedScore').textContent = score.toFixed(2);
             } else {
                 totalCheck.classList.remove('valid');
@@ -851,7 +851,7 @@
                     .map(cb => cb.value);
                 
                 // Calcular score según fórmula oficial
-                const scoreDecimal = (correct - (wrong * 0.33)) / 10;
+                const scoreDecimal = (correct - (wrong * 0.50)) / 10;
                 const score = parseFloat(scoreDecimal.toFixed(2)); // Redondear a 2 decimales
                 
                 // Validación de fecha
