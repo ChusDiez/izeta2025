@@ -1,194 +1,4 @@
 table_name,table_structure
-admin_dashboard,"[
-    {
-        ""type"": ""uuid"",
-        ""column"": ""id"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""email"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""username"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""slug"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""cohort"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""current_elo"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""current_streak"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""longest_streak"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""total_simulations"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""average_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""date"",
-        ""column"": ""last_participation"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""timestamp with time zone"",
-        ""column"": ""created_at"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""timestamp with time zone"",
-        ""column"": ""updated_at"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""boolean"",
-        ""column"": ""active"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""probability_pass"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""z_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""trend_direction"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""risk_level"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""ARRAY"",
-        ""column"": ""notes"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""total_tests_taken"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""recent_average"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""personal_std_dev"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""days_since_participation"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    }
-]"
-cohort_statistics,"[
-    {
-        ""type"": ""text"",
-        ""column"": ""cohort"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""total_students"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""active_students"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""integer(32,0)"",
-        ""column"": ""average_elo"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""average_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""average_pass_probability"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""at_risk_count"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""high_probability_count"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    }
-]"
 elo_history,"[
     {
         ""type"": ""uuid"",
@@ -389,7 +199,7 @@ public_leaderboard,"[
         ""nullable"": ""YES""
     },
     {
-        ""type"": ""integer(32,0)"",
+        ""type"": ""numeric(4,2)"",
         ""column"": ""last_score"",
         ""default"": null,
         ""nullable"": ""YES""
@@ -403,6 +213,146 @@ public_leaderboard,"[
     {
         ""type"": ""ARRAY"",
         ""column"": ""medals"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    }
+]"
+slug_distribution,"[
+    {
+        ""type"": ""text"",
+        ""column"": ""prefix"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""bigint(64,0)"",
+        ""column"": ""count"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""ARRAY"",
+        ""column"": ""slugs_sample"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    }
+]"
+slug_migration_backup,"[
+    {
+        ""type"": ""uuid"",
+        ""column"": ""id"",
+        ""default"": ""uuid_generate_v4()"",
+        ""nullable"": ""NO""
+    },
+    {
+        ""type"": ""uuid"",
+        ""column"": ""user_id"",
+        ""default"": null,
+        ""nullable"": ""NO""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""old_slug"",
+        ""default"": null,
+        ""nullable"": ""NO""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""new_slug"",
+        ""default"": null,
+        ""nullable"": ""NO""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""email"",
+        ""default"": null,
+        ""nullable"": ""NO""
+    },
+    {
+        ""type"": ""timestamp without time zone"",
+        ""column"": ""migrated_at"",
+        ""default"": ""now()"",
+        ""nullable"": ""YES""
+    }
+]"
+slug_migration_preview,"[
+    {
+        ""type"": ""uuid"",
+        ""column"": ""id"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""email"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""current_slug"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""proposed_slug"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""current_prefix_length"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""cohort"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""total_simulations"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    }
+]"
+slug_migration_stats,"[
+    {
+        ""type"": ""bigint(64,0)"",
+        ""column"": ""total_migrated"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""bigint(64,0)"",
+        ""column"": ""unique_prefixes"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""timestamp without time zone"",
+        ""column"": ""last_migration"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric"",
+        ""column"": ""avg_per_prefix"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""bigint(64,0)"",
+        ""column"": ""pending_migration"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""json"",
+        ""column"": ""top_prefixes"",
         ""default"": null,
         ""nullable"": ""YES""
     }
@@ -541,92 +491,6 @@ user_medals,"[
         ""nullable"": ""YES""
     }
 ]"
-user_patterns,"[
-    {
-        ""type"": ""uuid"",
-        ""column"": ""id"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""slug"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""text"",
-        ""column"": ""cohort"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""tests_taken"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""avg_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""avg_blanks"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""avg_stress"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""avg_review_time"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""avg_confidence"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""desktop_tests"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""bigint(64,0)"",
-        ""column"": ""mobile_tests"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""desktop_avg_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""numeric"",
-        ""column"": ""mobile_avg_score"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    },
-    {
-        ""type"": ""ARRAY"",
-        ""column"": ""top_weak_topics"",
-        ""default"": null,
-        ""nullable"": ""YES""
-    }
-]"
 user_results,"[
     {
         ""type"": ""uuid"",
@@ -647,16 +511,10 @@ user_results,"[
         ""nullable"": ""NO""
     },
     {
-        ""type"": ""integer(32,0)"",
+        ""type"": ""numeric(4,2)"",
         ""column"": ""score"",
         ""default"": null,
         ""nullable"": ""NO""
-    },
-    {
-        ""type"": ""numeric(5,2)"",
-        ""column"": ""error_percentage"",
-        ""default"": null,
-        ""nullable"": ""YES""
     },
     {
         ""type"": ""integer(32,0)"",
@@ -769,6 +627,170 @@ user_results,"[
     {
         ""type"": ""text"",
         ""column"": ""difficulty_note"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""correct_answers"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""wrong_answers"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric(5,2)"",
+        ""column"": ""error_percentage"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    }
+]"
+user_results_backup_20250602,"[
+    {
+        ""type"": ""uuid"",
+        ""column"": ""id"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""uuid"",
+        ""column"": ""user_id"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""uuid"",
+        ""column"": ""simulation_id"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric(4,2)"",
+        ""column"": ""score"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""position"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""position_cohort"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""points_base"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""points_performance"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""points_improvement"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric(3,1)"",
+        ""column"": ""multiplier"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""total_points"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""timestamp with time zone"",
+        ""column"": ""submitted_at"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""boolean"",
+        ""column"": ""is_saturday_live"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""time_taken"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""confidence_score"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric(5,2)"",
+        ""column"": ""z_score"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""percentile"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""blank_answers"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""device_type"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""stress_level"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""integer(32,0)"",
+        ""column"": ""review_time"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""ARRAY"",
+        ""column"": ""weakest_topics"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""text"",
+        ""column"": ""difficulty_note"",
+        ""default"": null,
+        ""nullable"": ""YES""
+    },
+    {
+        ""type"": ""numeric(5,2)"",
+        ""column"": ""error_percentage"",
         ""default"": null,
         ""nullable"": ""YES""
     }
