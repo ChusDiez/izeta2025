@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaderboard</title>
+    <title>Leaderboard IZETA 2025</title>
 <style>
     :root {
         --primary-blue: #1E3A8A;
@@ -31,22 +31,15 @@
         background: var(--bg-light);
         color: var(--text-dark);
         line-height: 1.6;
-        padding: 20px;
-    }
-    
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
+        overflow-x: hidden;
     }
     
     /* Header mejorado */
     .header {
         background: linear-gradient(135deg, #1E3A8A 0%, #111827 50%, #0B1F3F 100%);
         color: white;
-        padding: 3rem 2rem;
-        border-radius: 20px;
+        padding: 2rem 1rem;
         text-align: center;
-        margin-bottom: 3rem;
         box-shadow: var(--shadow-lg);
         position: relative;
         overflow: hidden;
@@ -70,152 +63,96 @@
     
     .header h1 {
         font-size: 2.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
         position: relative;
         z-index: 1;
     }
     
     .header p {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         opacity: 0.9;
         position: relative;
         z-index: 1;
     }
     
-    /* Stats cards mejoradas */
-    .stats-container {
+    /* Container principal */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    /* Layout de dos columnas */
+    .leaderboard-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
     }
     
-    .stat-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-        text-align: center;
-        transition: transform 0.3s, box-shadow 0.3s;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--primary-blue);
-    }
-    
-    .stat-label {
-        color: var(--secondary-gray);
-        font-size: 0.95rem;
-        margin-top: 0.5rem;
-    }
-    
-    /* Ranking container mejorado */
+    /* Contenedor de cada ranking */
     .ranking-container {
         background: white;
-        border-radius: 20px;
-        padding: 2rem;
+        border-radius: 15px;
         box-shadow: var(--shadow-lg);
-        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 800px;
     }
     
     .ranking-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e5e7eb;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    
-    .ranking-title {
-        font-size: 1.75rem;
-        font-weight: bold;
-        color: var(--text-dark);
-    }
-    
-    .filter-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .filter-btn {
-        padding: 0.5rem 1rem;
-        border: 2px solid #e5e7eb;
-        background: white;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-weight: 500;
-    }
-    
-    .filter-btn:hover {
-        background: #f3f4f6;
-        border-color: var(--primary-blue);
-    }
-    
-    .filter-btn.active {
         background: var(--primary-blue);
         color: white;
-        border-color: var(--primary-blue);
+        padding: 1.5rem;
+        text-align: center;
+        flex-shrink: 0;
     }
     
-    /* Search bar mejorada */
-    .search-container {
-        margin-bottom: 2rem;
-        position: relative;
+    .ranking-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
     }
     
-    .search-input {
-        width: 100%;
-        padding: 1rem 1rem 1rem 3rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 1rem;
-        transition: all 0.3s;
-        background: #f9fafb;
+    .ranking-header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
     }
     
-    .search-input:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-        box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
-        background: white;
-    }
-    
-    .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--secondary-gray);
-        font-size: 1.2rem;
-    }
-    
-    /* Ranking rows mejoradas */
-    #rankingList {
-        max-height: 600px;
+    /* Lista de ranking con scroll */
+    .ranking-list {
+        flex: 1;
         overflow-y: auto;
-        padding-right: 0.5rem;
+        padding: 1rem;
+        min-height: 600px;
     }
     
+    /* Estilo de scrollbar */
+    .ranking-list::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .ranking-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .ranking-list::-webkit-scrollbar-thumb {
+        background: var(--secondary-gray);
+        border-radius: 4px;
+    }
+    
+    .ranking-list::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-blue);
+    }
+    
+    /* Filas del ranking */
     .ranking-row {
         display: flex;
         align-items: center;
-        padding: 1.25rem;
+        padding: 1rem;
         margin-bottom: 0.75rem;
         background: #f9fafb;
-        border-radius: 12px;
+        border-radius: 10px;
         transition: all 0.3s;
         position: relative;
         overflow: hidden;
@@ -229,7 +166,7 @@
         box-shadow: var(--shadow);
     }
     
-    /* Top 3 con colores mejorados */
+    /* Top 3 especiales */
     .ranking-row.top-1 {
         background: linear-gradient(135deg, #FEF3C7 0%, #FBBF24 100%);
         border: 2px solid var(--accent-gold);
@@ -258,21 +195,38 @@
     
     .user-info {
         flex: 1;
-        margin: 0 1.5rem;
+        margin: 0 1rem;
     }
     
     .user-name {
         font-weight: 600;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         margin-bottom: 0.25rem;
     }
     
     .user-stats {
         display: flex;
-        gap: 1.5rem;
-        font-size: 0.875rem;
+        gap: 1rem;
+        font-size: 0.85rem;
         color: var(--secondary-gray);
         flex-wrap: wrap;
+    }
+    
+    .score-display {
+        text-align: right;
+        min-width: 100px;
+    }
+    
+    .score-number {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--primary-blue);
+    }
+    
+    .score-label {
+        font-size: 0.75rem;
+        color: var(--secondary-gray);
+        text-transform: uppercase;
     }
     
     .elo-display {
@@ -281,20 +235,13 @@
     }
     
     .elo-number {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: bold;
         color: var(--primary-blue);
     }
     
-    .elo-label {
-        font-size: 0.75rem;
-        color: var(--secondary-gray);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
     .elo-change {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         font-weight: 600;
         margin-top: 0.25rem;
     }
@@ -302,7 +249,41 @@
     .change-positive { color: var(--success-green); }
     .change-negative { color: var(--danger-red); }
     
-    /* Indicadores de racha mejorados */
+    /* Sistema de medallas */
+    .medals {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+    
+    .medal {
+        font-size: 1.3rem;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        animation: bounce 2s infinite;
+        position: relative;
+    }
+    
+    .medal:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        z-index: 10;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    
+    /* Indicadores de racha */
     .streak-indicator {
         display: inline-flex;
         align-items: center;
@@ -310,7 +291,7 @@
         padding: 0.25rem 0.75rem;
         background: #fee2e2;
         border-radius: 20px;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
         font-weight: 600;
     }
     
@@ -324,25 +305,84 @@
         color: #ef4444;
     }
     
-    /* Medallas animadas */
-    .medals {
+    /* Slider de logros */
+    .achievements-slider {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .achievements-track {
         display: flex;
-        gap: 0.5rem;
-        margin-left: 1rem;
+        transition: transform 0.3s ease;
+        gap: 2rem;
     }
     
-    .medal {
+    .achievement-card {
+        flex: 0 0 300px;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+    }
+    
+    .achievement-card:hover {
+        border-color: var(--primary-blue);
+        transform: scale(1.05);
+    }
+    
+    .achievement-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .achievement-title {
+        font-weight: bold;
+        color: var(--primary-blue);
+        margin-bottom: 0.5rem;
+    }
+    
+    .achievement-value {
         font-size: 1.5rem;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-        animation: bounce 2s infinite;
+        font-weight: bold;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
     }
     
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
+    .achievement-subtitle {
+        color: var(--secondary-gray);
+        font-size: 0.9rem;
     }
     
-    /* Loading mejorado */
+    /* Controles del slider */
+    .slider-controls {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .slider-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .slider-dot.active {
+        background: var(--primary-blue);
+        transform: scale(1.3);
+    }
+    
+    /* Loading */
     .loading {
         text-align: center;
         padding: 3rem;
@@ -363,7 +403,49 @@
         100% { transform: rotate(360deg); }
     }
     
-    /* Botón flotante mejorado */
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .leaderboard-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        .achievements-slider {
+            margin-top: 2rem;
+        }
+        
+        .achievement-card {
+            flex: 0 0 250px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .ranking-container {
+            max-height: 600px;
+        }
+        
+        .ranking-list {
+            min-height: 400px;
+        }
+        
+        .ranking-row {
+            padding: 0.75rem;
+        }
+        
+        .user-stats {
+            font-size: 0.8rem;
+        }
+        
+        .achievement-card {
+            flex: 0 0 280px;
+        }
+    }
+    
+    /* Flotante home */
     .float-home {
         position: fixed;
         bottom: 1.5rem;
@@ -380,6 +462,7 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         font-size: 1.5rem;
         transition: all 0.3s;
+        z-index: 1000;
     }
     
     .float-home:hover {
@@ -387,260 +470,158 @@
         box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
     
-    /* Responsive */
-    @media (max-width: 768px) {
-        .header h1 {
-            font-size: 2rem;
+    /* Touch para móviles */
+    @media (pointer: coarse) {
+        .achievements-track {
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
         }
         
-        .ranking-row {
-            flex-wrap: wrap;
-            padding: 1rem;
+        .achievement-card {
+            scroll-snap-align: center;
         }
         
-        .user-info {
-            margin: 0.5rem 0;
-        }
-        
-        .user-stats {
-            margin-top: 0.5rem;
-        }
-        
-        .medals {
-            margin-top: 0.5rem;
-        }
-        
-        .elo-display {
-            width: 100%;
-            text-align: left;
-            margin-top: 0.5rem;
+        .slider-controls {
+            display: none;
         }
     }
 </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header animado -->
-        <div class="header">
-            <h1>🏆 Ranking IZETA 2025</h1>
-            <p>Sistema de Puntuación ELO - Semana 15</p>
-        </div>
-        
-        <!-- Estadísticas generales -->
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-number">245</div>
-                <div class="stat-label">Participantes Activos</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">76.4</div>
-                <div class="stat-label">Media General</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">1,847</div>
-                <div class="stat-label">ELO Máximo</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">15</div>
-                <div class="stat-label">Semanas Completadas</div>
-            </div>
-        </div>
-        
-        <!-- Ranking principal -->
-        <div class="ranking-container">
-            <div class="ranking-header">
-                <h2 class="ranking-title">Clasificación General</h2>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" onclick="filterRanking('all')">Todos</button>
-                    <button class="filter-btn" onclick="filterRanking('20h')">20h</button>
-                    <button class="filter-btn" onclick="filterRanking('36h')">36h</button>
-                    <button class="filter-btn" onclick="filterRanking('48h')">48h</button>
+    <!-- Header -->
+    <div class="header">
+        <h1>🏆 Ranking IZETA 2025</h1>
+        <p id="headerSubtitle">Cargando información...</p>
+    </div>
+    
+    <!-- Contenedor principal -->
+    <div class="main-container">
+        <!-- Grid de dos columnas -->
+        <div class="leaderboard-grid">
+            <!-- Ranking Semanal Activo -->
+            <div class="ranking-container">
+                <div class="ranking-header">
+                    <h2>📊 Simulacro Activo</h2>
+                    <p id="weeklyInfo">Cargando...</p>
+                </div>
+                <div class="ranking-list" id="weeklyRanking">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 1rem;">Cargando ranking semanal...</p>
+                    </div>
                 </div>
             </div>
             
-            <!-- Barra de búsqueda -->
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="Buscar por nombre..." id="searchInput">
-            </div>
-            
-            <!-- Ranking rows -->
-            <div id="rankingList">
-                <!-- Top 1 -->
-                <div class="ranking-row top-1">
-                    <div class="rank-position rank-1">1º</div>
-                    <div class="user-info">
-                        <div class="user-name">carlos-4821</div>
-                        <div class="user-stats">
-                            <span>📊 Último: 93/100</span>
-                            <span class="streak-indicator streak-hot">🔥 15 semanas</span>
-                            <span>📈 x1.5</span>
-                        </div>
-                    </div>
-                    <div class="medals">
-                        <span class="medal">🥇</span>
-                        <span class="medal">⚡</span>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">1,847</div>
-                        <div class="elo-label">Puntos ELO</div>
-                    </div>
+            <!-- Ranking ELO Global -->
+            <div class="ranking-container">
+                <div class="ranking-header" style="background: #111827;">
+                    <h2>⚡ Ranking ELO Global</h2>
+                    <p>Clasificación general acumulada</p>
                 </div>
-                
-                <!-- Top 2 -->
-                <div class="ranking-row top-2">
-                    <div class="rank-position rank-2">2º</div>
-                    <div class="user-info">
-                        <div class="user-name">laura-9273</div>
-                        <div class="user-stats">
-                            <span>📊 Último: 91/100</span>
-                            <span class="streak-indicator streak-hot">🔥 12 semanas</span>
-                            <span>📈 x1.5</span>
-                        </div>
+                <div class="ranking-list" id="eloRanking">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 1rem;">Cargando ranking ELO...</p>
                     </div>
-                    <div class="medals">
-                        <span class="medal">🥈</span>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">1,765</div>
-                        <div class="elo-label">Puntos ELO</div>
-                    </div>
-                </div>
-                
-                <!-- Top 3 -->
-                <div class="ranking-row top-3">
-                    <div class="rank-position rank-3">3º</div>
-                    <div class="user-info">
-                        <div class="user-name">miguel-1547</div>
-                        <div class="user-stats">
-                            <span>📊 Último: 89/100</span>
-                            <span class="streak-indicator">⭐ 6 semanas</span>
-                            <span>📈 x1.0</span>
-                        </div>
-                    </div>
-                    <div class="medals">
-                        <span class="medal">🥉</span>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">1,687</div>
-                        <div class="elo-label">Puntos ELO</div>
-                    </div>
-                </div>
-                
-                <!-- Resto del ranking -->
-                <div class="ranking-row">
-                    <div class="rank-position">4º</div>
-                    <div class="user-info">
-                        <div class="user-name">ana-7639</div>
-                        <div class="user-stats">
-                            <span>📊 Último: 87/100</span>
-                            <span class="streak-indicator streak-hot">🔥 9 semanas</span>
-                            <span>📈 x1.5</span>
-                        </div>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">1,623</div>
-                        <div class="elo-label">Puntos ELO</div>
-                    </div>
-                </div>
-                
-                <div class="ranking-row">
-                    <div class="rank-position">5º</div>
-                    <div class="user-info">
-                        <div class="user-name">pedro-3892</div>
-                        <div class="user-stats">
-                            <span>📊 Último: 85/100</span>
-                            <span class="streak-indicator">⭐ 4 semanas</span>
-                            <span>📈 x1.0</span>
-                        </div>
-                    </div>
-                    <div class="elo-display">
-                        <div class="elo-number">1,598</div>
-                        <div class="elo-label">Puntos ELO</div>
-                    </div>
-                </div>
-                
-                <!-- Loading más resultados -->
-                <div class="loading" id="loadingMore" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <p style="margin-top: 1rem; color: var(--secondary-gray);">Cargando más resultados...</p>
                 </div>
             </div>
         </div>
         
-        <!-- Footer info -->
-        <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--secondary-gray);">
-            <p><strong>Sistema ELO:</strong> Gana hasta 25 puntos por semana</p>
-            <p style="margin-top: 0.5rem;">🔥 8+ semanas = x1.5 | 👑 16+ semanas = x2.0</p>
-            <p style="margin-top: 1rem; font-size: 0.875rem;">Actualizado cada lunes a las 00:05</p>
+        <!-- Slider de logros -->
+        <div class="achievements-slider">
+            <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary-blue);">🌟 Destacados de la Semana</h3>
+            <div class="achievements-track" id="achievementsTrack">
+                <!-- Se llenará dinámicamente -->
+            </div>
+            <div class="slider-controls" id="sliderControls">
+                <!-- Se llenará dinámicamente -->
+            </div>
         </div>
     </div>
     
+    <a href="/public/index.html" class="float-home">🏠</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/assets/js/config.js"></script>
     <script>
-        // Simulación de búsqueda
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('.ranking-row');
-            
-            rows.forEach(row => {
-                const userName = row.querySelector('.user-name').textContent.toLowerCase();
-                if (userName.includes(searchTerm)) {
-                    row.style.display = 'flex';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-        
-        // Filtro por cohorte
-        function filterRanking(cohort) {
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // En producción, esto haría una llamada a Supabase
-            console.log('Filtrando por cohorte:', cohort);
-        }
-        
-        // Simulación de carga infinita
-        let loading = false;
-        window.addEventListener('scroll', () => {
-            if (loading) return;
-            
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
-                loading = true;
-                document.getElementById('loadingMore').style.display = 'block';
-                
-                // Simular carga de más datos
-                setTimeout(() => {
-                    document.getElementById('loadingMore').style.display = 'none';
-                    loading = false;
-                }, 1500);
-            }
-        });
-    </script>
-    <!-- Antes del </body> en Leaderboard.html -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/assets/js/config.js"></script>
-<script>
 // Variables globales
-let allUsers = [];
-let currentFilter = 'all';
+let weeklyData = [];
+let eloData = [];
+let currentSlide = 0;
+let achievements = [];
+let activeSimulation = null;
 
-// Cargar datos del leaderboard
-async function loadLeaderboard() {
+// Cargar datos iniciales
+async function loadAllData() {
     try {
-        // Mostrar loading
-        document.getElementById('rankingList').innerHTML = `
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p style="margin-top: 1rem;">Cargando ranking...</p>
-            </div>
-        `;
+        // Obtener simulacro activo
+        const { data: simData, error: simError } = await supabaseClient
+            .from('weekly_simulations')
+            .select('*')
+            .eq('status', 'active')
+            .single();
 
-        // Obtener datos del leaderboard público
+        if (simError || !simData) {
+            console.error('Error obteniendo simulacro activo:', simError);
+            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
+        } else {
+            activeSimulation = simData;
+            document.getElementById('weeklyInfo').textContent = `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
+            document.getElementById('headerSubtitle').textContent = `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
+        }
+
+        // Cargar ranking semanal
+        loadWeeklyRanking();
+        
+        // Cargar ranking ELO
+        loadEloRanking();
+        
+        // Cargar logros
+        loadAchievements();
+
+    } catch (error) {
+        console.error('Error general:', error);
+    }
+}
+
+// Cargar ranking semanal
+async function loadWeeklyRanking() {
+    try {
+        if (!activeSimulation) {
+            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
+            return;
+        }
+
+        // Obtener resultados del simulacro activo con información del usuario
+        const { data, error } = await supabaseClient
+            .from('user_results')
+            .select(`
+                *,
+                users!inner(slug, current_elo, current_streak, cohort)
+            `)
+            .eq('simulation_id', activeSimulation.id)
+            .order('score', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay resultados aún para este simulacro</p>';
+            return;
+        }
+
+        weeklyData = data;
+        renderWeeklyRanking(data);
+
+    } catch (error) {
+        console.error('Error cargando ranking semanal:', error);
+        document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking semanal</p>';
+    }
+}
+
+// Cargar ranking ELO global
+async function loadEloRanking() {
+    try {
         const { data, error } = await supabaseClient
             .from('public_leaderboard')
             .select('*')
@@ -648,55 +629,86 @@ async function loadLeaderboard() {
 
         if (error) throw error;
 
-        allUsers = data;
-        renderLeaderboard(data);
-        updateStats(data);
+        eloData = data;
+        renderEloRanking(data);
 
     } catch (error) {
-        console.error('Error:', error);
-        document.getElementById('rankingList').innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #ef4444;">
-                Error al cargar el ranking. Por favor, recarga la página.
-            </div>
-        `;
+        console.error('Error cargando ranking ELO:', error);
+        document.getElementById('eloRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking ELO</p>';
     }
 }
 
-// Renderizar el leaderboard
-function renderLeaderboard(users) {
-    const rankingList = document.getElementById('rankingList');
+// Renderizar ranking semanal
+function renderWeeklyRanking(data) {
+    const container = document.getElementById('weeklyRanking');
     
-    if (!users || users.length === 0) {
-        rankingList.innerHTML = '<p style="text-align: center;">No hay datos disponibles</p>';
-        return;
-    }
-
-    rankingList.innerHTML = users.map((user, index) => {
+    container.innerHTML = data.map((result, index) => {
         const position = index + 1;
         const isTop3 = position <= 3;
-        const hasStreak = user.current_streak >= 4;
-        
-        // Determinar clases CSS
         let rowClass = 'ranking-row';
         if (position === 1) rowClass += ' top-1';
         else if (position === 2) rowClass += ' top-2';
         else if (position === 3) rowClass += ' top-3';
 
-        // Determinar medallas
-        const medals = user.medals || [];
-        const medalHTML = medals.map(medal => {
-            const medalEmojis = {
-                'top_3_live': '🥇',
-                'perfect_score': '💯',
-                'best_improvement': '⚡',
-                'streak_diamond': '💎',
-                'streak_gold': '🏆',
-                'streak_silver': '🥈'
-            };
-            return `<span class="medal">${medalEmojis[medal] || '🏅'}</span>`;
-        }).join('');
+        // Medallas solo para simulacro activo
+        let medals = [];
+        if (activeSimulation && activeSimulation.status === 'active') {
+            if (isTop3 && result.is_saturday_live) {
+                medals.push({ icon: '🥇', tooltip: 'Top 3 en directo' });
+            }
+            if (result.score === 100) {
+                medals.push({ icon: '💯', tooltip: 'Puntuación perfecta' });
+            }
+            if (result.blank_answers === 0) {
+                medals.push({ icon: '✅', tooltip: 'Sin blancos' });
+            }
+            if (result.review_time >= 60) {
+                medals.push({ icon: '📚', tooltip: 'Análisis profundo' });
+            }
+        }
 
-        // Determinar indicador de racha
+        const medalHTML = medals.length > 0 ? `
+            <div class="medals">
+                ${medals.map(m => `<span class="medal" data-tooltip="${m.tooltip}">${m.icon}</span>`).join('')}
+            </div>
+        ` : '';
+
+        return `
+            <div class="${rowClass}">
+                <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
+                <div class="user-info">
+                    <div class="user-name">${result.users.slug}</div>
+                    <div class="user-stats">
+                        <span>📋 ${result.users.cohort}</span>
+                        ${result.is_saturday_live ? '<span>🔴 En directo</span>' : ''}
+                        ${result.time_taken ? `<span>⏱️ ${Math.round(result.time_taken/60)} min</span>` : ''}
+                    </div>
+                </div>
+                ${medalHTML}
+                <div class="score-display">
+                    <div class="score-number">${result.score}/100</div>
+                    <div class="score-label">
+                        ${result.blank_answers > 0 ? `${result.blank_answers} blancos` : 'Completo'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Renderizar ranking ELO
+function renderEloRanking(data) {
+    const container = document.getElementById('eloRanking');
+    
+    container.innerHTML = data.map((user, index) => {
+        const position = index + 1;
+        const isTop3 = position <= 3;
+        let rowClass = 'ranking-row';
+        if (position === 1) rowClass += ' top-1';
+        else if (position === 2) rowClass += ' top-2';
+        else if (position === 3) rowClass += ' top-3';
+
+        // Indicador de racha
         let streakHTML = '';
         if (user.current_streak >= 16) {
             streakHTML = `<span class="streak-indicator streak-hot">👑 ${user.current_streak} semanas</span>`;
@@ -708,15 +720,27 @@ function renderLeaderboard(users) {
             streakHTML = `<span class="streak-indicator">⭐ ${user.current_streak} semanas</span>`;
         }
 
-        // Determinar multiplicador
-        const multiplier = user.current_streak >= 16 ? 'x2.0' : 
-                          user.current_streak >= 8 ? 'x1.5' : 'x1.0';
-
-        // Color del cambio de ELO
+        // Color del cambio
         const changeClass = user.last_elo_change > 0 ? 'change-positive' : 
                            user.last_elo_change < 0 ? 'change-negative' : '';
         const changeSymbol = user.last_elo_change > 0 ? '↗' : 
                             user.last_elo_change < 0 ? '↘' : '→';
+
+        // Medallas permanentes
+        const medals = user.medals || [];
+        const medalHTML = medals.length > 0 ? `
+            <div class="medals">
+                ${medals.map(medal => {
+                    const medalEmojis = {
+                        'streak_diamond': '💎',
+                        'streak_gold': '🏆',
+                        'perfect_week': '🌟',
+                        'comeback': '🚀'
+                    };
+                    return `<span class="medal" data-tooltip="${medal}">${medalEmojis[medal] || '🏅'}</span>`;
+                }).join('')}
+            </div>
+        ` : '';
 
         return `
             <div class="${rowClass}">
@@ -724,15 +748,15 @@ function renderLeaderboard(users) {
                 <div class="user-info">
                     <div class="user-name">${user.slug}</div>
                     <div class="user-stats">
-                        ${user.last_score ? `<span>📊 Último: ${user.last_score}/100</span>` : ''}
+                        <span>📋 ${user.cohort}</span>
                         ${streakHTML}
-                        <span>📈 ${multiplier}</span>
+                        ${user.last_score ? `<span>📊 Último: ${user.last_score}/100</span>` : ''}
                     </div>
                 </div>
-                ${medalHTML ? `<div class="medals">${medalHTML}</div>` : ''}
+                ${medalHTML}
                 <div class="elo-display">
                     <div class="elo-number">${formatNumber(user.current_elo)}</div>
-                    <div class="elo-label">Puntos ELO</div>
+                    <div class="score-label">Puntos ELO</div>
                     ${user.last_elo_change ? 
                         `<div class="elo-change ${changeClass}">${changeSymbol} ${Math.abs(user.last_elo_change)}</div>` : 
                         ''}
@@ -742,71 +766,169 @@ function renderLeaderboard(users) {
     }).join('');
 }
 
-// Actualizar estadísticas generales
-function updateStats(users) {
-    if (!users || users.length === 0) return;
+// Cargar logros destacados
+async function loadAchievements() {
+    try {
+        // Obtener estadísticas para los logros
+        
+        // 1. Menor tasa de error de la semana
+        let lowestErrorUser = null;
+        if (weeklyData.length > 0) {
+            lowestErrorUser = weeklyData.reduce((min, user) => 
+                user.error_percentage < min.error_percentage ? user : min
+            );
+        }
 
-    // Total participantes
-    document.querySelector('.stat-card:nth-child(1) .stat-number').textContent = users.length;
-    
-    // Media general (calculada de los últimos scores)
-    const scoresWithData = users.filter(u => u.last_score);
-    const avgScore = scoresWithData.length > 0 
-        ? (scoresWithData.reduce((sum, u) => sum + u.last_score, 0) / scoresWithData.length).toFixed(1)
-        : '0';
-    document.querySelector('.stat-card:nth-child(2) .stat-number').textContent = avgScore;
-    
-    // ELO máximo
-    const maxElo = Math.max(...users.map(u => u.current_elo));
-    document.querySelector('.stat-card:nth-child(3) .stat-number').textContent = formatNumber(maxElo);
+        // 2. Más simulacros completados
+        const { data: mostActive, error: activeError } = await supabaseClient
+            .from('users')
+            .select('slug, total_simulations')
+            .order('total_simulations', { ascending: false })
+            .limit(1)
+            .single();
+
+        // 3. Mayor asistencia a sábados
+        const { data: saturdayKing, error: satError } = await supabaseClient
+            .from('user_results')
+            .select('user_id, users!inner(slug)')
+            .eq('is_saturday_live', true)
+            .limit(100); // Obtener todos y contar
+
+        let saturdayChampion = null;
+        if (saturdayKing && saturdayKing.length > 0) {
+            const saturdayCount = {};
+            saturdayKing.forEach(record => {
+                const slug = record.users.slug;
+                saturdayCount[slug] = (saturdayCount[slug] || 0) + 1;
+            });
+            
+            const maxSaturdays = Math.max(...Object.values(saturdayCount));
+            const championSlug = Object.keys(saturdayCount).find(key => saturdayCount[key] === maxSaturdays);
+            saturdayChampion = { slug: championSlug, count: maxSaturdays };
+        }
+
+        achievements = [
+            {
+                icon: '🎯',
+                title: 'Menor Tasa de Error',
+                value: lowestErrorUser ? `${lowestErrorUser.error_percentage}%` : 'N/A',
+                subtitle: lowestErrorUser ? lowestErrorUser.users.slug : 'Sin datos',
+                color: '#10B981'
+            },
+            {
+                icon: '📚',
+                title: 'Más Simulacros',
+                value: mostActive ? mostActive.total_simulations : 0,
+                subtitle: mostActive ? mostActive.slug : 'Sin datos',
+                color: '#3B82F6'
+            },
+            {
+                icon: '🔴',
+                title: 'Rey del Sábado',
+                value: saturdayChampion ? `${saturdayChampion.count} directos` : 'N/A',
+                subtitle: saturdayChampion ? saturdayChampion.slug : 'Sin datos',
+                color: '#DC2626'
+            }
+        ];
+
+        renderAchievements();
+
+    } catch (error) {
+        console.error('Error cargando logros:', error);
+    }
 }
 
-// Filtrar por cohorte
-function filterRanking(cohort) {
-    currentFilter = cohort;
+// Renderizar logros
+function renderAchievements() {
+    const track = document.getElementById('achievementsTrack');
+    const controls = document.getElementById('sliderControls');
     
-    // Actualizar botones activos
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
+    track.innerHTML = achievements.map(achievement => `
+        <div class="achievement-card">
+            <div class="achievement-icon" style="color: ${achievement.color};">${achievement.icon}</div>
+            <div class="achievement-title">${achievement.title}</div>
+            <div class="achievement-value">${achievement.value}</div>
+            <div class="achievement-subtitle">${achievement.subtitle}</div>
+        </div>
+    `).join('');
+    
+    // Solo mostrar controles en desktop
+    if (window.innerWidth > 768) {
+        controls.innerHTML = achievements.map((_, index) => `
+            <div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></div>
+        `).join('');
+        
+        // Auto-slide cada 5 segundos
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % achievements.length;
+            updateSlider();
+        }, 5000);
+    }
+}
+
+// Control del slider
+function goToSlide(index) {
+    currentSlide = index;
+    updateSlider();
+}
+
+function updateSlider() {
+    const track = document.getElementById('achievementsTrack');
+    const dots = document.querySelectorAll('.slider-dot');
+    
+    const offset = currentSlide * -320; // 300px card + 20px gap
+    track.style.transform = `translateX(${offset}px)`;
+    
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
     });
-    event.target.classList.add('active');
-    
-    // Filtrar usuarios
-    let filteredUsers = allUsers;
-    if (cohort !== 'all') {
-        filteredUsers = allUsers.filter(u => u.cohort === cohort);
-    }
-    
-    renderLeaderboard(filteredUsers);
 }
 
-// Búsqueda en tiempo real
-document.getElementById('searchInput').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    
-    let filteredUsers = allUsers;
-    
-    // Aplicar filtro de cohorte si está activo
-    if (currentFilter !== 'all') {
-        filteredUsers = filteredUsers.filter(u => u.cohort === currentFilter);
-    }
-    
-    // Aplicar búsqueda
-    if (searchTerm) {
-        filteredUsers = filteredUsers.filter(u => 
-            u.slug.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    renderLeaderboard(filteredUsers);
+// Touch/swipe para móviles
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
 });
 
+document.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    if (touchEndX < touchStartX - 50) {
+        // Swipe left
+        currentSlide = Math.min(currentSlide + 1, achievements.length - 1);
+        updateSlider();
+    }
+    if (touchEndX > touchStartX + 50) {
+        // Swipe right
+        currentSlide = Math.max(currentSlide - 1, 0);
+        updateSlider();
+    }
+}
+
+// Utilidades
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+}
+
+function formatNumber(num) {
+    return new Intl.NumberFormat('es-ES').format(num);
+}
+
 // Auto-actualizar cada 30 segundos
-setInterval(loadLeaderboard, 30000);
+setInterval(loadAllData, 30000);
 
 // Cargar al iniciar
-document.addEventListener('DOMContentLoaded', loadLeaderboard);
-</script>
+document.addEventListener('DOMContentLoaded', loadAllData);
+    </script>
 </body>
 </html>
-

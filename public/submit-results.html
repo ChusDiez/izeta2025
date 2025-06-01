@@ -362,22 +362,30 @@
                     <div class="form-group">
                         <label for="score">
                             Puntuación obtenida <span class="required">*</span>
+                            <span class="help-text" style="display: block; font-weight: normal; margin-top: 0.25rem;">
+                            Sobre 10, usa coma para decimales (ej: 8,50)
+                            </span>
                         </label>
                         <input 
                             type="number" 
                             id="score" 
                             name="score" 
                             min="0" 
-                            max="100" 
+                            max="10" 
                             required 
                             class="score-input"
-                            placeholder="85"
+                            placeholder="8,55"
+                            pattern="^([0-9]|10)(,[0-9]{1,2})?$"
+                            title="Puntuación sobre 10 con máximo 2 decimales usando coma"
                         >
                     </div>
                     
                     <div class="form-group">
                         <label for="blank_answers">
                             Preguntas en blanco
+                            <span class="help-text" style="display: block; font-weight: normal; margin-top: 0.25rem;">
+                            Cuántas te han faltado para las 100?
+                            </span>
                         </label>
                         <input 
                             type="number" 

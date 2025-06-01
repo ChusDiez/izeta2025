@@ -154,7 +154,7 @@ function generateEmailHTML(templateId: string, data: any): string {
       </div>
       
       <div class="stat-box">
-        <strong>📊 Puntuación:</strong> ${data.score}/100
+        <strong>📊 Puntuación:</strong> ${data.score.toFixed(2).replace('.', ',')}/10
       </div>
       
       <div class="stat-box">
