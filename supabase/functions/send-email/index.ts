@@ -136,6 +136,7 @@ function generateEmailHTML(templateId: string, data: any): string {
     .weak-topics { background: #FEF3C7; padding: 15px; border-radius: 5px; margin: 15px 0; }
     .button { display: inline-block; padding: 12px 30px; background: #1E3A8A; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
     .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 0.9em; }
+    .identifier { background: #1E3A8A; color: white; padding: 3px 10px; border-radius: 4px; font-weight: bold; display: inline-block; }
   </style>
 </head>
 <body>
@@ -147,6 +148,10 @@ function generateEmailHTML(templateId: string, data: any): string {
     <div class="content">
       <p>Hola,</p>
       <p>Confirmamos la recepción de tus resultados del simulacro:</p>
+      
+      <div class="stat-box">
+        <strong>🏷️ Tu identificador en el ranking:</strong> <span class="identifier">${data.user_slug || 'No disponible'}</span>
+      </div>
       
       <div class="stat-box">
         <strong>📊 Puntuación:</strong> ${data.score}/100
@@ -182,6 +187,8 @@ function generateEmailHTML(templateId: string, data: any): string {
           Ver mi posición en el ranking
         </a>
       </center>
+      
+      <p>Busca tu identificador <strong>${data.user_slug}</strong> en el ranking para ver tu posición y evolución.</p>
       
       <p><strong>Próximos pasos:</strong></p>
       <ul>
