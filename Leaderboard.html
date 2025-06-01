@@ -27,11 +27,597 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             font-size: 1.5rem;
         }
+        :root {
+            --primary-blue: #1e40af;
+            --secondary-gray: #475569;
+            --accent-gold: #fbbf24;
+            --accent-silver: #c0c0c9;
+            --accent-bronze: #cd7f32;
+            --success-green: #22c55e;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header animado */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-gray));
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            animation: fadeInDown 0.5s ease-out;
+        }
+        
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.5s ease-out 0.2s both;
+        }
+        
+        /* Stats cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+        
+        .stat-label {
+            color: var(--secondary-gray);
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Ranking table */
+        .ranking-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            animation: fadeIn 0.5s ease-out 0.3s both;
+        }
+        
+        .ranking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .ranking-title {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid transparent;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .filter-btn:hover {
+            background: #e5e7eb;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        
+        /* Ranking rows */
+        .ranking-row {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ranking-row:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        /* Top 3 special styling */
+        .ranking-row.top-1 {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid var(--accent-gold);
+        }
+        
+        .ranking-row.top-2 {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border: 2px solid var(--accent-silver);
+        }
+        
+        .ranking-row.top-3 {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid var(--accent-bronze);
+        }
+        
+        .rank-position {
+            font-size: 1.5rem;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .rank-1 { color: var(--accent-gold); }
+        .rank-2 { color: var(--accent-silver); }
+        .rank-3 { color: var(--accent-bronze); }
+        
+        /* User info */
+        .user-info {
+            flex: 1;
+            margin: 0 1.5rem;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--secondary-gray);
+        }
+        
+        /* ELO display */
+        .elo-display {
+            text-align: right;
+            min-width: 150px;
+        }
+        
+        .elo-number {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+        
+        .elo-label {
+            font-size: 0.75rem;
+            color: var(--secondary-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Streak indicator */
+        .streak-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            background: #fee2e2;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .streak-fire {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .streak-hot {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        
+        /* Medals */
+        .medals {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+        
+        .medal {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Search bar */
+        .search-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-gray);
+        }
+        
+        /* Loading animation */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .ranking-row {
+                flex-wrap: wrap;
+            }
+            
+            .user-stats {
+                margin-top: 0.5rem;
+            }
+            
+            .medals {
+                margin-top: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Leaderboard</h1>
-    <p>Página en construcción</p>
-    <a href="index.html" class="float-home">🏠</a>
+    <div class="container">
+        <!-- Header animado -->
+        <div class="header">
+            <h1>🏆 Ranking IZETA 2025</h1>
+            <p>Sistema de Puntuación ELO - Semana 15</p>
+        </div>
+        
+        <!-- Estadísticas generales -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number">245</div>
+                <div class="stat-label">Participantes Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">76.4</div>
+                <div class="stat-label">Media General</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1,847</div>
+                <div class="stat-label">ELO Máximo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">15</div>
+                <div class="stat-label">Semanas Completadas</div>
+            </div>
+        </div>
+        
+        <!-- Ranking principal -->
+        <div class="ranking-container">
+            <div class="ranking-header">
+                <h2 class="ranking-title">Clasificación General</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterRanking('all')">Todos</button>
+                    <button class="filter-btn" onclick="filterRanking('20h')">20h</button>
+                    <button class="filter-btn" onclick="filterRanking('36h')">36h</button>
+                    <button class="filter-btn" onclick="filterRanking('48h')">48h</button>
+                </div>
+            </div>
+            
+            <!-- Barra de búsqueda -->
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Buscar por nombre..." id="searchInput">
+            </div>
+            
+            <!-- Ranking rows -->
+            <div id="rankingList">
+                <!-- Top 1 -->
+                <div class="ranking-row top-1">
+                    <div class="rank-position rank-1">1º</div>
+                    <div class="user-info">
+                        <div class="user-name">carlos-4821</div>
+                        <div class="user-stats">
+                            <span>📊 Último: 93/100</span>
+                            <span class="streak-indicator streak-hot">🔥 15 semanas</span>
+                            <span>📈 x1.5</span>
+                        </div>
+                    </div>
+                    <div class="medals">
+                        <span class="medal">🥇</span>
+                        <span class="medal">⚡</span>
+                    </div>
+                    <div class="elo-display">
+                        <div class="elo-number">1,847</div>
+                        <div class="elo-label">Puntos ELO</div>
+                    </div>
+                </div>
+                
+                <!-- Top 2 -->
+                <div class="ranking-row top-2">
+                    <div class="rank-position rank-2">2º</div>
+                    <div class="user-info">
+                        <div class="user-name">laura-9273</div>
+                        <div class="user-stats">
+                            <span>📊 Último: 91/100</span>
+                            <span class="streak-indicator streak-hot">🔥 12 semanas</span>
+                            <span>📈 x1.5</span>
+                        </div>
+                    </div>
+                    <div class="medals">
+                        <span class="medal">🥈</span>
+                    </div>
+                    <div class="elo-display">
+                        <div class="elo-number">1,765</div>
+                        <div class="elo-label">Puntos ELO</div>
+                    </div>
+                </div>
+                
+                <!-- Top 3 -->
+                <div class="ranking-row top-3">
+                    <div class="rank-position rank-3">3º</div>
+                    <div class="user-info">
+                        <div class="user-name">miguel-1547</div>
+                        <div class="user-stats">
+                            <span>📊 Último: 89/100</span>
+                            <span class="streak-indicator">⭐ 6 semanas</span>
+                            <span>📈 x1.0</span>
+                        </div>
+                    </div>
+                    <div class="medals">
+                        <span class="medal">🥉</span>
+                    </div>
+                    <div class="elo-display">
+                        <div class="elo-number">1,687</div>
+                        <div class="elo-label">Puntos ELO</div>
+                    </div>
+                </div>
+                
+                <!-- Resto del ranking -->
+                <div class="ranking-row">
+                    <div class="rank-position">4º</div>
+                    <div class="user-info">
+                        <div class="user-name">ana-7639</div>
+                        <div class="user-stats">
+                            <span>📊 Último: 87/100</span>
+                            <span class="streak-indicator streak-hot">🔥 9 semanas</span>
+                            <span>📈 x1.5</span>
+                        </div>
+                    </div>
+                    <div class="elo-display">
+                        <div class="elo-number">1,623</div>
+                        <div class="elo-label">Puntos ELO</div>
+                    </div>
+                </div>
+                
+                <div class="ranking-row">
+                    <div class="rank-position">5º</div>
+                    <div class="user-info">
+                        <div class="user-name">pedro-3892</div>
+                        <div class="user-stats">
+                            <span>📊 Último: 85/100</span>
+                            <span class="streak-indicator">⭐ 4 semanas</span>
+                            <span>📈 x1.0</span>
+                        </div>
+                    </div>
+                    <div class="elo-display">
+                        <div class="elo-number">1,598</div>
+                        <div class="elo-label">Puntos ELO</div>
+                    </div>
+                </div>
+                
+                <!-- Loading más resultados -->
+                <div class="loading" id="loadingMore" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 1rem; color: var(--secondary-gray);">Cargando más resultados...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer info -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--secondary-gray);">
+            <p><strong>Sistema ELO:</strong> Gana hasta 25 puntos por semana</p>
+            <p style="margin-top: 0.5rem;">🔥 8+ semanas = x1.5 | 👑 16+ semanas = x2.0</p>
+            <p style="margin-top: 1rem; font-size: 0.875rem;">Actualizado cada lunes a las 00:05</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simulación de búsqueda
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.ranking-row');
+            
+            rows.forEach(row => {
+                const userName = row.querySelector('.user-name').textContent.toLowerCase();
+                if (userName.includes(searchTerm)) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filtro por cohorte
+        function filterRanking(cohort) {
+            // Actualizar botones activos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // En producción, esto haría una llamada a Supabase
+            console.log('Filtrando por cohorte:', cohort);
+        }
+        
+        // Simulación de carga infinita
+        let loading = false;
+        window.addEventListener('scroll', () => {
+            if (loading) return;
+            
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                loading = true;
+                document.getElementById('loadingMore').style.display = 'block';
+                
+                // Simular carga de más datos
+                setTimeout(() => {
+                    document.getElementById('loadingMore').style.display = 'none';
+                    loading = false;
+                }, 1500);
+            }
+        });
+    </script>
 </body>
 </html>
+
