@@ -1,1 +1,1234 @@
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IZETA 2025 - Cronograma Torre ♜ (48h/semana)</title>
+    <style>
+        :root {
+            --chess-black: #0a0a0a;
+            --chess-white: #f5f5f5;
+            --chess-gold: #ffd700;
+            --chess-platinum: #e5e4e2;
+            --tower-purple: #4a148c;
+            --tower-dark: #311b92;
+            --elite-red: #b71c1c;
+            --success-green: #1b5e20;
+            --warning-amber: #ff6f00;
+            --bg-elite: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --shadow-strong: 0 4px 20px rgba(0,0,0,0.15);
+            --gradient-elite: linear-gradient(135deg, #311b92 0%, #4a148c 50%, #6a1b9a 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-elite);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(74, 20, 140, 0.02) 10px,
+                    rgba(74, 20, 140, 0.02) 20px
+                );
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .header {
+            background: var(--gradient-elite);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-strong);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '♜';
+            position: absolute;
+            left: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 15rem;
+            opacity: 0.05;
+            animation: tower-slide 20s linear infinite;
+        }
+        
+        .header::after {
+            content: '♜';
+            position: absolute;
+            right: -50px;
+            top: 50%;
+            transform: translateY(-50%) scaleX(-1);
+            font-size: 15rem;
+            opacity: 0.05;
+            animation: tower-slide-reverse 20s linear infinite;
+        }
+        
+        @keyframes tower-slide {
+            0% { left: -200px; }
+            100% { left: calc(100% + 200px); }
+        }
+        
+        @keyframes tower-slide-reverse {
+            0% { right: -200px; }
+            100% { right: calc(100% + 200px); }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .chess-piece {
+            font-size: 3.5rem;
+            animation: tower-power 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
+        
+        @keyframes tower-power {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.1) translateY(-5px); }
+        }
+        
+        .elite-badge {
+            display: inline-block;
+            background: var(--chess-gold);
+            color: var(--chess-black);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: bold;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+            animation: shine 3s ease-in-out infinite;
+        }
+        
+        @keyframes shine {
+            0%, 100% { box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
+            50% { box-shadow: 0 4px 25px rgba(255,215,0,0.8); }
+        }
+        
+        .summary {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-strong);
+            border: 2px solid var(--tower-purple);
+            position: relative;
+        }
+        
+        .summary::before {
+            content: '👑';
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            font-size: 2rem;
+            background: white;
+            padding: 0 10px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: var(--bg-elite);
+            border-radius: 10px;
+            border: 1px solid var(--tower-purple);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .summary-item::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-elite);
+            transition: top 0.3s;
+            z-index: 0;
+        }
+        
+        .summary-item:hover::before {
+            top: 0;
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-strong);
+        }
+        
+        .summary-item:hover .summary-number,
+        .summary-item:hover div {
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .summary-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--tower-purple);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .day-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow-strong);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid transparent;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--tower-purple);
+            box-shadow: 0 8px 30px rgba(74, 20, 140, 0.2);
+        }
+        
+        .day-card.elite::before {
+            content: '⚡';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            animation: pulse-elite 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-elite {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .day-header {
+            background: var(--gradient-elite);
+            color: white;
+            padding: 1.25rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .day-header.weekend {
+            background: linear-gradient(135deg, var(--chess-gold), #ffab00);
+            color: var(--chess-black);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .day-header.weekend::after {
+            content: '★';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            opacity: 0.3;
+        }
+        
+        .time-slot {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .time-slot:hover {
+            background: linear-gradient(to right, transparent, rgba(74, 20, 140, 0.05));
+            padding-left: 1.5rem;
+        }
+        
+        .time-slot.intensive {
+            border-left: 4px solid var(--elite-red);
+        }
+        
+        .time-slot:last-child {
+            border-bottom: none;
+        }
+        
+        .time {
+            font-weight: bold;
+            color: var(--tower-dark);
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+        
+        .activity {
+            flex: 1;
+            margin-left: 1rem;
+        }
+        
+        .activity-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        
+        .activity-detail {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 0.25rem;
+        }
+        
+        .duration {
+            background: var(--gradient-elite);
+            color: white;
+            padding: 0.35rem 0.85rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(74, 20, 140, 0.3);
+        }
+        
+        .task-type {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .type-test { background: #e3f2fd; color: #0d47a1; }
+        .type-review { background: #f3e5f5; color: #4a148c; }
+        .type-simulacro { background: #ffebee; color: #b71c1c; }
+        .type-flashcard { background: #e8f5e9; color: #1b5e20; }
+        .type-rest { background: #fff3e0; color: #e65100; }
+        .type-analysis { background: #fce4ec; color: #880e4f; }
+        .type-technique { background: #e0f2f1; color: #004d40; }
+        .type-speed { background: #f3e5f5; color: #4a148c; }
+        .type-lab { background: #e8eaf6; color: #283593; }
+        
+        .daily-summary {
+            background: var(--gradient-elite);
+            color: white;
+            padding: 1.25rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s;
+        }
+        
+        .progress-dot.active {
+            background: var(--tower-purple);
+            transform: scale(1.5);
+            box-shadow: 0 0 10px rgba(74, 20, 140, 0.5);
+        }
+        
+        .tips-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow-strong);
+            margin-top: 2rem;
+            border: 1px solid var(--tower-purple);
+        }
+        
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .tip-card {
+            padding: 1.75rem;
+            background: linear-gradient(135deg, var(--bg-elite), white);
+            border-radius: 10px;
+            border-left: 5px solid var(--tower-purple);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tip-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(74, 20, 140, 0.1) 0%, transparent 70%);
+            transition: all 0.5s;
+        }
+        
+        .tip-card:hover::before {
+            top: -20%;
+            right: -20%;
+        }
+        
+        .tip-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-strong);
+            border-left-width: 8px;
+        }
+        
+        .tip-title {
+            font-weight: bold;
+            color: var(--tower-dark);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .chess-notation {
+            background: var(--chess-black);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow: hidden;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-strong);
+        }
+        
+        .chess-notation::before,
+        .chess-notation::after {
+            content: '♜';
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.1;
+        }
+        
+        .chess-notation::before {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .chess-notation::after {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .tower-power-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 2px;
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 10px;
+            background: var(--chess-black);
+            border-radius: 5px;
+        }
+        
+        .tower-cell {
+            aspect-ratio: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .tower-cell.black {
+            background: #333;
+            color: white;
+        }
+        
+        .tower-cell.highlight {
+            background: var(--tower-purple);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(74, 20, 140, 0.8);
+        }
+        
+        .legend {
+            background: linear-gradient(135deg, #fffde7, #fff9c4);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 2rem;
+            border: 2px solid var(--chess-gold);
+            box-shadow: 0 4px 15px rgba(255,215,0,0.2);
+        }
+        
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            color: var(--tower-dark);
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+        
+        .achievement-banner {
+            background: var(--gradient-elite);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .achievement-banner::before {
+            content: '🏆';
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            opacity: 0.2;
+        }
+        
+        .achievement-banner::after {
+            content: '🏆';
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3rem;
+            opacity: 0.2;
+        }
+        
+        @media (max-width: 768px) {
+            .weekly-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .chess-piece {
+                font-size: 2.5rem;
+            }
+            
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span class="chess-piece">♜</span>
+                Cronograma Semanal - Cohorte Torre
+                <span class="chess-piece">♜</span>
+            </h1>
+            <p style="font-size: 1.3rem; margin-top: 0.5rem;">48 horas semanales - Dedicación élite completa</p>
+            <div class="elite-badge">NIVEL MÁXIMO DE PREPARACIÓN</div>
+            <p style="margin-top: 1.5rem; opacity: 0.9; font-size: 1.1rem;">"La torre domina filas y columnas completas - Control absoluto del tablero"</p>
+        </div>
+        
+        <!-- Resumen semanal -->
+        <div class="summary">
+            <h2 style="color: var(--tower-dark); margin-bottom: 1rem;">📊 Resumen Semanal Élite</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-number">48h</div>
+                    <div>Horas totales</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">745</div>
+                    <div>Preguntas/sem</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">3×</div>
+                    <div>Bloques diarios</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">5</div>
+                    <div>Cajas Leitner</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">100%</div>
+                    <div>Cobertura banco</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number">Elite</div>
+                    <div>Técnicas avanzadas</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress indicator -->
+        <div class="progress-indicator">
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+            <div class="progress-dot active"></div>
+        </div>
+        
+        <!-- Notación ajedrecística -->
+        <div class="chess-notation">
+            <strong>Dominio de Torre:</strong> 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d4! exd4 5.O-O Bc5 6.e5! (Control total del centro)
+        </div>
+        
+        <!-- Visualización poder de torre -->
+        <div class="tower-power-grid">
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black highlight">♜</div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell highlight">↓</div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            
+            <div class="tower-cell highlight">←</div>
+            <div class="tower-cell highlight">←</div>
+            <div class="tower-cell highlight">●</div>
+            <div class="tower-cell highlight">→</div>
+            <div class="tower-cell highlight">→</div>
+            <div class="tower-cell highlight">→</div>
+            <div class="tower-cell highlight">→</div>
+            <div class="tower-cell highlight">→</div>
+            
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell highlight">↓</div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+            <div class="tower-cell black"></div>
+            <div class="tower-cell"></div>
+        </div>
+        
+        <!-- Grid semanal -->
+        <div class="weekly-grid">
+            <!-- LUNES -->
+            <div class="day-card elite">
+                <div class="day-header">LUNES - Arranque élite</div>
+                <div class="time-slot intensive">
+                    <span class="time">06:00-06:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias - Mente fresca</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">06:45-07:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 1-10 (lectura activa + subrayado)</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-10:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express A <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1-2 (diaria + 3 días)</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">14:00-14:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas - Enfoque diferente</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">17:00-18:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Top-10 Fallos + Análisis <span class="task-type type-analysis">TOP-10</span></div>
+                        <div class="activity-detail">Preguntas más falladas + patrones de error</div>
+                    </div>
+                    <span class="duration">1h</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">19:00-19:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express B <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 3-5 (semanal/quincenal/mensual)</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Mini-test dirigido <span class="task-type type-test">REFUERZO</span></div>
+                        <div class="activity-detail">Temas débiles detectados (<80%)</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 4h 25min | 90-105 preguntas | 10 temas | Top-10 análisis
+                </div>
+            </div>
+            
+            <!-- MARTES -->
+            <div class="day-card elite">
+                <div class="day-header">MARTES - Triple bloque</div>
+                <div class="time-slot intensive">
+                    <span class="time">06:00-06:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">06:45-07:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 11-20</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-10:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express A <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1-2</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">14:00-14:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas diferentes</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">17:00-17:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Casos prácticos avanzados <span class="task-type type-analysis">PRÁCTICA</span></div>
+                        <div class="activity-detail">Supuestos complejos tipo examen</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">19:00-19:45</span>
+                    <div class="activity">
+                        <div class="activity-name">3er bloque - Nuevas <span class="task-type type-test">TEST-3</span></div>
+                        <div class="activity-detail">30-40 preguntas 100% inéditas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Análisis estadístico <span class="task-type type-analysis">MÉTRICAS</span></div>
+                        <div class="activity-detail">Evolución diaria + ajustes estrategia</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:30-20:40</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión integral 5 cajas</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 5h 25min | 110-150 preguntas | 10 temas | Triple sesión
+                </div>
+            </div>
+            
+            <!-- MIÉRCOLES -->
+            <div class="day-card elite">
+                <div class="day-header">MIÉRCOLES - Técnicas élite</div>
+                <div class="time-slot intensive">
+                    <span class="time">06:00-06:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">06:45-07:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 21-30</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-10:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express A <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1-2</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">14:00-14:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">16:00-16:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Técnica Feynman <span class="task-type type-technique">FEYNMAN</span></div>
+                        <div class="activity-detail">Explicar tema complejo grabando audio</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">18:00-19:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Simulacro contrarreloj <span class="task-type type-speed">SPEED</span></div>
+                        <div class="activity-detail">50 preguntas en 20 minutos (quincenal)</div>
+                    </div>
+                    <span class="duration">1h</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:20</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión integral + nuevas</div>
+                    </div>
+                    <span class="duration">20 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 4h 25min | 115-130 preguntas | 10 temas | Speed training
+                </div>
+            </div>
+            
+            <!-- JUEVES -->
+            <div class="day-card elite">
+                <div class="day-header">JUEVES - Laboratorio</div>
+                <div class="time-slot intensive">
+                    <span class="time">06:00-06:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">06:45-07:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 31-40</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-10:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express A <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1-2</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">14:00-14:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">17:00-17:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Laboratorio de fichas <span class="task-type type-lab">LAB</span></div>
+                        <div class="activity-detail">Crear mnemotecnias avanzadas grupales</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">19:00-19:45</span>
+                    <div class="activity">
+                        <div class="activity-name">3er bloque - Nuevas <span class="task-type type-test">TEST-3</span></div>
+                        <div class="activity-detail">30-40 preguntas inéditas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Análisis profundo errores <span class="task-type type-analysis">DEEP</span></div>
+                        <div class="activity-detail">Por qué fallamos + estrategias correctivas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:45-21:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Nocturno <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 3-5 + urgentes</div>
+                    </div>
+                    <span class="duration">15 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 5h 45min | 110-150 preguntas | 10 temas | Laboratorio
+                </div>
+            </div>
+            
+            <!-- VIERNES -->
+            <div class="day-card elite">
+                <div class="day-header">VIERNES - Consolidación élite</div>
+                <div class="time-slot intensive">
+                    <span class="time">06:00-06:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">06:45-07:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 41-44 + Legislación actualizada</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-10:10</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Express A <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1-2</div>
+                    </div>
+                    <span class="duration">10 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">14:00-14:45</span>
+                    <div class="activity">
+                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">16:00-16:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Técnica Feynman II <span class="task-type type-technique">FEYNMAN</span></div>
+                        <div class="activity-detail">Segundo tema complejo de la semana</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">18:00-19:50</span>
+                    <div class="activity">
+                        <div class="activity-name">Simulacro contrarreloj XL <span class="task-type type-speed">ULTRA</span></div>
+                        <div class="activity-detail">100 preguntas en 35 minutos (quincenal)</div>
+                    </div>
+                    <span class="duration">1h 50min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Preparación weekend <span class="task-type type-rest">PREP</span></div>
+                        <div class="activity-detail">Estrategia simulacros + revisión semanal</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:30-20:50</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Master <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión completa pre-simulacros</div>
+                    </div>
+                    <span class="duration">20 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 5h 55min | 165-180 preguntas | Speed test incluido
+                </div>
+            </div>
+            
+            <!-- SÁBADO -->
+            <div class="day-card">
+                <div class="day-header weekend">SÁBADO - Batalla decisiva</div>
+                <div class="time-slot">
+                    <span class="time">07:30-08:15</span>
+                    <div class="activity">
+                        <div class="activity-name">Test matutino élite <span class="task-type type-test">WARM-UP</span></div>
+                        <div class="activity-detail">30 preguntas de calentamiento mental</div>
+                    </div>
+                    <span class="duration">45 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">09:00-09:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Preparación mental <span class="task-type type-rest">FOCUS</span></div>
+                        <div class="activity-detail">Técnicas concentración + visualización</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">10:00-11:50</span>
+                    <div class="activity">
+                        <div class="activity-name">SIMULACRO RF OFICIAL <span class="task-type type-simulacro">EXAMEN</span></div>
+                        <div class="activity-detail">100 preguntas inéditas nivel máximo - En directo</div>
+                    </div>
+                    <span class="duration">1h 50min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">12:00-14:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Corrección Master <span class="task-type type-analysis">ANÁLISIS</span></div>
+                        <div class="activity-detail">Análisis exhaustivo + patrones + flashcards</div>
+                    </div>
+                    <span class="duration">2h</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">16:00-16:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Test recuperación <span class="task-type type-test">RECOVERY</span></div>
+                        <div class="activity-detail">25 preguntas de los fallos del simulacro</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">17:00-17:20</span>
+                    <div class="activity">
+                        <div class="activity-name">Leitner Post-Battle <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Solo críticas del simulacro</div>
+                    </div>
+                    <span class="duration">20 min</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 5h 55min | 155 preguntas | Simulacro + análisis profundo
+                </div>
+            </div>
+            
+            <!-- DOMINGO -->
+            <div class="day-card">
+                <div class="day-header weekend">DOMINGO - Coronación</div>
+                <div class="time-slot intensive">
+                    <span class="time">08:00-09:50</span>
+                    <div class="activity">
+                        <div class="activity-name">Simulacro Entrenamiento Plus <span class="task-type type-simulacro">TEST</span></div>
+                        <div class="activity-detail">100 preguntas - Ritmo personal controlado</div>
+                    </div>
+                    <span class="duration">1h 50min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">10:00-12:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Análisis comparativo élite <span class="task-type type-analysis">COMPARE</span></div>
+                        <div class="activity-detail">Sábado vs domingo + tendencias + predicciones</div>
+                    </div>
+                    <span class="duration">2h</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">15:00-19:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Vuelta Express Torre <span class="task-type type-review">MASTER</span></div>
+                        <div class="activity-detail">Lectura voz alta temario completo + grabación</div>
+                    </div>
+                    <span class="duration">4h</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Sistema Leitner Dominical <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión completa 5 cajas + reorganización</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">21:00-22:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Planificación Torre <span class="task-type type-rest">STRATEGY</span></div>
+                        <div class="activity-detail">Análisis semanal + ajustes + objetivos próxima</div>
+                    </div>
+                    <span class="duration">1h</span>
+                </div>
+                <div class="daily-summary">
+                    Total día: 10h 20min | 100 preguntas + vuelta completa + estrategia
+                </div>
+            </div>
+        </div>
+        
+        <!-- Achievement banner -->
+        <div class="achievement-banner">
+            <h3>LOGROS SEMANALES DE LA TORRE</h3>
+            <p>✓ 745 preguntas resueltas | ✓ 100% cobertura del banco | ✓ 3 técnicas avanzadas aplicadas</p>
+            <p>✓ 2 simulacros speed | ✓ 5 vueltas completas al temario | ✓ Sistema Leitner optimizado</p>
+        </div>
+        
+        <!-- Leyenda -->
+        <div class="legend">
+            <div class="legend-title">📋 Leyenda del Sistema Torre:</div>
+            <div class="legend-items">
+                <span class="task-type type-test">TEST</span> Práctica triple
+                <span class="task-type type-review">REPASO</span> Vuelta master
+                <span class="task-type type-simulacro">EXAMEN</span> Simulacro élite
+                <span class="task-type type-flashcard">FICHAS</span> Leitner 5 cajas
+                <span class="task-type type-analysis">ANÁLISIS</span> Estudio profundo
+                <span class="task-type type-technique">FEYNMAN</span> Técnica activa
+                <span class="task-type type-speed">SPEED</span> Contrarreloj
+                <span class="task-type type-lab">LAB</span> Laboratorio
+            </div>
+        </div>
+        
+        <!-- Tips estratégicos -->
+        <div class="tips-section">
+            <h2 style="color: var(--tower-dark); margin-bottom: 1rem;">♜ Estrategias de la Torre</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-title">
+                        ⚡ Triple sesión inteligente
+                    </div>
+                    <p>AM: temas complejos (mente fresca), PM: repaso y consolidación, Noche: preguntas nuevas para mantener la adaptabilidad. Cada sesión tiene un objetivo específico.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        🧠 Feynman bi-semanal
+                    </div>
+                    <p>Dos sesiones Feynman atacan los puntos ciegos desde ángulos diferentes. La grabación permite auto-evaluación objetiva de tu dominio real.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        ⚡ Speed training quincenal
+                    </div>
+                    <p>Los simulacros contrarreloj no son para aprobar, son para crear resiliencia mental. Si mantienes 70% a máxima velocidad, el examen real será pan comido.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        🔬 Laboratorio de fichas
+                    </div>
+                    <p>Crear mnemotecnias en grupo multiplica la retención. Las mejores creaciones se comparten y benefician a toda la cohorte Torre.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        📊 Análisis predictivo
+                    </div>
+                    <p>Con 3 bloques diarios tienes datos suficientes para predecir tu rendimiento por franja horaria y tipo de pregunta. Usa esta info estratégicamente.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        🏰 Dominio absoluto
+                    </div>
+                    <p>Como la torre en ajedrez, controlas filas (temas) y columnas (tipos de pregunta) completas. Tu visión es panorámica y tu ejecución, precisa.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        💪 Resiliencia élite
+                    </div>
+                    <p>48h requiere disciplina militar. Nutrición óptima, sueño de calidad (7-8h) y ejercicio diario son NO negociables. Tu cuerpo es tu herramienta.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        🎯 El 1% superior
+                    </div>
+                    <p>Este nivel te coloca en el 1% de preparación. No es solo aprobar, es dominar. Cada hora invertida te acerca a la excelencia absoluta.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nota final -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: #666;">
+            <p style="font-size: 1.3rem; font-weight: bold; color: var(--tower-dark);">
+                "La Torre no conoce obstáculos en su camino" ♜
+            </p>
+            <p style="margin-top: 1rem;">Tu dedicación élite te garantiza el control total del tablero.</p>
+            <p style="margin-top: 1.5rem; font-size: 1.1rem;">
+                <strong>Próximo nivel:</strong> Dama (∞) - Pero primero, corona como Rey del 85/100. 👑
+            </p>
+            <div style="margin-top: 2rem; padding: 1.5rem; background: var(--gradient-elite); color: white; border-radius: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <p style="font-weight: bold; font-size: 1.1rem;">RECORDATORIO ÉLITE:</p>
+                <p style="margin-top: 0.5rem;">Con este nivel de preparación, no solo apruebas: dominas. Mantén la disciplina, confía en el sistema y prepárate para brillar el día del examen.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
