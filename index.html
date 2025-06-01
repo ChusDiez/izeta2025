@@ -22,6 +22,159 @@
             --color-48h: #475569;        /* Gris oscuro para Plan Élite */
         }
         
+        /* Estilos para el Header de Navegación */
+        .nav-header {
+            background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+            padding: 0;
+            margin: 0 auto 2rem;
+            max-width: 100%;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-brand:hover {
+            opacity: 0.9;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .nav-dropdown {
+            position: relative;
+        }
+        
+        .nav-dropdown-toggle {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .nav-dropdown-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            margin-top: 0.5rem;
+        }
+        
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .nav-dropdown-item {
+            display: block;
+            padding: 0.75rem 1.25rem;
+            color: var(--color-texto);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .nav-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .nav-dropdown-item:hover {
+            background: var(--color-fondo);
+            color: var(--color-primario);
+            padding-left: 1.5rem;
+        }
+        
+        .nav-dropdown-item .chess-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        
+        .nav-link {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.leaderboard {
+            background: rgba(255,255,255,0.9);
+            color: var(--color-primario);
+            font-weight: 600;
+        }
+        
+        .nav-link.leaderboard:hover {
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .nav-link.admin {
+            background: var(--color-peligro);
+            color: white;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .nav-link.admin:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
         /* Estilos base */
         * {
             margin: 0;
@@ -34,6 +187,8 @@
             line-height: 1.6;
             color: var(--color-texto);
             background: var(--color-fondo);
+            margin: 0;
+            padding: 0;
         }
         
         .container {
@@ -432,6 +587,28 @@
         
         /* Responsive */
         @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .nav-dropdown-menu {
+                position: fixed;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+                width: 90%;
+                max-width: 300px;
+            }
+            
+            .nav-dropdown:hover .nav-dropdown-menu {
+                transform: translateX(-50%) translateY(0);
+            }
+            
             .container {
                 padding: 1rem;
             }
@@ -487,6 +664,51 @@
     </style>
 </head>
 <body>
+    <!-- HEADER DE NAVEGACIÓN -->
+    <nav class="nav-header">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">
+                ♔ IZETA 2025
+            </a>
+            
+            <div class="nav-links">
+                <!-- Dropdown de Planes -->
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle">
+                        📚 Planes de Estudio
+                        <span style="font-size: 0.8rem;">▼</span>
+                    </div>
+                    <div class="nav-dropdown-menu">
+                        <a href="Caballo_20.html" class="nav-dropdown-item">
+                            <span class="chess-icon">♞</span>Base (20h/semana)
+                        </a>
+                        <a href="Alfil_36.html" class="nav-dropdown-item">
+                            <span class="chess-icon">♗</span>Intensivo (36h/semana)
+                        </a>
+                        <a href="Torre_48.html" class="nav-dropdown-item">
+                            <span class="chess-icon">♜</span>Élite (48h/semana)
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Sistema ELO -->
+                <a href="Sistema_ELO.html" class="nav-link">
+                    🏆 Sistema ELO
+                </a>
+                
+                <!-- Leaderboard Público -->
+                <a href="Leaderboard.html" class="nav-link leaderboard">
+                    📊 Leaderboard
+                </a>
+                
+                <!-- Dashboard Admin (solo visible para ti) -->
+                <a href="Dashboard_rendimiento.html" class="nav-link admin">
+                    🔐 Dashboard Admin
+                </a>
+            </div>
+        </div>
+    </nav>
+    
     <div class="container">
         <!-- ENCABEZADO PRINCIPAL -->
         <div class="header fade-in">
@@ -533,7 +755,7 @@
                 <!-- COHORTE 20H -->
                 <div class="cohort-card cohort-20h fade-in">
                     <div class="cohort-header">
-                        <div class="cohort-title">&#9822; Preparación Base</div>
+                        <div class="cohort-title">♞ Preparación Base</div>
                         <div class="cohort-hours">20h/sem</div>
                         <div style="font-size: 0.9rem; margin-top: 0.5rem;">Para opositores con trabajo</div>
                     </div>
@@ -705,7 +927,7 @@
                 <!-- COHORTE 36H -->
                 <div class="cohort-card cohort-36h fade-in" style="animation-delay: 0.1s;">
                     <div class="cohort-header">
-                        <div class="cohort-title">&#9815; Preparación Intensiva</div>
+                        <div class="cohort-title">♗ Preparación Intensiva</div>
                         <div class="cohort-hours">36h/sem</div>
                         <div style="font-size: 0.9rem; margin-top: 0.5rem;">Para dedicación parcial estratégica</div>
                     </div>
@@ -975,7 +1197,7 @@
                 <!-- COHORTE 48H -->
                 <div class="cohort-card cohort-48h fade-in" style="animation-delay: 0.2s;">
                     <div class="cohort-header">
-                        <div class="cohort-title">&#9820; Plan Élite</div>
+                        <div class="cohort-title">♜ Plan Élite</div>
                         <div class="cohort-hours">48h/sem</div>
                         <div style="font-size: 0.9rem; margin-top: 0.5rem;">Control absoluto del tablero - Para dedicación completa</div>
                     </div>
