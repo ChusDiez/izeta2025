@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IZETA 2025 - Cronograma Peón ♟️ (20h/semana)</title>
+    <title>IZETA 2025 - Preparación Base ♞ (20h/semana)</title>
     <style>
         :root {
             --chess-black: #1a1a1a;
@@ -126,6 +126,11 @@
         .day-header.weekend {
             background: var(--chess-gold);
             color: var(--chess-black);
+        }
+        
+        .day-header.rest {
+            background: var(--warning-amber);
+            color: white;
         }
         
         .time-slot {
@@ -280,12 +285,12 @@
         <!-- Header -->
         <div class="header">
             <h1>
-                <span class="chess-piece">♟️</span>
-                Cronograma Semanal - Cohorte Peón
-                <span class="chess-piece">♟️</span>
+                <span class="chess-piece">♞</span>
+                Cronograma Semanal - Preparación Base
+                <span class="chess-piece">♞</span>
             </h1>
             <p style="font-size: 1.2rem; margin-top: 0.5rem;">20 horas semanales - Para opositores con trabajo</p>
-            <p style="margin-top: 1rem; opacity: 0.9;">"El peón es el alma del ajedrez" - Philidor</p>
+            <p style="margin-top: 1rem; opacity: 0.9;">"El caballo es la pieza más versátil del tablero"</p>
         </div>
         
         <!-- Resumen semanal -->
@@ -305,17 +310,13 @@
                     <div>Simulacros RF</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-number">5</div>
-                    <div>Vueltas temario</div>
+                    <div class="summary-number">7</div>
+                    <div>Temas por semana</div>
                 </div>
             </div>
         </div>
         
-        <!-- Notación ajedrecística -->
-        <div class="chess-notation">
-            <strong>Apertura Peón:</strong> 1.e4 (Test diario) e5 2.Nf3 (Mini-test) Nc6 3.Bb5 (Flashcards) 
-        </div>
-        
+            
         <!-- Grid semanal -->
         <div class="weekly-grid">
             <!-- LUNES -->
@@ -333,7 +334,7 @@
                     <span class="time">07:45-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 1-10 (lectura activa de esquemas)</div>
+                        <div class="activity-detail">Tema 1 (lectura activa de esquemas)</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -346,7 +347,7 @@
                     <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 10 temas
+                    Total día: 1h 45min | 40 preguntas | 1 tema
                 </div>
             </div>
             
@@ -365,7 +366,7 @@
                     <span class="time">07:45-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 11-20</div>
+                        <div class="activity-detail">Temas 2-3</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -378,7 +379,7 @@
                     <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 10 temas
+                    Total día: 1h 45min | 40 preguntas | 2 temas
                 </div>
             </div>
             
@@ -397,7 +398,7 @@
                     <span class="time">07:45-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 21-30</div>
+                        <div class="activity-detail">Temas 4-5</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -418,7 +419,7 @@
                     <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 2h 15min | 60 preguntas | 10 temas
+                    Total día: 2h 15min | 60 preguntas | 2 temas
                 </div>
             </div>
             
@@ -437,7 +438,7 @@
                     <span class="time">07:45-08:30</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 31-40</div>
+                        <div class="activity-detail">Temas 6-7</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -450,26 +451,18 @@
                     <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 10 temas
+                    Total día: 1h 45min | 40 preguntas | 2 temas
                 </div>
             </div>
             
             <!-- VIERNES -->
             <div class="day-card">
-                <div class="day-header">VIERNES</div>
+                <div class="day-header rest">VIERNES - Descanso Activo</div>
                 <div class="time-slot">
                     <span class="time">07:00-07:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">07:45-08:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 41-44 + Legislación actualizada</div>
+                        <div class="activity-name">Test ligero <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">20-25 preguntas (50% carga)</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -490,7 +483,7 @@
                     <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 2h 15min | 40 preguntas | 4 temas + legislación
+                    Total día: 1h 30min | 25 preguntas | Descanso activo
                 </div>
             </div>
             
@@ -589,7 +582,7 @@
         
         <!-- Tips estratégicos -->
         <div class="tips-section">
-            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">♟️ Estrategias del Peón</h2>
+            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">♞ Estrategias del Caballo</h2>
             <div class="tips-grid">
                 <div class="tip-card">
                     <div class="tip-title">
@@ -620,8 +613,8 @@
         
         <!-- Nota final -->
         <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: #666;">
-            <p><strong>Recuerda:</strong> El peón que llega a la octava fila se corona. 🏆</p>
-            <p style="margin-top: 0.5rem;">Tu constancia diaria es el camino hacia el éxito.</p>
+            <p><strong>Recuerda:</strong> El caballo puede saltar obstáculos que otras piezas no pueden. 🏇</p>
+            <p style="margin-top: 0.5rem;">Tu constancia diaria y flexibilidad son el camino hacia el éxito.</p>
         </div>
     </div>
 </body>
