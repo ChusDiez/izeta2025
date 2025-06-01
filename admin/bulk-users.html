@@ -452,25 +452,30 @@ carlos.lopez@email.com,Carlos López,48h"></textarea>
             loadCurrentUsers();
         }
 
-        // Generar slug único
-        function generateSlug(name, existingSlugs = []) {
-            // Limpiar y formatear el nombre
-            const baseName = name
-                .toLowerCase()
+        // Generar slug único según formato: 2 letras nombre + 1 letra apellido + 4 números
+        function generateSlug(fullName, existingSlugs = []) {
+            // Limpiar y normalizar el nombre
+            const cleanName = fullName
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
-                .replace(/[^a-z0-9\s]/g, '') // Solo letras y números
-                .trim()
-                .split(' ')
-                .slice(0, 2) // Tomar solo primeras 2 palabras
-                .join('-');
+                .toLowerCase()
+                .trim();
             
-            // Generar número aleatorio
+            // Separar nombre y apellido
+            const parts = cleanName.split(/\s+/);
+            const firstName = parts[0] || 'xx';
+            const lastName = parts[1] || 'x';
+            
+            // Obtener las partes del slug
+            const firstNamePart = firstName.slice(0, 2).padEnd(2, 'x'); // 2 primeras letras del nombre
+            const lastNamePart = lastName.charAt(0) || 'x'; // Primera letra del apellido
+            
+            // Generar slug único
             let slug;
             let attempts = 0;
             do {
-                const randomNum = Math.floor(Math.random() * 9000) + 1000;
-                slug = `${baseName}-${randomNum}`;
+                const randomNum = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+                slug = `${firstNamePart}-${lastNamePart}-${randomNum}`;
                 attempts++;
             } while (existingSlugs.includes(slug) && attempts < 100);
             
@@ -853,6 +858,127 @@ carlos.lopez@email.com,Carlos López,48h"></textarea>
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', checkAdminAccess);
+        // ============ ACTUALIZACIÓN EN TIEMPO REAL ============
+        let realtimeSubscription = null;
+        let lastUpdateTime = null;
+
+        // Función para mostrar indicador de actualización
+        function showUpdateIndicator() {
+            const currentStats = document.getElementById('currentStats');
+            if (currentStats && lastUpdateTime) {
+                const indicator = document.getElementById('updateIndicator') || createUpdateIndicator();
+                indicator.textContent = `Última actualización: ${lastUpdateTime.toLocaleTimeString()}`;
+            }
+        }
+
+        function createUpdateIndicator() {
+            const indicator = document.createElement('div');
+            indicator.id = 'updateIndicator';
+            indicator.style.cssText = 'text-align: right; font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;';
+            const currentStats = document.getElementById('currentStats');
+            currentStats.parentNode.insertBefore(indicator, currentStats);
+            return indicator;
+        }
+
+        // Suscribirse a cambios en tiempo real
+        function subscribeToRealtimeUpdates() {
+            // Primero, cancelar suscripción anterior si existe
+            if (realtimeSubscription) {
+                supabaseClient.removeChannel(realtimeSubscription);
+            }
+
+            // Crear nueva suscripción
+            realtimeSubscription = supabaseClient
+                .channel('admin-users-changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*', // Escuchar INSERT, UPDATE y DELETE
+                        schema: 'public',
+                        table: 'users'
+                    },
+                    (payload) => {
+                        console.log('Cambio en usuarios detectado:', payload.eventType);
+                        
+                        // Actualizar timestamp
+                        lastUpdateTime = new Date();
+                        
+                        // Mostrar notificación temporal
+                        showTemporaryNotification(payload.eventType);
+                        
+                        // Recargar lista
+                        loadCurrentUsers();
+                        showUpdateIndicator();
+                    }
+                )
+                .subscribe((status) => {
+                    console.log('Estado de suscripción Realtime:', status);
+                });
+        }
+
+        // Notificación temporal para cambios
+        function showTemporaryNotification(eventType) {
+            const messages = {
+                'INSERT': '✅ Nuevo usuario añadido',
+                'UPDATE': '📝 Usuario actualizado',
+                'DELETE': '🗑️ Usuario eliminado'
+            };
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = messages[eventType] || 'Tabla actualizada';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Añadir estilos de animación
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Limpiar suscripciones al salir
+        window.addEventListener('beforeunload', () => {
+            if (realtimeSubscription) {
+                supabaseClient.removeChannel(realtimeSubscription);
+            }
+        });
+
+        // Modificar la función checkAdminAccess para incluir la suscripción
+        const originalCheckAdminAccess = checkAdminAccess;
+        checkAdminAccess = async function() {
+            await originalCheckAdminAccess();
+            // Si llegamos aquí, el usuario es admin
+            subscribeToRealtimeUpdates();
+            lastUpdateTime = new Date();
+            showUpdateIndicator();
+        };
+
+        // ============ FIN ACTUALIZACIÓN EN TIEMPO REAL ============
     </script>
 </body>
 </html>

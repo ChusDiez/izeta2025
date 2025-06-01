@@ -909,8 +909,8 @@
                         review_time: parseInt(document.getElementById('review_time').value),
                         weakest_topics: selectedTopics,
                         difficulty_note: document.getElementById('difficulty_note').value || null,
-                        error_percentage: parseFloat(((wrong / (correct + wrong)) * 100).toFixed(2))
-                    });
+                        error_percentage: (correct + wrong) > 0 ? parseFloat(((wrong / (correct + wrong)) * 100).toFixed(2)) : 0
+                        });
 
                 if (insertError) throw insertError;
 
