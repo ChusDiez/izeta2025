@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IZETA 2025 - Preparación Base ♞ (20h/semana)</title>
+    <title>IZETA 2025 - Nivel Base (20h/semana)</title>
     <style>
         :root {
             --chess-black: #1a1a1a;
@@ -57,13 +57,8 @@
         }
         
         .chess-piece {
-            font-size: 3rem;
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            font-size: 1.5rem;
+            opacity: 0.6;
         }
         
         .summary {
@@ -93,6 +88,19 @@
             font-size: 2rem;
             font-weight: bold;
             color: var(--accent-blue);
+        }
+        
+        .rest-system {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border-left: 5px solid var(--accent-blue);
+        }
+        
+        .rest-system h3 {
+            color: var(--chess-black);
+            margin-bottom: 0.5rem;
         }
         
         .weekly-grid {
@@ -236,16 +244,6 @@
             gap: 0.5rem;
         }
         
-        .chess-notation {
-            background: var(--chess-black);
-            color: white;
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 2rem 0;
-            text-align: center;
-            font-family: 'Courier New', monospace;
-        }
-        
         .legend {
             background: #fff9c4;
             padding: 1.5rem;
@@ -275,7 +273,7 @@
             }
             
             .chess-piece {
-                font-size: 2.5rem;
+                font-size: 1.25rem;
             }
         }
     </style>
@@ -286,16 +284,16 @@
         <div class="header">
             <h1>
                 <span class="chess-piece">♞</span>
-                Cronograma Semanal - Preparación Base
+                IZETA 2025 - Nivel Base
                 <span class="chess-piece">♞</span>
             </h1>
-            <p style="font-size: 1.2rem; margin-top: 0.5rem;">20 horas semanales - Para opositores con trabajo</p>
-            <p style="margin-top: 1rem; opacity: 0.9;">"El caballo es la pieza más versátil del tablero"</p>
+            <p style="font-size: 1.2rem; margin-top: 0.5rem;">20 horas semanales - Programa para opositores con trabajo</p>
+            <p style="margin-top: 1rem; opacity: 0.9;">Preparación optimizada para compatibilizar con jornada laboral</p>
         </div>
         
         <!-- Resumen semanal -->
         <div class="summary">
-            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">📊 Resumen de la Semana</h2>
+            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">📊 Resumen Semanal</h2>
             <div class="summary-grid">
                 <div class="summary-item">
                     <div class="summary-number">20h</div>
@@ -316,6 +314,15 @@
             </div>
         </div>
         
+        <!-- Sistema 6/7 -->
+        <div class="rest-system">
+            <h3>📅 Sistema 6/7 - Día de descanso completo</h3>
+            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                <li>Elige 1 día libre a la semana según tu disponibilidad</li>
+                <li>Sugerencia: Miércoles (para dividir la semana)</li>
+                <li>Las horas se redistribuyen automáticamente en los demás días</li>
+            </ul>
+        </div>
             
         <!-- Grid semanal -->
         <div class="weekly-grid">
@@ -323,31 +330,31 @@
             <div class="day-card">
                 <div class="day-header">LUNES</div>
                 <div class="time-slot">
-                    <span class="time">07:00-07:45</span>
+                    <span class="time">07:00-07:30</span>
                     <div class="activity">
                         <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias del banco completo</div>
+                        <div class="activity-detail">25-30 preguntas aleatorias del banco completo</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">07:45-08:30</span>
+                    <span class="time">07:30-08:00</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Tema 1 (lectura activa de esquemas)</div>
+                        <div class="activity-detail">Tema 1 (lectura activa)</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">20:00-20:15</span>
+                    <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión Caja 1 (tarjetas diarias)</div>
+                        <div class="activity-name">Revisión de fichas <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Sistema Leitner - Caja 1</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 1 tema
+                    Total día: 1h 10min | 30 preguntas | 1 tema
                 </div>
             </div>
             
@@ -355,71 +362,45 @@
             <div class="day-card">
                 <div class="day-header">MARTES</div>
                 <div class="time-slot">
-                    <span class="time">07:00-07:45</span>
+                    <span class="time">07:00-07:30</span>
                     <div class="activity">
                         <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                        <div class="activity-detail">25-30 preguntas aleatorias</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">07:45-08:30</span>
+                    <span class="time">07:30-08:00</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 2-3</div>
+                        <div class="activity-detail">Tema 2</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">20:00-20:15</span>
+                    <span class="time">20:00-20:10</span>
                     <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Caja 1 + Caja 2 (cada 3 días)</div>
+                        <div class="activity-name">Revisión de fichas <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Cajas 1 y 2</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 2 temas
+                    Total día: 1h 10min | 30 preguntas | 1 tema
                 </div>
             </div>
             
             <!-- MIÉRCOLES -->
             <div class="day-card">
-                <div class="day-header">MIÉRCOLES</div>
+                <div class="day-header rest">MIÉRCOLES - Descanso completo</div>
                 <div class="time-slot">
-                    <span class="time">07:00-07:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                        <div class="activity-name">Día libre <span class="task-type type-rest">DESCANSO</span></div>
+                        <div class="activity-detail">Sin actividades programadas - Descanso mental</div>
                     </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">07:45-08:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 4-5</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">20:00-20:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Mini-test dirigido <span class="task-type type-test">REFUERZO</span></div>
-                        <div class="activity-detail">Solo si algún tema <80% (20-25 preguntas)</div>
-                    </div>
-                    <span class="duration">30 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">20:30-20:45</span>
-                    <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Caja 1 diaria</div>
-                    </div>
-                    <span class="duration">15 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 2h 15min | 60 preguntas | 2 temas
+                    Total día: 0h | Descanso completo
                 </div>
             </div>
             
@@ -427,143 +408,167 @@
             <div class="day-card">
                 <div class="day-header">JUEVES</div>
                 <div class="time-slot">
-                    <span class="time">07:00-07:45</span>
+                    <span class="time">07:00-07:30</span>
                     <div class="activity">
                         <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias</div>
+                        <div class="activity-detail">25-30 preguntas aleatorias</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">07:45-08:30</span>
+                    <span class="time">07:30-08:00</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 6-7</div>
+                        <div class="activity-detail">Tema 3</div>
                     </div>
-                    <span class="duration">45 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">20:00-20:15</span>
+                    <span class="time">20:00-20:20</span>
                     <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Caja 1 + Caja 3 (semanal)</div>
+                        <div class="activity-name">Mini-test dirigido <span class="task-type type-test">REFUERZO</span></div>
+                        <div class="activity-detail">Solo si algún tema <80% (15-20 preguntas)</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">20 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:20-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Revisión de fichas <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Caja 1 y nuevas</div>
+                    </div>
+                    <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 45min | 40 preguntas | 2 temas
+                    Total día: 1h 30min | 45-50 preguntas | 1 tema
                 </div>
             </div>
             
             <!-- VIERNES -->
             <div class="day-card">
-                <div class="day-header rest">VIERNES - Descanso Activo</div>
+                <div class="day-header">VIERNES</div>
                 <div class="time-slot">
-                    <span class="time">07:00-07:45</span>
+                    <span class="time">07:00-07:30</span>
                     <div class="activity">
-                        <div class="activity-name">Test ligero <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">20-25 preguntas (50% carga)</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">18:00-18:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Preparación mental <span class="task-type type-rest">DESCANSO</span></div>
-                        <div class="activity-detail">Revisar estrategia para simulacros del finde</div>
+                        <div class="activity-name">Test diario mixto <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">25-30 preguntas aleatorias</div>
                     </div>
                     <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">20:00-20:15</span>
+                    <span class="time">07:30-08:00</span>
                     <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión rápida Caja 1</div>
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Tema 4</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:20</span>
+                    <div class="activity">
+                        <div class="activity-name">Preparación simulacros <span class="task-type type-rest">PREPARACIÓN</span></div>
+                        <div class="activity-detail">Revisar estrategia para el fin de semana</div>
+                    </div>
+                    <span class="duration">20 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:20-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Revisión de fichas <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Repaso rápido Caja 1</div>
+                    </div>
+                    <span class="duration">10 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 1h 30min | 25 preguntas | Descanso activo
+                    Total día: 1h 30min | 30 preguntas | 1 tema
                 </div>
             </div>
             
             <!-- SÁBADO -->
             <div class="day-card">
-                <div class="day-header weekend">SÁBADO - Día D</div>
+                <div class="day-header weekend">SÁBADO</div>
                 <div class="time-slot">
-                    <span class="time">09:30-10:00</span>
+                    <span class="time">08:00-08:45</span>
                     <div class="activity">
-                        <div class="activity-name">Preparación simulacro <span class="task-type type-rest">PREP</span></div>
-                        <div class="activity-detail">Café, preparar espacio, mentalización</div>
+                        <div class="activity-name">Test matutino <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">30-35 preguntas de calentamiento</div>
                     </div>
-                    <span class="duration">30 min</span>
+                    <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">10:00-11:50</span>
+                    <span class="time">09:00-10:00</span>
                     <div class="activity">
-                        <div class="activity-name">SIMULACRO RF OFICIAL <span class="task-type type-simulacro">EXAMEN</span></div>
-                        <div class="activity-detail">100 preguntas inéditas - En directo con el grupo</div>
-                    </div>
-                    <span class="duration">1h 50min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">12:00-13:00</span>
-                    <div class="activity">
-                        <div class="activity-name">Corrección profunda <span class="task-type type-review">ANÁLISIS</span></div>
-                        <div class="activity-detail">Revisar fallos, crear flashcards nuevas</div>
+                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 5-6 (lectura activa)</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">17:00-17:15</span>
+                    <span class="time">10:00-11:50</span>
                     <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-name">Simulacro oficial <span class="task-type type-simulacro">EXAMEN</span></div>
+                        <div class="activity-detail">100 preguntas inéditas - En directo</div>
+                    </div>
+                    <span class="duration">1h 50min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">12:00-13:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Corrección y análisis <span class="task-type type-review">ANÁLISIS</span></div>
+                        <div class="activity-detail">Revisar fallos, crear nuevas fichas</div>
+                    </div>
+                    <span class="duration">1h 30min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">17:00-17:20</span>
+                    <div class="activity">
+                        <div class="activity-name">Revisión de fichas <span class="task-type type-flashcard">FICHAS</span></div>
                         <div class="activity-detail">Solo nuevas del simulacro</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">20 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 35min | 100 preguntas oficiales
+                    Total día: 5h 25min | 135 preguntas | 2 temas
                 </div>
             </div>
             
             <!-- DOMINGO -->
             <div class="day-card">
-                <div class="day-header weekend">DOMINGO - Refuerzo</div>
+                <div class="day-header weekend">DOMINGO</div>
                 <div class="time-slot">
-                    <span class="time">10:00-11:50</span>
+                    <span class="time">09:00-10:50</span>
                     <div class="activity">
-                        <div class="activity-name">Simulacro Entrenamiento <span class="task-type type-simulacro">TEST</span></div>
-                        <div class="activity-detail">100 preguntas - A tu ritmo, sin presión</div>
+                        <div class="activity-name">Simulacro de entrenamiento <span class="task-type type-simulacro">TEST</span></div>
+                        <div class="activity-detail">100 preguntas - Ritmo personal</div>
                     </div>
                     <span class="duration">1h 50min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">12:00-13:00</span>
+                    <span class="time">11:00-12:30</span>
                     <div class="activity">
                         <div class="activity-name">Análisis comparativo <span class="task-type type-review">ANÁLISIS</span></div>
                         <div class="activity-detail">Comparar resultados sábado vs domingo</div>
                     </div>
-                    <span class="duration">1h</span>
+                    <span class="duration">1h 30min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">17:00-21:00</span>
+                    <span class="time">15:00-19:00</span>
                     <div class="activity">
-                        <div class="activity-name">Vuelta Express <span class="task-type type-review">VUELTA</span></div>
-                        <div class="activity-detail">Lectura en voz alta del temario completo (mensual)</div>
+                        <div class="activity-name">Vuelta express mensual <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Lectura rápida del temario completo</div>
                     </div>
                     <span class="duration">4h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">22:00-22:30</span>
+                    <span class="time">20:00-20:30</span>
                     <div class="activity">
-                        <div class="activity-name">Planificación semanal <span class="task-type type-rest">PLAN</span></div>
-                        <div class="activity-detail">Revisar métricas y preparar semana siguiente</div>
+                        <div class="activity-name">Planificación semanal <span class="task-type type-rest">PLANIFICACIÓN</span></div>
+                        <div class="activity-detail">Revisar métricas y preparar próxima semana</div>
                     </div>
                     <span class="duration">30 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 7h 20min | 100 preguntas + vuelta completa
+                    Total día: 7h 50min | 100 preguntas + repaso completo
                 </div>
             </div>
         </div>
@@ -582,39 +587,39 @@
         
         <!-- Tips estratégicos -->
         <div class="tips-section">
-            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">♞ Estrategias del Caballo</h2>
+            <h2 style="color: var(--chess-black); margin-bottom: 1rem;">💡 Estrategias para el Nivel Base</h2>
             <div class="tips-grid">
                 <div class="tip-card">
                     <div class="tip-title">
-                        ⏰ Madrugador victorioso
+                        ⏰ Optimización del tiempo
                     </div>
-                    <p>Los tests matutinos aprovechan tu mente fresca. Si no puedes a las 7:00, busca tu "hora dorada" personal.</p>
+                    <p>Los bloques matutinos son más cortos para adaptarse a horarios laborales. Aprovecha el fin de semana para sesiones más largas.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        📱 Tiempo muerto = Tiempo útil
+                        📱 Flexibilidad móvil
                     </div>
-                    <p>Usa la app de flashcards en transporte público, colas o pausas del trabajo. Cada minuto suma.</p>
+                    <p>Usa aplicaciones móviles para repasar fichas durante desplazamientos o pausas laborales.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        🎯 Calidad sobre cantidad
+                        🎯 Foco en la calidad
                     </div>
-                    <p>Es mejor hacer 35 preguntas con análisis profundo que 50 corriendo. El aprendizaje está en entender los fallos.</p>
+                    <p>Con tiempo limitado, es crucial analizar cada error en profundidad. Prioriza comprensión sobre cantidad.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        🔄 Consistencia es clave
+                        🔄 Consistencia diaria
                     </div>
-                    <p>20 horas bien distribuidas vencen a 40 horas caóticas. Mantén el ritmo constante sin quemarte.</p>
+                    <p>Mantén el hábito diario aunque sea con sesiones cortas. La constancia supera a la intensidad esporádica.</p>
                 </div>
             </div>
         </div>
         
         <!-- Nota final -->
         <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: #666;">
-            <p><strong>Recuerda:</strong> El caballo puede saltar obstáculos que otras piezas no pueden. 🏇</p>
-            <p style="margin-top: 0.5rem;">Tu constancia diaria y flexibilidad son el camino hacia el éxito.</p>
+            <p><strong>Nivel Base:</strong> Diseñado para compatibilizar preparación efectiva con vida laboral</p>
+            <p style="margin-top: 0.5rem;">20 horas bien distribuidas pueden llevarte al éxito</p>
         </div>
     </div>
 </body>
