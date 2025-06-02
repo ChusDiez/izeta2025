@@ -918,27 +918,23 @@
                 const weekNumber = document.querySelector('#simulacro option:checked')
                     .textContent.match(/RF(\d+)/)[1];
                 
-                const { error: emailError } = await supabaseClient
-                    .from('email_queue')
-                    .insert({
-                        to_email: document.getElementById('email').value,
-                        subject: `Resultados recibidos - Simulacro RF${weekNumber}`,
-                        template_id: 'result_confirmation',
-                        template_data: {
-                            week_number: weekNumber,
-                            score: score.toFixed(2),
-                            correct_answers: correct,
-                            wrong_answers: wrong,
-                            blank_answers: blank,
-                            error_percentage: ((wrong / (correct + wrong)) * 100).toFixed(2),
-                            review_time: document.getElementById('review_time').value,
-                            weakest_topics: selectedTopics,
-                            user_slug: userData.slug
-                        }
-                    });
-
-                if (emailError) {
-                    console.error('Error al programar email:', emailError);
+                try {
+                    const emailResult = await EmailService.sendResultConfirmation({
+                        userId: userData.id,
+                        simulationId: document.getElementById('simulacro').value,
+                        score: score,
+                        correctAnswers: correct,
+                        wrongAnswers: wrong,
+                        blankAnswers: blank,
+                        weakestTopics: selectedTopics,
+                        reviewTime: parseInt(document.getElementById('review_time').value)
+                    })
+                    
+                    console.log('Email enviado:', emailResult.message)
+                    
+                } catch (emailError) {
+                    // El error no debe impedir que se guarden los resultados
+                    console.error('No se pudo enviar el email:', emailError)
                 }
 
                 // Mostrar éxito

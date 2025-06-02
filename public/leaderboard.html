@@ -307,29 +307,28 @@
         color: #ef4444;
     }
     
-/* Slider de logros */
+    /* Slider de logros */
     .achievements-slider {
         background: white;
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
         box-shadow: var(--shadow);
-        position: sticky;
-        top: 10px;
-        z-index: 50;
-        transition: all 0.3s ease;
+        position: relative;
     }
     
     .achievements-track {
-            display: flex;
-            transition: transform 0.3s ease;
-            gap: 2rem;
-            overflow: hidden; /* Movemos el overflow aquí */
-            border-radius: 10px; /* Para mantener las esquinas redondeadas */
-        }
+        display: flex;
+        gap: 2rem;
+        justify-content: space-around; /* Añade esto */
+        flex-wrap: wrap; /* Añade esto */
+        /* ELIMINA: transition: transform 0.3s ease; */
+        /* ELIMINA: overflow: hidden; */
+    }
     
     .achievement-card {
-        flex: 0 0 300px;
+        flex: 1 1 300px; /* Cambia de "flex: 0 0 300px" a esto */
+        max-width: 350px; /* Añade esto */
         background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
         padding: 1.5rem;
         border-radius: 10px;
@@ -365,29 +364,7 @@
         color: var(--secondary-gray);
         font-size: 0.9rem;
     }
-    
-    /* Controles del slider */
-    .slider-controls {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-top: 1.5rem;
-    }
-    
-    .slider-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #e5e7eb;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    
-    .slider-dot.active {
-        background: var(--primary-blue);
-        transform: scale(1.3);
-    }
-    
+      
     /* Loading */
     .loading {
         text-align: center;
@@ -598,28 +575,31 @@
         box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
     
-/* Touch para móviles */
-    @media (pointer: coarse) {
+    @media (max-width: 768px) {
         .achievements-track {
-            overflow-x: auto;
-            overflow-y: hidden; /* Añadimos esto para evitar scroll vertical */
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 0.5rem; /* Espacio para la barra de scroll si aparece */
+            flex-wrap: nowrap; /* Forzar fila horizontal */
+            overflow-x: auto; /* Permitir scroll horizontal */
+            padding-bottom: 1rem;
+            gap: 1rem; /* Reducir espacio entre cards */
         }
         
         .achievement-card {
-            scroll-snap-align: center;
+            flex: 0 0 280px; /* Ancho fijo en móvil */
+            min-width: 280px;
         }
         
-        .slider-controls {
-            display: none;
+        /* Opcional: estilizar la barra de scroll */
+        .achievements-track::-webkit-scrollbar {
+            height: 6px;
         }
         
-        /* En móviles, el slider no debe ser sticky */
-        .achievements-slider {
-            position: relative !important;
-            top: auto !important;
+        .achievements-track::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .achievements-track::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
         }
     }
     /* Slider de logros */
@@ -697,9 +677,6 @@
             <div class="achievements-track" id="achievementsTrack">
                 <!-- Se llenará dinámicamente -->
             </div>
-            <div class="slider-controls" id="sliderControls">
-                <!-- Se llenará dinámicamente -->
-            </div>
         </div>
     </div>
     
@@ -711,7 +688,6 @@
 // Variables globales
 let weeklyData = [];
 let eloData = [];
-let currentSlide = 0;
 let achievements = [];
 let activeSimulation = null;
 
@@ -1401,7 +1377,6 @@ async function loadAchievements() {
 // Renderizar logros
 function renderAchievements() {
     const track = document.getElementById('achievementsTrack');
-    const controls = document.getElementById('sliderControls');
     
     track.innerHTML = achievements.map(achievement => `
         <div class="achievement-card">
@@ -1412,63 +1387,10 @@ function renderAchievements() {
         </div>
     `).join('');
     
-    // Solo mostrar controles en desktop
-    if (window.innerWidth > 768) {
-        controls.innerHTML = achievements.map((_, index) => `
-            <div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></div>
-        `).join('');
-        
-        // Auto-slide cada 5 segundos
-        setInterval(() => {
-            currentSlide = (currentSlide + 1) % achievements.length;
-            updateSlider();
-        }, 5000);
-    }
+    // NO HAY MÁS CÓDIGO AQUÍ - eliminamos todo lo relacionado con controles y auto-slide
 }
 
-// Control del slider
-function goToSlide(index) {
-    currentSlide = index;
-    updateSlider();
-}
 
-function updateSlider() {
-    const track = document.getElementById('achievementsTrack');
-    const dots = document.querySelectorAll('.slider-dot');
-    
-    const offset = currentSlide * -320; // 300px card + 20px gap
-    track.style.transform = `translateX(${offset}px)`;
-    
-    dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentSlide);
-    });
-}
-
-// Touch/swipe para móviles
-let touchStartX = 0;
-let touchEndX = 0;
-
-document.addEventListener('touchstart', e => {
-    touchStartX = e.changedTouches[0].screenX;
-});
-
-document.addEventListener('touchend', e => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-});
-
-function handleSwipe() {
-    if (touchEndX < touchStartX - 50) {
-        // Swipe left
-        currentSlide = Math.min(currentSlide + 1, achievements.length - 1);
-        updateSlider();
-    }
-    if (touchEndX > touchStartX + 50) {
-        // Swipe right
-        currentSlide = Math.max(currentSlide - 1, 0);
-        updateSlider();
-    }
-}
 
 // Utilidades
 function formatDate(dateString) {
@@ -1492,7 +1414,7 @@ function formatNumber(num) {
 document.addEventListener('DOMContentLoaded', () => {
     // Cargar datos con tiempo real
     loadAllDataWithRealtime();
-    setTimeout(setupStickyObserver, 100);
+    
     // Limpiar al salir
     window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 });
