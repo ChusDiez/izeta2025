@@ -307,14 +307,17 @@
         color: #ef4444;
     }
     
-    /* Slider de logros */
+/* Slider de logros */
     .achievements-slider {
         background: white;
         border-radius: 15px;
         padding: 2rem;
         margin-bottom: 2rem;
         box-shadow: var(--shadow);
-        position: relative;
+        position: sticky;
+        top: 10px;
+        z-index: 50;
+        transition: all 0.3s ease;
     }
     
     .achievements-track {
@@ -1489,7 +1492,7 @@ function formatNumber(num) {
 document.addEventListener('DOMContentLoaded', () => {
     // Cargar datos con tiempo real
     loadAllDataWithRealtime();
-    
+    setTimeout(setupStickyObserver, 100);
     // Limpiar al salir
     window.addEventListener('beforeunload', cleanupRealtimeSubscriptions);
 });
