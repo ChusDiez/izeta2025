@@ -18,7 +18,6 @@
         --white: #FFFFFF;
         --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    }
     
     * {
         margin: 0;
@@ -318,12 +317,10 @@
     }
     
     .achievements-track {
-        display: flex;
-        gap: 2rem;
-        justify-content: space-around; /* Añade esto */
-        flex-wrap: wrap; /* Añade esto */
-        /* ELIMINA: transition: transform 0.3s ease; */
-        /* ELIMINA: overflow: hidden; */
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        /* Quitamos justify-content y flex-wrap ya que ahora son 4 */
     }
     
     .achievement-card {
@@ -341,7 +338,20 @@
         border-color: var(--primary-blue);
         transform: scale(1.05);
     }
-    
+        /* Añadir después de .achievement-card:hover */
+    .achievement-card:nth-child(2) {
+        border: 2px solid #DC2626;
+        background: linear-gradient(135deg, #fee2e2, #fef2f2);
+    }
+
+    .achievement-card:nth-child(2) .achievement-icon {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
     .achievement-icon {
         font-size: 3rem;
         margin-bottom: 1rem;
@@ -575,17 +585,17 @@
         box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
     
-    @media (max-width: 768px) {
-        .achievements-track {
-            flex-wrap: nowrap; /* Forzar fila horizontal */
-            overflow-x: auto; /* Permitir scroll horizontal */
-            padding-bottom: 1rem;
-            gap: 1rem; /* Reducir espacio entre cards */
-        }
-        
-        .achievement-card {
-            flex: 0 0 280px; /* Ancho fijo en móvil */
-            min-width: 280px;
+        /* En móvil, mostrar 2x2 en lugar de scroll horizontal */
+        @media (max-width: 768px) {
+            .achievements-track {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .achievement-card {
+                flex: unset;
+                min-width: unset;
+            }
         }
         
         /* Opcional: estilizar la barra de scroll */
@@ -1027,9 +1037,13 @@ async function updateWeeklyRankingRow(userId) {
         if (error) throw error;
         if (!data) return;
         
-        // Calcular la tasa de error si no viene de la BD
-        if (!data.error_percentage && data.correct_answers && data.wrong_answers) {
-            data.error_percentage = ((data.wrong_answers / (data.correct_answers + data.wrong_answers)) * 100).toFixed(2);
+        // Calcular la tasa de error si no viene de la BD o es null
+        if ((!data.error_percentage || data.error_percentage === null) && 
+            data.correct_answers !== undefined && 
+            data.wrong_answers !== undefined) {
+            const totalAnswered = data.correct_answers + data.wrong_answers;
+            data.error_percentage = totalAnswered > 0 ? 
+                ((data.wrong_answers / totalAnswered) * 100).toFixed(2) : '0.00';
         }
         
         // Encontrar el elemento en el DOM
@@ -1303,16 +1317,37 @@ function addRealtimeIndicator() {
 // ============================================
 
 // Cargar logros destacados
+// Cargar logros destacados
 async function loadAchievements() {
     try {
         // Obtener estadísticas para los logros
         
-        // 1. Menor tasa de error de la semana
+        // 1. Menor tasa de error de la semana - MEJORADO
         let lowestErrorUser = null;
-        if (weeklyData.length > 0) {
-            lowestErrorUser = weeklyData.reduce((min, user) => 
-                user.error_percentage < min.error_percentage ? user : min
+        if (weeklyData && weeklyData.length > 0) {
+            // Filtrar solo usuarios con error_percentage válido
+            const usersWithError = weeklyData.filter(user => 
+                user.error_percentage !== null && 
+                user.error_percentage !== undefined &&
+                user.error_percentage >= 0
             );
+            
+            if (usersWithError.length > 0) {
+                lowestErrorUser = usersWithError.reduce((min, user) => 
+                    parseFloat(user.error_percentage) < parseFloat(min.error_percentage) ? user : min
+                );
+            } else {
+                // Si nadie tiene error_percentage, usar el de mayor score
+                lowestErrorUser = weeklyData.reduce((max, user) => 
+                    user.score > max.score ? user : max
+                );
+                // Calcular error_percentage manualmente si no existe
+                if (lowestErrorUser && lowestErrorUser.correct_answers && lowestErrorUser.wrong_answers) {
+                    const total = lowestErrorUser.correct_answers + lowestErrorUser.wrong_answers;
+                    lowestErrorUser.error_percentage = total > 0 ? 
+                        ((lowestErrorUser.wrong_answers / total) * 100).toFixed(2) : 0;
+                }
+            }
         }
 
         // 2. Más simulacros completados
@@ -1323,12 +1358,34 @@ async function loadAchievements() {
             .limit(1)
             .single();
 
-        // 3. Mayor asistencia a sábados
+        // 3. NUEVO: Nota de Corte (Percentil 80)
+        let notaDeCorte = null;
+        if (weeklyData && weeklyData.length > 0) {
+            // Ordenar por score de mayor a menor
+            const sortedByScore = [...weeklyData].sort((a, b) => b.score - a.score);
+            
+            // Calcular la posición del percentil 80
+            // El percentil 80 significa que el 80% tiene una nota MENOR
+            // Por lo tanto, necesitamos la posición del 20% superior
+            const percentil80Position = Math.floor(sortedByScore.length * 0.2);
+            
+            // Obtener el usuario en esa posición
+            if (percentil80Position < sortedByScore.length) {
+                const userAtCutoff = sortedByScore[percentil80Position];
+                notaDeCorte = {
+                    user: userAtCutoff.users,
+                    score: userAtCutoff.score,
+                    position: percentil80Position + 1
+                };
+            }
+        }
+
+        // 4. Mayor asistencia a sábados (sin cambios)
         const { data: saturdayKing, error: satError } = await supabaseClient
             .from('user_results')
             .select('user_id, users!inner(slug)')
             .eq('is_saturday_live', true)
-            .limit(100); // Obtener todos y contar
+            .limit(100);
 
         let saturdayChampion = null;
         if (saturdayKing && saturdayKing.length > 0) {
@@ -1343,13 +1400,23 @@ async function loadAchievements() {
             saturdayChampion = { slug: championSlug, count: maxSaturdays };
         }
 
+        // Crear array de achievements con el nuevo
         achievements = [
             {
                 icon: '🎯',
                 title: '¿Quién acierta más en la diana del acierto?',
-                value: lowestErrorUser ? `${lowestErrorUser.error_percentage}%` : 'N/A',
-                subtitle: lowestErrorUser ? lowestErrorUser.users.slug : 'Sin datos',
+                value: lowestErrorUser ? `${lowestErrorUser.error_percentage || '0'}%` : 'N/A',
+                subtitle: lowestErrorUser ? lowestErrorUser.users.slug : 'Sin datos aún',
                 color: '#10B981'
+            },
+            {
+                icon: '✂️',
+                title: 'Nota de Corte del simulacro activo',
+                value: notaDeCorte ? `${notaDeCorte.score.toFixed(2)}/10` : 'N/A',
+                subtitle: notaDeCorte ? 
+                    `${notaDeCorte.user.slug} (Top ${notaDeCorte.position})` : 
+                    'Sin datos suficientes',
+                color: '#DC2626'
             },
             {
                 icon: '📚',
