@@ -453,7 +453,7 @@
                         Puntuación: <span id="calculatedScore">0.00</span>/10
                     </div>
                     <div class="score-formula">
-                        Fórmula: (Aciertos - Fallos × 0.33) ÷ 10
+                        Fórmula: (Aciertos - Fallos × 0.5) ÷ 10
                     </div>
                 </div>
                 
@@ -677,7 +677,7 @@
                 totalCheck.classList.add('valid');
                 
                 // Calcular puntuación
-                const score = (correct - (wrong * 0.33)) / 10;
+                const score = (correct - (wrong * 0.5)) / 10;
                 document.getElementById('calculatedScore').textContent = score.toFixed(2);
             } else {
                 totalCheck.classList.remove('valid');
@@ -851,7 +851,7 @@
                     .map(cb => cb.value);
                 
                 // Calcular score según fórmula oficial
-                const scoreDecimal = (correct - (wrong * 0.33)) / 10;
+                const scoreDecimal = (correct - (wrong * 0.50)) / 10;
                 const score = parseFloat(scoreDecimal.toFixed(2)); // Redondear a 2 decimales
                 
                 // Validación de fecha
@@ -918,27 +918,23 @@
                 const weekNumber = document.querySelector('#simulacro option:checked')
                     .textContent.match(/RF(\d+)/)[1];
                 
-                const { error: emailError } = await supabaseClient
-                    .from('email_queue')
-                    .insert({
-                        to_email: document.getElementById('email').value,
-                        subject: `Resultados recibidos - Simulacro RF${weekNumber}`,
-                        template_id: 'result_confirmation',
-                        template_data: {
-                            week_number: weekNumber,
-                            score: score.toFixed(2),
-                            correct_answers: correct,
-                            wrong_answers: wrong,
-                            blank_answers: blank,
-                            error_percentage: ((wrong / (correct + wrong)) * 100).toFixed(2),
-                            review_time: document.getElementById('review_time').value,
-                            weakest_topics: selectedTopics,
-                            user_slug: userData.slug
-                        }
-                    });
-
-                if (emailError) {
-                    console.error('Error al programar email:', emailError);
+                try {
+                    const emailResult = await EmailService.sendResultConfirmation({
+                        userId: userData.id,
+                        simulationId: document.getElementById('simulacro').value,
+                        score: score,
+                        correctAnswers: correct,
+                        wrongAnswers: wrong,
+                        blankAnswers: blank,
+                        weakestTopics: selectedTopics,
+                        reviewTime: parseInt(document.getElementById('review_time').value)
+                    })
+                    
+                    console.log('Email enviado:', emailResult.message)
+                    
+                } catch (emailError) {
+                    // El error no debe impedir que se guarden los resultados
+                    console.error('No se pudo enviar el email:', emailError)
                 }
 
                 // Mostrar éxito

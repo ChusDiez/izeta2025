@@ -73,7 +73,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${RESEND_API_KEY}`
           },
           body: JSON.stringify({
-            from: 'IZETA 2025 <noreply@izeta2025.com>',
+            from: 'IZETA 2025 <noreply@iz.academy>',
             to: email.to_email,
             subject: email.subject,
             html: generateEmailHTML(email.template_id, email.template_data)
@@ -151,11 +151,11 @@ function generateEmailHTML(templateId: string, data: any): string {
   <div class="container">
     <div class="header">
       <h1>🎯 IZETA 2025</h1>
-      <p>Resultados del Simulacro RF${data.week_number}</p>
+      <p>Resultados del Simulacro Recta Final 1${data.week_number}</p>
     </div>
     <div class="content">
       <p>Hola,</p>
-      <p>Confirmamos la recepción de tus resultados del simulacro:</p>
+      <p>Te confirmamos la recepción de tus resultados del simulacro:</p>
       
       <div style="background: #EFF6FF; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <p style="margin: 0;">
@@ -220,7 +220,7 @@ function generateEmailHTML(templateId: string, data: any): string {
       <p><strong>Próximos pasos:</strong></p>
       <ul>
         <li>Revisa los temas señalados como débiles</li>
-        <li>Practica con las preguntas del banco relacionadas</li>
+        <li>Practica con las preguntas con test de entrenamiento relacionadas</li>
         <li>Participa en el próximo simulacro para medir tu progreso</li>
       </ul>
       
@@ -230,7 +230,7 @@ function generateEmailHTML(templateId: string, data: any): string {
     
     <div class="footer">
       <p>Este es un email automático. Por favor, no respondas a este mensaje.</p>
-      <p>© 2025 IZETA - Sistema de Preparación Avanzada</p>
+      <p>© 2025 IZETA - A por el apto EB42</p>
     </div>
   </div>
 </body>
