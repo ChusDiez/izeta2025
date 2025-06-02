@@ -659,7 +659,10 @@
                     <button class="btn btn-secondary" onclick="refreshData()">
                         🔄 Actualizar
                     </button>
-                    <button class="btn btn-primary" onclick="window.location.href='/admin/bulk-users.html'">
+                    <button class="btn btn-secondary" onclick="window.location.href='/izeta2025/admin/elo_manual.html'">
+                        ⚡ Actualizar ELO Manual
+                    </button>
+                    <button class="btn btn-primary" onclick="window.location.href='/izeta2025/admin/bulk-users.html'">
                         ➕ Añadir alumnos
                     </button>
                 </div>
@@ -725,7 +728,7 @@
                 const user = await checkAuth();
                 if (!user) {
                     console.log('No hay usuario autenticado');
-                    window.location.href = '/admin/login.html';
+                    window.location.href = '/izeta2025/admin/login.html';
                     return;
                 }
 
@@ -738,7 +741,7 @@
                     console.log('Usuario no es administrador');
                     showError('No tienes permisos de administrador');
                     setTimeout(() => {
-                        window.location.href = '/public/index.html';
+                        window.location.href = '/izeta2025/public/index.html';
                     }, 2000);
                     return;
                 }
@@ -1291,7 +1294,7 @@
         async function logout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 await supabaseClient.auth.signOut();
-                window.location.href = '/admin/login.html';
+                window.location.href = '/izeta2025/admin/login.html';
             }
         }
 
