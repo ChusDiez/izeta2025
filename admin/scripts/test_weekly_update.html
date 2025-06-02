@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Weekly Update</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Verificando Weekly Update...</h1>
+    <pre id="output"></pre>
+    <script>
+        // Script para verificar el funcionamiento de weekly-update
+// Ejecutar en la consola del navegador o en un archivo HTML
+
+// Configuración
+const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ';
+
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 1. VERIFICAR ÚLTIMA EJECUCIÓN DE LA FUNCIÓN
+async function checkLastExecution() {
+    console.log('=== VERIFICANDO ÚLTIMA EJECUCIÓN ===');
+    
+    try {
+        // Invocar la función manualmente para test
+        const { data, error } = await supabaseClient.functions.invoke('weekly-update');
+        
+        if (error) {
+            console.error('❌ Error al ejecutar weekly-update:', error);
+        } else {
+            console.log('✅ Función ejecutada correctamente:', data);
+        }
+    } catch (err) {
+        console.error('❌ Error general:', err);
+    }
+}
+
+// 2. VERIFICAR CAMBIOS EN ELO_HISTORY
+async function checkEloHistory() {
+    console.log('\n=== VERIFICANDO HISTORIAL ELO ===');
+    
+    try {
+        // Obtener los últimos registros de ELO
+        const { data, error } = await supabaseClient
+            .from('elo_history')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+        
+        if (error) {
+            console.error('❌ Error obteniendo historial ELO:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ Encontrados ${data.length} registros de ELO recientes:`);
+            
+            // Agrupar por semana
+            const byWeek = {};
+            data.forEach(record => {
+                const week = record.week_number;
+                if (!byWeek[week]) byWeek[week] = [];
+                byWeek[week].push(record);
+            });
+            
+            Object.keys(byWeek).forEach(week => {
+                console.log(`\n📅 Semana ${week}: ${byWeek[week].length} cambios de ELO`);
+                console.log(`   Fecha más reciente: ${new Date(byWeek[week][0].created_at).toLocaleString()}`);
+            });
+        } else {
+            console.log('⚠️ No hay registros en elo_history');
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+}
+
+// 3. VERIFICAR SIMULACROS PROCESADOS
+async function checkProcessedSimulations() {
+    console.log('\n=== VERIFICANDO SIMULACROS PROCESADOS ===');
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('weekly_simulations')
+            .select('*')
+            .order('week_number', { ascending: false })
+            .limit(5);
+        
+        if (error) {
+            console.error('❌ Error obteniendo simulacros:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ Últimos ${data.length} simulacros:`);
+            data.forEach(sim => {
+                console.log(`\n📊 RF${sim.week_number}`);
+                console.log(`   Estado: ${sim.status}`);
+                console.log(`   Participantes: ${sim.total_participants}`);
+                console.log(`   Procesado: ${sim.processed_at ? new Date(sim.processed_at).toLocaleString() : 'NO'}`);
+                console.log(`   Score promedio: ${sim.average_score || 'N/A'}`);
+            });
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+}
+
+// 4. VERIFICAR CAMBIOS DE ELO EN USUARIOS
+async function checkUserEloChanges() {
+    console.log('\n=== VERIFICANDO CAMBIOS DE ELO EN USUARIOS ===');
+    
+    try {
+        // Obtener usuarios con cambios recientes de ELO
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('id, email, slug, current_elo, updated_at')
+            .not('updated_at', 'is', null)
+            .order('updated_at', { ascending: false })
+            .limit(10);
+        
+        if (error) {
+            console.error('❌ Error obteniendo usuarios:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`✅ ${data.length} usuarios con actualizaciones recientes:`);
+            data.forEach(user => {
+                const updated = new Date(user.updated_at);
+                const hoursAgo = Math.floor((new Date() - updated) / (1000 * 60 * 60));
+                console.log(`   ${user.slug}: ELO ${user.current_elo} (hace ${hoursAgo}h)`);
+            });
+        } else {
+            console.log('⚠️ No hay usuarios con actualizaciones recientes');
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+}
+
+// 5. VERIFICAR RACHAS ACTUALIZADAS
+async function checkStreaks() {
+    console.log('\n=== VERIFICANDO RACHAS ===');
+    
+    try {
+        // Usuarios con rachas activas
+        const { data: activeStreaks, error: error1 } = await supabaseClient
+            .from('users')
+            .select('slug, current_streak, last_participation')
+            .gt('current_streak', 0)
+            .order('current_streak', { ascending: false })
+            .limit(10);
+        
+        if (error1) {
+            console.error('❌ Error obteniendo rachas:', error1);
+            return;
+        }
+        
+        if (activeStreaks && activeStreaks.length > 0) {
+            console.log(`✅ ${activeStreaks.length} usuarios con rachas activas:`);
+            activeStreaks.forEach(user => {
+                console.log(`   ${user.slug}: 🔥 ${user.current_streak} semanas`);
+            });
+        }
+        
+        // Usuarios que perdieron rachas recientemente
+        const { data: lostStreaks, error: error2 } = await supabaseClient
+            .from('users')
+            .select('slug, current_streak, longest_streak, last_participation')
+            .eq('current_streak', 0)
+            .gt('longest_streak', 0)
+            .order('updated_at', { ascending: false })
+            .limit(5);
+        
+        if (!error2 && lostStreaks && lostStreaks.length > 0) {
+            console.log(`\n⚠️ ${lostStreaks.length} usuarios perdieron su racha recientemente:`);
+            lostStreaks.forEach(user => {
+                console.log(`   ${user.slug}: Tenía ${user.longest_streak} semanas`);
+            });
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+}
+
+// 6. CALCULAR SEMANA ACTUAL
+function getCurrentWeekNumber() {
+    const currentDate = new Date();
+    const weekNumber = Math.ceil(((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / 86400000 + 1) / 7);
+    console.log(`\n📅 Semana actual del año: ${weekNumber}`);
+    console.log(`   Fecha: ${currentDate.toLocaleString()}`);
+    return weekNumber;
+}
+
+// 7. VERIFICAR INTEGRIDAD DEL SISTEMA ELO
+async function checkEloIntegrity() {
+    console.log('\n=== VERIFICANDO INTEGRIDAD DEL SISTEMA ELO ===');
+    
+    try {
+        // Verificar que no haya ELOs negativos o anormales
+        const { data: abnormalElos, error } = await supabaseClient
+            .from('users')
+            .select('slug, current_elo')
+            .or('current_elo.lt.0,current_elo.gt.3000');
+        
+        if (error) {
+            console.error('❌ Error verificando ELOs:', error);
+            return;
+        }
+        
+        if (abnormalElos && abnormalElos.length > 0) {
+            console.log(`⚠️ ${abnormalElos.length} usuarios con ELO anormal:`);
+            abnormalElos.forEach(user => {
+                console.log(`   ${user.slug}: ELO ${user.current_elo}`);
+            });
+        } else {
+            console.log('✅ Todos los ELOs están en rangos normales (0-3000)');
+        }
+        
+        // Verificar distribución de ELO
+        const { data: eloStats, error: statsError } = await supabaseClient
+            .from('users')
+            .select('current_elo');
+        
+        if (!statsError && eloStats) {
+            const elos = eloStats.map(u => u.current_elo);
+            const avg = elos.reduce((a, b) => a + b, 0) / elos.length;
+            const max = Math.max(...elos);
+            const min = Math.min(...elos);
+            
+            console.log('\n📊 Estadísticas de ELO:');
+            console.log(`   Total usuarios: ${elos.length}`);
+            console.log(`   ELO promedio: ${avg.toFixed(0)}`);
+            console.log(`   ELO máximo: ${max}`);
+            console.log(`   ELO mínimo: ${min}`);
+        }
+    } catch (err) {
+        console.error('❌ Error:', err);
+    }
+}
+
+// EJECUTAR TODAS LAS VERIFICACIONES
+async function runAllChecks() {
+    console.log('🔍 INICIANDO VERIFICACIÓN COMPLETA DEL SISTEMA WEEKLY-UPDATE\n');
+    console.log('=' . repeat(50));
+    
+    getCurrentWeekNumber();
+    await checkLastExecution();
+    await checkEloHistory();
+    await checkProcessedSimulations();
+    await checkUserEloChanges();
+    await checkStreaks();
+    await checkEloIntegrity();
+    
+    console.log('\n' + '=' . repeat(50));
+    console.log('✅ VERIFICACIÓN COMPLETADA');
+    console.log('\nSi ves errores o datos faltantes, revisa:');
+    console.log('1. Que la función weekly-update esté programada correctamente');
+    console.log('2. Que los procedimientos RPC existan en la base de datos');
+    console.log('3. Que haya resultados para procesar en la semana actual');
+}
+
+// Ejecutar automáticamente
+runAllChecks();
+    </script>
+</body>
+</html>
