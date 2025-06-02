@@ -147,6 +147,15 @@
             box-shadow: var(--shadow-strong);
         }
         
+        .day-card.intensive::after {
+            content: '⚡';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            opacity: 0.3;
+        }
+        
         .day-header {
             background: var(--secondary-navy);
             color: white;
@@ -513,8 +522,8 @@
                 <div class="time-slot">
                     <span class="time">17:30-18:30</span>
                     <div class="activity">
-                        <div class="activity-name">Casos prácticos <span class="task-type type-analysis">PRÁCTICA</span></div>
-                        <div class="activity-detail">Supuestos complejos tipo examen</div>
+                        <div class="activity-name">Vuelta adicional <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Repaso extra temas débiles</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
