@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualización Manual ELO - IZETA 2025</title>
+    <style>
+        :root {
+            --primary: #1E3A8A;
+            --success: #10B981;
+            --danger: #DC2626;
+            --warning: #F59E0B;
+            --bg-light: #F9FAFB;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .section {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .log {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .log-entry {
+            margin: 0.5rem 0;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #fbbf24; }
+        .info { color: #60a5fa; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            font-size: 1rem;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            background: var(--success);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Panel de Actualización Manual - Sistema ELO</h1>
+        <p>Este panel permite forzar la actualización del ELO y las estadísticas sin esperar al proceso automático del lunes.</p>
+        
+        <!-- Sección 1: Selección de simulacro -->
+        <div class="section">
+            <h2>1. Seleccionar Simulacro</h2>
+            <select id="simulationSelect">
+                <option value="">Cargando simulacros...</option>
+            </select>
+            <button class="button btn-primary" onclick="loadSimulationInfo()">
+                📊 Ver información del simulacro
+            </button>
+            
+            <div id="simulationInfo" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="totalParticipants">0</div>
+                        <div class="stat-label">Participantes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="avgScore">0</div>
+                        <div class="stat-label">Score Promedio</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="processedStatus">❌</div>
+                        <div class="stat-label">Procesado</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección 2: Actualizar estadísticas -->
+        <div class="section">
+            <h2>2. Actualizar Estadísticas del Simulacro</h2>
+            <p>Recalcula participantes, promedios y estadísticas por cohorte basándose en todos los resultados actuales.</p>
+            <button class="button btn-warning" onclick="updateSimulationStats()">
+                📈 Actualizar estadísticas del simulacro
+            </button>
+        </div>
+        
+        <!-- Sección 3: Forzar cálculo de ELO -->
+        <div class="section">
+            <h2>3. Forzar Cálculo de ELO</h2>
+            <p>⚠️ <strong>Importante:</strong> Este proceso calculará el ELO para TODOS los participantes del simulacro seleccionado.</p>
+            <button class="button btn-danger" onclick="forceEloCalculation()">
+                ⚡ Forzar cálculo de ELO ahora
+            </button>
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+        
+        <!-- Sección 4: Verificación -->
+        <div class="section">
+            <h2>4. Verificar Cambios</h2>
+            <button class="button btn-success" onclick="verifyChanges()">
+                ✅ Verificar actualizaciones
+            </button>
+        </div>
+        
+        <!-- Log de actividad -->
+        <div class="section">
+            <h3>📋 Log de actividad</h3>
+            <div class="log" id="activityLog">
+                <div class="log-entry info">Sistema iniciado. Esperando acciones...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Configuración
+        const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let selectedSimulation = null;
+        
+        // Función para añadir logs
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('activityLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Cargar simulacros disponibles
+        async function loadSimulations() {
+            try {
+                addLog('Cargando simulacros disponibles...');
+                
+                const { data, error } = await supabaseClient
+                    .from('weekly_simulations')
+                    .select('*')
+                    .order('week_number', { ascending: false });
+                
+                if (error) throw error;
+                
+                const select = document.getElementById('simulationSelect');
+                select.innerHTML = '<option value="">Selecciona un simulacro...</option>';
+                
+                data.forEach(sim => {
+                    const option = document.createElement('option');
+                    option.value = sim.id;
+                    option.textContent = `RF${sim.week_number} - ${sim.status} - ${formatDate(sim.start_date)}`;
+                    if (sim.processed_at) {
+                        option.textContent += ' (YA PROCESADO)';
+                    }
+                    select.appendChild(option);
+                });
+                
+                addLog(`${data.length} simulacros cargados`, 'success');
+                
+            } catch (error) {
+                addLog(`Error cargando simulacros: ${error.message}`, 'error');
+            }
+        }
+        
+        // Cargar información del simulacro seleccionado
+        async function loadSimulationInfo() {
+            const simId = document.getElementById('simulationSelect').value;
+            if (!simId) {
+                addLog('Por favor selecciona un simulacro', 'warning');
+                return;
+            }
+            
+            try {
+                addLog('Cargando información del simulacro...');
+                
+                // Obtener simulacro
+                const { data: sim, error: simError } = await supabaseClient
+                    .from('weekly_simulations')
+                    .select('*')
+                    .eq('id', simId)
+                    .single();
+                
+                if (simError) throw simError;
+                
+                selectedSimulation = sim;
+                
+                // Contar resultados reales
+                const { count, error: countError } = await supabaseClient
+                    .from('user_results')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('simulation_id', simId);
+                
+                if (countError) throw countError;
+                
+                // Mostrar información
+                document.getElementById('totalParticipants').textContent = count || 0;
+                document.getElementById('avgScore').textContent = sim.average_score ? 
+                    (sim.average_score / 10).toFixed(2) : 'N/A';
+                document.getElementById('processedStatus').textContent = sim.processed_at ? '✅' : '❌';
+                
+                document.getElementById('simulationInfo').style.display = 'block';
+                
+                addLog(`Simulacro RF${sim.week_number}: ${count} resultados actuales`, 'success');
+                
+                if (sim.processed_at) {
+                    addLog(`⚠️ Este simulacro ya fue procesado el ${formatDate(sim.processed_at)}`, 'warning');
+                }
+                
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Actualizar estadísticas del simulacro
+        async function updateSimulationStats() {
+            if (!selectedSimulation) {
+                addLog('Primero selecciona un simulacro', 'warning');
+                return;
+            }
+            
+            try {
+                addLog('Actualizando estadísticas del simulacro...');
+                
+                // Obtener todos los resultados
+                const { data: results, error: resultsError } = await supabaseClient
+                    .from('user_results')
+                    .select('*, users!inner(cohort)')
+                    .eq('simulation_id', selectedSimulation.id);
+                
+                if (resultsError) throw resultsError;
+                
+                // Calcular estadísticas
+                const total = results.length;
+                const scores = results.map(r => r.score);
+                const avgScore = scores.reduce((a, b) => a + b, 0) / total;
+                const medianScore = scores.sort((a, b) => a - b)[Math.floor(total / 2)];
+                const topScore = Math.max(...scores);
+                
+                // Estadísticas por cohorte
+                const cohortStats = {
+                    '20h': results.filter(r => r.users.cohort === '20h'),
+                    '36h': results.filter(r => r.users.cohort === '36h'),
+                    '48h': results.filter(r => r.users.cohort === '48h')
+                };
+                
+                const updateData = {
+                    total_participants: total,
+                    average_score: avgScore,
+                    median_score: medianScore,
+                    top_score: topScore,
+                    participants_20h: cohortStats['20h'].length,
+                    participants_36h: cohortStats['36h'].length,
+                    participants_48h: cohortStats['48h'].length,
+                    average_20h: cohortStats['20h'].length > 0 ? 
+                        cohortStats['20h'].reduce((a, b) => a + b.score, 0) / cohortStats['20h'].length : null,
+                    average_36h: cohortStats['36h'].length > 0 ? 
+                        cohortStats['36h'].reduce((a, b) => a + b.score, 0) / cohortStats['36h'].length : null,
+                    average_48h: cohortStats['48h'].length > 0 ? 
+                        cohortStats['48h'].reduce((a, b) => a + b.score, 0) / cohortStats['48h'].length : null,
+                    updated_at: new Date().toISOString()
+                };
+                
+                // Actualizar en la base de datos
+                const { error: updateError } = await supabaseClient
+                    .from('weekly_simulations')
+                    .update(updateData)
+                    .eq('id', selectedSimulation.id);
+                
+                if (updateError) throw updateError;
+                
+                addLog(`✅ Estadísticas actualizadas:`, 'success');
+                addLog(`   - Total participantes: ${total}`, 'info');
+                addLog(`   - Score promedio: ${(avgScore / 10).toFixed(2)}/10`, 'info');
+                addLog(`   - Distribución: 20h(${cohortStats['20h'].length}), 36h(${cohortStats['36h'].length}), 48h(${cohortStats['48h'].length})`, 'info');
+                
+                // Recargar información
+                await loadSimulationInfo();
+                
+            } catch (error) {
+                addLog(`Error actualizando estadísticas: ${error.message}`, 'error');
+            }
+        }
+        
+        // Forzar cálculo de ELO
+        async function forceEloCalculation() {
+            if (!selectedSimulation) {
+                addLog('Primero selecciona un simulacro', 'warning');
+                return;
+            }
+            
+            if (!confirm(`¿Estás seguro de forzar el cálculo de ELO para RF${selectedSimulation.week_number}?\nEsto procesará todos los resultados actuales.`)) {
+                return;
+            }
+            
+            try {
+                const progressBar = document.getElementById('progressBar');
+                const progressFill = document.getElementById('progressFill');
+                progressBar.style.display = 'block';
+                
+                addLog('🚀 Iniciando cálculo forzado de ELO...', 'warning');
+                
+                // PASO 1: Obtener todos los resultados con información de usuarios
+                addLog('Obteniendo resultados del simulacro...');
+                progressFill.style.width = '10%';
+                progressFill.textContent = '10%';
+                
+                const { data: results, error: resultsError } = await supabaseClient
+                    .from('user_results')
+                    .select(`
+                        *,
+                        users!inner(
+                            id,
+                            slug,
+                            current_elo,
+                            current_streak,
+                            total_simulations,
+                            average_score
+                        )
+                    `)
+                    .eq('simulation_id', selectedSimulation.id)
+                    .order('score', { ascending: false });
+                
+                if (resultsError) throw resultsError;
+                
+                addLog(`${results.length} resultados encontrados`, 'info');
+                progressFill.style.width = '20%';
+                progressFill.textContent = '20%';
+                
+                // PASO 2: Calcular nuevos ELOs
+                addLog('Calculando nuevos valores de ELO...');
+                const K = 32; // Factor K para el sistema ELO
+                const totalParticipants = results.length;
+                
+                // Crear mapa de cambios de ELO
+                const eloChanges = new Map();
+                const eloHistory = [];
+                
+                for (let i = 0; i < results.length; i++) {
+                    const result = results[i];
+                    const userId = result.user_id;
+                    const currentElo = result.users.current_elo || 1000;
+                    const position = i + 1;
+                    
+                    // Cálculo simplificado de ELO basado en posición
+                    let expectedScore = 0;
+                    let actualScore = 0;
+                    
+                    // Comparar contra el promedio del grupo
+                    const avgPosition = totalParticipants / 2;
+                    expectedScore = 1 / (1 + Math.pow(10, (avgPosition - position) / 400));
+                    actualScore = position <= avgPosition ? 1 : 0;
+                    
+                    // Bonus por puntuación alta
+                    if (result.score >= 85) actualScore += 0.2;
+                    if (result.score >= 90) actualScore += 0.3;
+                    
+                    // Calcular cambio de ELO
+                    const eloChange = Math.round(K * (actualScore - expectedScore));
+                    const newElo = Math.max(0, currentElo + eloChange);
+                    
+                    eloChanges.set(userId, {
+                        oldElo: currentElo,
+                        newElo: newElo,
+                        change: eloChange,
+                        position: position
+                    });
+                    
+                    // Preparar registro de historial
+                    eloHistory.push({
+                        user_id: userId,
+                        week_number: selectedSimulation.week_number,
+                        elo_before: currentElo,
+                        elo_after: newElo,
+                        change: eloChange,
+                        position: position,
+                        total_participants: totalParticipants
+                    });
+                    
+                    // Actualizar progreso
+                    const progress = 20 + (i / results.length) * 40;
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = Math.round(progress) + '%';
+                }
+                
+                addLog(`ELOs calculados para ${eloChanges.size} usuarios`, 'success');
+                
+                // PASO 3: Actualizar ELOs en la tabla users
+                addLog('Actualizando ELOs en la base de datos...');
+                progressFill.style.width = '65%';
+                progressFill.textContent = '65%';
+                
+                let updatedCount = 0;
+                for (const [userId, data] of eloChanges) {
+                    try {
+                        // También actualizar estadísticas del usuario
+                        const userResults = results.filter(r => r.user_id === userId);
+                        const userScores = userResults.map(r => r.score);
+                        const newAvg = userScores.reduce((a, b) => a + b, 0) / userScores.length;
+                        
+                        const { error } = await supabaseClient
+                            .from('users')
+                            .update({
+                                current_elo: data.newElo,
+                                average_score: newAvg,
+                                total_simulations: results.filter(r => r.user_id === userId).length,
+                                last_participation: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', userId);
+                        
+                        if (!error) updatedCount++;
+                    } catch (err) {
+                        addLog(`Error actualizando usuario ${userId}: ${err.message}`, 'error');
+                    }
+                }
+                
+                addLog(`✅ ${updatedCount} usuarios actualizados`, 'success');
+                progressFill.style.width = '80%';
+                progressFill.textContent = '80%';
+                
+                // PASO 4: Insertar registros en elo_history
+                addLog('Guardando historial de ELO...');
+                const { error: historyError } = await supabaseClient
+                    .from('elo_history')
+                    .insert(eloHistory);
+                
+                if (historyError) {
+                    addLog(`Error guardando historial: ${historyError.message}`, 'error');
+                } else {
+                    addLog(`✅ ${eloHistory.length} registros de historial guardados`, 'success');
+                }
+                
+                progressFill.style.width = '90%';
+                progressFill.textContent = '90%';
+                
+                // PASO 5: Marcar simulacro como procesado
+                const { error: processedError } = await supabaseClient
+                    .from('weekly_simulations')
+                    .update({
+                        processed_at: new Date().toISOString(),
+                        status: 'completed'
+                    })
+                    .eq('id', selectedSimulation.id);
+                
+                if (processedError) {
+                    addLog(`Error marcando simulacro como procesado: ${processedError.message}`, 'error');
+                } else {
+                    addLog('✅ Simulacro marcado como procesado', 'success');
+                }
+                
+                // PASO 6: Actualizar rachas
+                addLog('Actualizando rachas de participación...');
+                await updateStreaks();
+                
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+                
+                addLog('🎉 ¡Proceso completado exitosamente!', 'success');
+                addLog(`Resumen: ${updatedCount} ELOs actualizados`, 'info');
+                
+                // Mostrar algunos cambios destacados
+                const topChanges = Array.from(eloChanges.entries())
+                    .sort((a, b) => b[1].change - a[1].change)
+                    .slice(0, 5);
+                
+                addLog('Top 5 mayores subidas de ELO:', 'info');
+                for (const [userId, data] of topChanges) {
+                    const user = results.find(r => r.user_id === userId)?.users;
+                    if (user) {
+                        addLog(`   ${user.slug}: +${data.change} (${data.oldElo} → ${data.newElo})`, 'success');
+                    }
+                }
+                
+            } catch (error) {
+                addLog(`❌ Error crítico: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+        
+        // Actualizar rachas
+        async function updateStreaks() {
+            try {
+                // Obtener todos los usuarios que participaron
+                const { data: participants, error } = await supabaseClient
+                    .from('user_results')
+                    .select('user_id, users!inner(current_streak, longest_streak)')
+                    .eq('simulation_id', selectedSimulation.id);
+                
+                if (error) throw error;
+                
+                // Actualizar racha para cada participante
+                for (const participant of participants) {
+                    const newStreak = (participant.users.current_streak || 0) + 1;
+                    const longestStreak = Math.max(newStreak, participant.users.longest_streak || 0);
+                    
+                    await supabaseClient
+                        .from('users')
+                        .update({
+                            current_streak: newStreak,
+                            longest_streak: longestStreak
+                        })
+                        .eq('id', participant.user_id);
+                }
+                
+                // Resetear rachas de los que no participaron
+                const participantIds = participants.map(p => p.user_id);
+                await supabaseClient
+                    .from('users')
+                    .update({ current_streak: 0 })
+                    .gt('current_streak', 0)
+                    .not('id', 'in', `(${participantIds.join(',')})`);
+                
+                addLog('✅ Rachas actualizadas correctamente', 'success');
+                
+            } catch (error) {
+                addLog(`Error actualizando rachas: ${error.message}`, 'error');
+            }
+        }
+        
+        // Verificar cambios
+        async function verifyChanges() {
+            if (!selectedSimulation) {
+                addLog('Primero selecciona un simulacro', 'warning');
+                return;
+            }
+            
+            try {
+                addLog('Verificando cambios realizados...');
+                
+                // Verificar usuarios con cambios de ELO recientes
+                const { data: recentChanges, error: changesError } = await supabaseClient
+                    .from('elo_history')
+                    .select('*, users!inner(slug)')
+                    .eq('week_number', selectedSimulation.week_number)
+                    .order('change', { ascending: false })
+                    .limit(10);
+                
+                if (changesError) throw changesError;
+                
+                if (recentChanges && recentChanges.length > 0) {
+                    addLog(`✅ ${recentChanges.length} cambios de ELO encontrados:`, 'success');
+                    recentChanges.forEach(change => {
+                        const symbol = change.change > 0 ? '+' : '';
+                        addLog(`   ${change.users.slug}: ${change.elo_before} → ${change.elo_after} (${symbol}${change.change})`, 'info');
+                    });
+                } else {
+                    addLog('⚠️ No se encontraron cambios de ELO para este simulacro', 'warning');
+                }
+                
+                // Verificar estado del simulacro
+                const { data: sim, error: simError } = await supabaseClient
+                    .from('weekly_simulations')
+                    .select('processed_at, total_participants, average_score')
+                    .eq('id', selectedSimulation.id)
+                    .single();
+                
+                if (simError) throw simError;
+                
+                addLog('Estado del simulacro:', 'info');
+                addLog(`   Procesado: ${sim.processed_at ? '✅ Sí' : '❌ No'}`, 'info');
+                addLog(`   Participantes: ${sim.total_participants || 0}`, 'info');
+                addLog(`   Score promedio: ${sim.average_score ? (sim.average_score / 10).toFixed(2) : 'N/A'}/10`, 'info');
+                
+            } catch (error) {
+                addLog(`Error verificando cambios: ${error.message}`, 'error');
+            }
+        }
+        
+        // Utilidades
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('es-ES');
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSimulations();
+        });
+    </script>
+</body>
+</html>
