@@ -140,6 +140,28 @@
             margin: 0.5rem 0;
         }
         
+        .header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: rgba(30, 58, 138, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            background: rgba(30, 58, 138, 0.2);
+            transform: translateX(-5px);
+        }
+        
         .progress-bar {
             background: #e5e7eb;
             height: 30px;
@@ -159,77 +181,97 @@
             color: white;
             font-weight: bold;
         }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="header-nav">
+            <a href="/izeta2025/admin/dashboard.html" class="back-link">← Volver al Dashboard</a>
+        </div>
+        
         <h1>🚀 Panel de Actualización Manual - Sistema ELO</h1>
         <p>Este panel permite forzar la actualización del ELO y las estadísticas sin esperar al proceso automático del lunes.</p>
         
-        <!-- Sección 1: Selección de simulacro -->
-        <div class="section">
-            <h2>1. Seleccionar Simulacro</h2>
-            <select id="simulationSelect">
-                <option value="">Cargando simulacros...</option>
-            </select>
-            <button class="button btn-primary" onclick="loadSimulationInfo()">
-                📊 Ver información del simulacro
-            </button>
-            
-            <div id="simulationInfo" style="display: none;">
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-number" id="totalParticipants">0</div>
-                        <div class="stat-label">Participantes</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="avgScore">0</div>
-                        <div class="stat-label">Score Promedio</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="processedStatus">❌</div>
-                        <div class="stat-label">Procesado</div>
-                    </div>
+        <div id="loadingAuth">
+            <div class="section">
+                <div style="text-align: center; padding: 2rem;">
+                    <div class="loading-spinner" style="width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    <p style="margin-top: 1rem;">Verificando permisos de administrador...</p>
                 </div>
             </div>
         </div>
         
-        <!-- Sección 2: Actualizar estadísticas -->
-        <div class="section">
-            <h2>2. Actualizar Estadísticas del Simulacro</h2>
-            <p>Recalcula participantes, promedios y estadísticas por cohorte basándose en todos los resultados actuales.</p>
-            <button class="button btn-warning" onclick="updateSimulationStats()">
-                📈 Actualizar estadísticas del simulacro
-            </button>
-        </div>
-        
-        <!-- Sección 3: Forzar cálculo de ELO -->
-        <div class="section">
-            <h2>3. Forzar Cálculo de ELO</h2>
-            <p>⚠️ <strong>Importante:</strong> Este proceso calculará el ELO para TODOS los participantes del simulacro seleccionado.</p>
-            <button class="button btn-danger" onclick="forceEloCalculation()">
-                ⚡ Forzar cálculo de ELO ahora
-            </button>
-            <div class="progress-bar" id="progressBar" style="display: none;">
-                <div class="progress-fill" id="progressFill">0%</div>
+        <div id="mainContent" style="display: none;">
+            <!-- Sección 1: Selección de simulacro -->
+            <div class="section">
+                <h2>1. Seleccionar Simulacro</h2>
+                <select id="simulationSelect">
+                    <option value="">Cargando simulacros...</option>
+                </select>
+                <button class="button btn-primary" onclick="loadSimulationInfo()">
+                    📊 Ver información del simulacro
+                </button>
+                
+                <div id="simulationInfo" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-number" id="totalParticipants">0</div>
+                            <div class="stat-label">Participantes</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgScore">0</div>
+                            <div class="stat-label">Score Promedio</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="processedStatus">❌</div>
+                            <div class="stat-label">Procesado</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Sección 4: Verificación -->
-        <div class="section">
-            <h2>4. Verificar Cambios</h2>
-            <button class="button btn-success" onclick="verifyChanges()">
-                ✅ Verificar actualizaciones
-            </button>
-        </div>
-        
-        <!-- Log de actividad -->
-        <div class="section">
-            <h3>📋 Log de actividad</h3>
-            <div class="log" id="activityLog">
-                <div class="log-entry info">Sistema iniciado. Esperando acciones...</div>
+            
+            <!-- Sección 2: Actualizar estadísticas -->
+            <div class="section">
+                <h2>2. Actualizar Estadísticas del Simulacro</h2>
+                <p>Recalcula participantes, promedios y estadísticas por cohorte basándose en todos los resultados actuales.</p>
+                <button class="button btn-warning" onclick="updateSimulationStats()">
+                    📈 Actualizar estadísticas del simulacro
+                </button>
             </div>
-        </div>
+            
+            <!-- Sección 3: Forzar cálculo de ELO -->
+            <div class="section">
+                <h2>3. Forzar Cálculo de ELO</h2>
+                <p>⚠️ <strong>Importante:</strong> Este proceso calculará el ELO para TODOS los participantes del simulacro seleccionado.</p>
+                <button class="button btn-danger" onclick="forceEloCalculation()">
+                    ⚡ Forzar cálculo de ELO ahora
+                </button>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+            </div>
+            
+            <!-- Sección 4: Verificación -->
+            <div class="section">
+                <h2>4. Verificar Cambios</h2>
+                <button class="button btn-success" onclick="verifyChanges()">
+                    ✅ Verificar actualizaciones
+                </button>
+            </div>
+            
+            <!-- Log de actividad -->
+            <div class="section">
+                <h3>📋 Log de actividad</h3>
+                <div class="log" id="activityLog">
+                    <div class="log-entry info">Sistema iniciado. Esperando acciones...</div>
+                </div>
+            </div>
+        </div> <!-- Cierre de mainContent -->
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -242,6 +284,82 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let selectedSimulation = null;
+        
+        // ========================================
+        // FUNCIONES DE SEGURIDAD
+        // ========================================
+        async function checkAuth() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                return user;
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                return null;
+            }
+        }
+        
+        async function checkIfUserIsAdmin(email) {
+            try {
+                console.log('Verificando permisos de admin para:', email);
+                
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .select('is_admin')
+                    .eq('email', email.toLowerCase().trim())
+                    .single();
+                
+                if (error) {
+                    console.error('Error al verificar admin:', error);
+                    return false;
+                }
+                
+                console.log('Resultado de verificación admin:', data);
+                return data && data.is_admin === true;
+                
+            } catch (error) {
+                console.error('Error en checkIfUserIsAdmin:', error);
+                return false;
+            }
+        }
+        
+        // ========================================
+        // VERIFICAR ACCESO DE ADMIN
+        // ========================================
+        async function checkAdminAccess() {
+            console.log('Verificando acceso de administrador...');
+            
+            // Mostrar indicador de carga
+            document.getElementById('loadingAuth').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            
+            const user = await checkAuth();
+            
+            if (!user) {
+                console.log('No hay usuario autenticado, redirigiendo a login...');
+                window.location.href = '/izeta2025/admin/login.html';
+                return false;
+            }
+            
+            console.log('Usuario autenticado:', user.email);
+            
+            // Verificar si es admin
+            const isAdmin = await checkIfUserIsAdmin(user.email);
+            
+            if (!isAdmin) {
+                console.log('Usuario no es administrador');
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = '/izeta2025/public/index.html';
+                return false;
+            }
+            
+            console.log('Acceso de administrador confirmado');
+            
+            // Ocultar indicador de carga y mostrar contenido
+            document.getElementById('loadingAuth').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            return true;
+        }
         
         // Función para añadir logs
         function addLog(message, type = 'info') {
@@ -696,8 +814,12 @@
         }
         
         // Inicializar
-        document.addEventListener('DOMContentLoaded', () => {
-            loadSimulations();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar acceso de admin primero
+            const hasAccess = await checkAdminAccess();
+            if (hasAccess) {
+                loadSimulations();
+            }
         });
     </script>
 </body>

@@ -1,0 +1,260 @@
+table_name,column_name,data_type,character_maximum_length,numeric_precision,numeric_scale,is_nullable,column_default,key_type,column_comment
+admin_dashboard,id,uuid,null,null,null,YES,null,,null
+admin_dashboard,email,text,null,null,null,YES,null,,null
+admin_dashboard,username,text,null,null,null,YES,null,,null
+admin_dashboard,slug,text,null,null,null,YES,null,,null
+admin_dashboard,cohort,text,null,null,null,YES,null,,null
+admin_dashboard,current_elo,integer,null,32,0,YES,null,,null
+admin_dashboard,current_streak,integer,null,32,0,YES,null,,null
+admin_dashboard,longest_streak,integer,null,32,0,YES,null,,null
+admin_dashboard,total_simulations,integer,null,32,0,YES,null,,null
+admin_dashboard,average_score,numeric,null,5,2,YES,null,,null
+admin_dashboard,last_participation,date,null,null,null,YES,null,,null
+admin_dashboard,created_at,timestamp with time zone,null,null,null,YES,null,,null
+admin_dashboard,updated_at,timestamp with time zone,null,null,null,YES,null,,null
+admin_dashboard,active,boolean,null,null,null,YES,null,,null
+admin_dashboard,probability_pass,numeric,null,5,2,YES,null,,null
+admin_dashboard,z_score,numeric,null,5,2,YES,null,,null
+admin_dashboard,trend_direction,text,null,null,null,YES,null,,null
+admin_dashboard,risk_level,text,null,null,null,YES,null,,null
+admin_dashboard,notes,ARRAY,null,null,null,YES,null,,null
+admin_dashboard,calculated_risk_level,text,null,null,null,YES,null,,null
+elo_history,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+elo_history,user_id,uuid,null,null,null,NO,null,FOREIGN KEY -> users(id),null
+elo_history,week_number,integer,null,32,0,NO,null,,null
+elo_history,elo_before,integer,null,32,0,NO,null,,null
+elo_history,elo_after,integer,null,32,0,NO,null,,null
+elo_history,change,integer,null,32,0,YES,null,,null
+elo_history,position,integer,null,32,0,YES,null,,null
+elo_history,total_participants,integer,null,32,0,YES,null,,null
+elo_history,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+email_duplicates_analysis,email1_id,uuid,null,null,null,YES,null,,null
+email_duplicates_analysis,email2_id,uuid,null,null,null,YES,null,,null
+email_duplicates_analysis,to_email,text,null,null,null,YES,null,,null
+email_duplicates_analysis,created1,timestamp with time zone,null,null,null,YES,null,,null
+email_duplicates_analysis,created2,timestamp with time zone,null,null,null,YES,null,,null
+email_duplicates_analysis,subject1,text,null,null,null,YES,null,,null
+email_duplicates_analysis,subject2,text,null,null,null,YES,null,,null
+email_duplicates_analysis,status1,text,null,null,null,YES,null,,null
+email_duplicates_analysis,status2,text,null,null,null,YES,null,,null
+email_duplicates_analysis,seconds_apart,numeric,null,null,null,YES,null,,null
+email_logs,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+email_logs,user_id,uuid,null,null,null,YES,null,FOREIGN KEY -> users(id),null
+email_logs,email_type,text,null,null,null,NO,null,,null
+email_logs,subject,text,null,null,null,NO,null,,null
+email_logs,content,text,null,null,null,YES,null,,null
+email_logs,sent_at,timestamp with time zone,null,null,null,YES,now(),,null
+email_logs,status,text,null,null,null,YES,'sent'::text,,null
+email_logs,metadata,jsonb,null,null,null,YES,'{}'::jsonb,,null
+email_queue,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+email_queue,to_email,text,null,null,null,NO,null,,null
+email_queue,subject,text,null,null,null,NO,null,,null
+email_queue,template_id,text,null,null,null,NO,null,,null
+email_queue,template_data,jsonb,null,null,null,YES,null,,null
+email_queue,status,text,null,null,null,YES,'pending'::text,,null
+email_queue,sent_at,timestamp with time zone,null,null,null,YES,null,,null
+email_queue,error,text,null,null,null,YES,null,,null
+email_queue,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+public_leaderboard,slug,text,null,null,null,YES,null,,null
+public_leaderboard,current_elo,integer,null,32,0,YES,null,,null
+public_leaderboard,current_streak,integer,null,32,0,YES,null,,null
+public_leaderboard,cohort,text,null,null,null,YES,null,,null
+public_leaderboard,position,bigint,null,64,0,YES,null,,null
+public_leaderboard,position_cohort,bigint,null,64,0,YES,null,,null
+public_leaderboard,last_score,numeric,null,4,2,YES,null,,null
+public_leaderboard,last_elo_change,integer,null,32,0,YES,null,,null
+public_leaderboard,medals,ARRAY,null,null,null,YES,null,,null
+slug_distribution,prefix,text,null,null,null,YES,null,,null
+slug_distribution,count,bigint,null,64,0,YES,null,,null
+slug_distribution,slugs_sample,ARRAY,null,null,null,YES,null,,null
+slug_migration_backup,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+slug_migration_backup,user_id,uuid,null,null,null,NO,null,,null
+slug_migration_backup,old_slug,text,null,null,null,NO,null,,null
+slug_migration_backup,new_slug,text,null,null,null,NO,null,,null
+slug_migration_backup,email,text,null,null,null,NO,null,,null
+slug_migration_backup,migrated_at,timestamp without time zone,null,null,null,YES,now(),,null
+slug_migration_preview,id,uuid,null,null,null,YES,null,,null
+slug_migration_preview,email,text,null,null,null,YES,null,,null
+slug_migration_preview,current_slug,text,null,null,null,YES,null,,null
+slug_migration_preview,proposed_slug,text,null,null,null,YES,null,,null
+slug_migration_preview,current_prefix_length,integer,null,32,0,YES,null,,null
+slug_migration_preview,cohort,text,null,null,null,YES,null,,null
+slug_migration_preview,total_simulations,integer,null,32,0,YES,null,,null
+slug_migration_stats,total_migrated,bigint,null,64,0,YES,null,,null
+slug_migration_stats,unique_prefixes,bigint,null,64,0,YES,null,,null
+slug_migration_stats,last_migration,timestamp without time zone,null,null,null,YES,null,,null
+slug_migration_stats,avg_per_prefix,numeric,null,null,null,YES,null,,null
+slug_migration_stats,pending_migration,bigint,null,64,0,YES,null,,null
+slug_migration_stats,top_prefixes,json,null,null,null,YES,null,,null
+system_events,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+system_events,event_type,character varying,100,null,null,NO,null,,null
+system_events,entity_type,character varying,100,null,null,NO,null,,null
+system_events,entity_id,uuid,null,null,null,NO,null,,null
+system_events,payload,jsonb,null,null,null,NO,null,,null
+system_events,processed,boolean,null,null,null,YES,false,,null
+system_events,processed_at,timestamp with time zone,null,null,null,YES,null,,null
+system_events,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+top_failed_questions_weekly,week_number,integer,null,32,0,YES,null,,null
+top_failed_questions_weekly,start_date,date,null,null,null,YES,null,,null
+top_failed_questions_weekly,end_date,date,null,null,null,YES,null,,null
+top_failed_questions_weekly,question_data,jsonb,null,null,null,YES,null,,null
+topic_difficulty_analysis,topic,text,null,null,null,YES,null,,null
+topic_difficulty_analysis,mention_count,bigint,null,64,0,YES,null,,null
+topic_difficulty_analysis,avg_score_when_weak,numeric,null,null,null,YES,null,,null
+topic_difficulty_analysis,difficulty_rank,bigint,null,64,0,YES,null,,null
+user_alerts,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+user_alerts,user_id,uuid,null,null,null,NO,null,FOREIGN KEY -> users(id),null
+user_alerts,simulation_id,uuid,null,null,null,YES,null,FOREIGN KEY -> weekly_simulations(id),null
+user_alerts,alert_type,text,null,null,null,NO,null,,null
+user_alerts,message,text,null,null,null,NO,null,,null
+user_alerts,is_read,boolean,null,null,null,YES,false,,null
+user_alerts,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+user_medals,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+user_medals,user_id,uuid,null,null,null,NO,null,FOREIGN KEY -> users(id),null
+user_medals,medal_type,text,null,null,null,NO,null,,null
+user_medals,week_earned,integer,null,32,0,NO,null,,null
+user_medals,metadata,jsonb,null,null,null,YES,'{}'::jsonb,,null
+user_medals,earned_at,timestamp with time zone,null,null,null,YES,now(),,null
+user_results,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+user_results,user_id,uuid,null,null,null,NO,null,FOREIGN KEY -> users(id),null
+user_results,simulation_id,uuid,null,null,null,NO,null,FOREIGN KEY -> weekly_simulations(id),null
+user_results,score,numeric,null,4,2,NO,null,,null
+user_results,position,integer,null,32,0,YES,null,,null
+user_results,position_cohort,integer,null,32,0,YES,null,,null
+user_results,points_base,integer,null,32,0,YES,5,,null
+user_results,points_performance,integer,null,32,0,YES,0,,null
+user_results,points_improvement,integer,null,32,0,YES,0,,null
+user_results,multiplier,numeric,null,3,1,YES,1.0,,null
+user_results,total_points,integer,null,32,0,YES,0,,null
+user_results,submitted_at,timestamp with time zone,null,null,null,YES,now(),,null
+user_results,is_saturday_live,boolean,null,null,null,YES,false,,null
+user_results,time_taken,integer,null,32,0,YES,null,,null
+user_results,confidence_score,integer,null,32,0,YES,null,,null
+user_results,z_score,numeric,null,5,2,YES,null,,null
+user_results,percentile,integer,null,32,0,YES,null,,null
+user_results,blank_answers,integer,null,32,0,YES,0,,Número de preguntas dejadas en blanco
+user_results,device_type,text,null,null,null,YES,null,,"Tipo de dispositivo usado: desktop, mobile o tablet"
+user_results,stress_level,integer,null,32,0,YES,50,,"Nivel de estrés percibido: 0=tranquilo, 50=normal, 100=muy nervioso"
+user_results,review_time,integer,null,32,0,YES,0,,Minutos dedicados a revisar fallos después del examen
+user_results,weakest_topics,ARRAY,null,null,null,YES,null,,Array con hasta 3 temas donde el usuario percibe más dificultad
+user_results,difficulty_note,text,null,null,null,YES,null,,Observación libre del usuario sobre dificultades (máx 100 caracteres)
+user_results,correct_answers,integer,null,32,0,YES,null,,null
+user_results,wrong_answers,integer,null,32,0,YES,null,,null
+user_results,error_percentage,numeric,null,5,2,YES,null,,null
+user_results_backup_20250602,id,uuid,null,null,null,YES,null,,null
+user_results_backup_20250602,user_id,uuid,null,null,null,YES,null,,null
+user_results_backup_20250602,simulation_id,uuid,null,null,null,YES,null,,null
+user_results_backup_20250602,score,numeric,null,4,2,YES,null,,null
+user_results_backup_20250602,position,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,position_cohort,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,points_base,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,points_performance,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,points_improvement,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,multiplier,numeric,null,3,1,YES,null,,null
+user_results_backup_20250602,total_points,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,submitted_at,timestamp with time zone,null,null,null,YES,null,,null
+user_results_backup_20250602,is_saturday_live,boolean,null,null,null,YES,null,,null
+user_results_backup_20250602,time_taken,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,confidence_score,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,z_score,numeric,null,5,2,YES,null,,null
+user_results_backup_20250602,percentile,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,blank_answers,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,device_type,text,null,null,null,YES,null,,null
+user_results_backup_20250602,stress_level,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,review_time,integer,null,32,0,YES,null,,null
+user_results_backup_20250602,weakest_topics,ARRAY,null,null,null,YES,null,,null
+user_results_backup_20250602,difficulty_note,text,null,null,null,YES,null,,null
+user_results_backup_20250602,error_percentage,numeric,null,5,2,YES,null,,null
+user_results_backup_formula_change,id,uuid,null,null,null,YES,null,,null
+user_results_backup_formula_change,user_id,uuid,null,null,null,YES,null,,null
+user_results_backup_formula_change,simulation_id,uuid,null,null,null,YES,null,,null
+user_results_backup_formula_change,score,numeric,null,4,2,YES,null,,null
+user_results_backup_formula_change,position,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,position_cohort,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,points_base,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,points_performance,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,points_improvement,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,multiplier,numeric,null,3,1,YES,null,,null
+user_results_backup_formula_change,total_points,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,submitted_at,timestamp with time zone,null,null,null,YES,null,,null
+user_results_backup_formula_change,is_saturday_live,boolean,null,null,null,YES,null,,null
+user_results_backup_formula_change,time_taken,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,confidence_score,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,z_score,numeric,null,5,2,YES,null,,null
+user_results_backup_formula_change,percentile,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,blank_answers,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,device_type,text,null,null,null,YES,null,,null
+user_results_backup_formula_change,stress_level,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,review_time,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,weakest_topics,ARRAY,null,null,null,YES,null,,null
+user_results_backup_formula_change,difficulty_note,text,null,null,null,YES,null,,null
+user_results_backup_formula_change,correct_answers,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,wrong_answers,integer,null,32,0,YES,null,,null
+user_results_backup_formula_change,error_percentage,numeric,null,5,2,YES,null,,null
+user_results_backup_formula_change,backup_timestamp,timestamp with time zone,null,null,null,YES,null,,null
+user_results_backup_formula_change,backup_reason,text,null,null,null,YES,null,,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+users,email,text,null,null,null,NO,null,,null
+users,email,text,null,null,null,NO,null,,null
+users,username,text,null,null,null,NO,null,,null
+users,username,text,null,null,null,NO,null,,null
+users,slug,text,null,null,null,NO,null,,null
+users,slug,text,null,null,null,NO,null,,null
+users,cohort,text,null,null,null,NO,null,,null
+users,cohort,text,null,null,null,NO,null,,null
+users,current_elo,integer,null,32,0,YES,1000,,null
+users,current_elo,integer,null,32,0,YES,1000,,null
+users,current_streak,integer,null,32,0,YES,0,,null
+users,current_streak,integer,null,32,0,YES,0,,null
+users,longest_streak,integer,null,32,0,YES,0,,null
+users,longest_streak,integer,null,32,0,YES,0,,null
+users,total_simulations,integer,null,32,0,YES,0,,null
+users,total_simulations,integer,null,32,0,YES,0,,null
+users,average_score,numeric,null,5,2,YES,0,,null
+users,average_score,numeric,null,5,2,YES,0,,null
+users,last_participation,date,null,null,null,YES,null,,null
+users,last_participation,date,null,null,null,YES,null,,null
+users,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+users,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+users,updated_at,timestamp with time zone,null,null,null,YES,now(),,null
+users,updated_at,timestamp with time zone,null,null,null,YES,now(),,null
+users,active,boolean,null,null,null,YES,true,,null
+users,active,boolean,null,null,null,YES,true,,null
+users,probability_pass,numeric,null,5,2,YES,50.00,,null
+users,probability_pass,numeric,null,5,2,YES,50.00,,null
+users,z_score,numeric,null,5,2,YES,0,,null
+users,z_score,numeric,null,5,2,YES,0,,null
+users,trend_direction,text,null,null,null,YES,'neutral'::text,,null
+users,trend_direction,text,null,null,null,YES,'neutral'::text,,null
+users,risk_level,text,null,null,null,YES,'medium'::text,,null
+users,risk_level,text,null,null,null,YES,'medium'::text,,null
+users,notes,ARRAY,null,null,null,YES,ARRAY[]::text[],,null
+users,notes,ARRAY,null,null,null,YES,ARRAY[]::text[],,null
+users,is_admin,boolean,null,null,null,YES,false,,null
+users,is_admin,boolean,null,null,null,YES,false,,null
+weekly_simulations,id,uuid,null,null,null,NO,uuid_generate_v4(),PRIMARY KEY,null
+weekly_simulations,week_number,integer,null,32,0,NO,null,,null
+weekly_simulations,start_date,date,null,null,null,NO,null,,null
+weekly_simulations,end_date,date,null,null,null,NO,null,,null
+weekly_simulations,total_participants,integer,null,32,0,YES,0,,null
+weekly_simulations,average_score,numeric,null,5,2,YES,null,,null
+weekly_simulations,median_score,numeric,null,5,2,YES,null,,null
+weekly_simulations,top_score,integer,null,32,0,YES,null,,null
+weekly_simulations,participants_20h,integer,null,32,0,YES,0,,null
+weekly_simulations,participants_36h,integer,null,32,0,YES,0,,null
+weekly_simulations,participants_48h,integer,null,32,0,YES,0,,null
+weekly_simulations,average_20h,numeric,null,5,2,YES,null,,null
+weekly_simulations,average_36h,numeric,null,5,2,YES,null,,null
+weekly_simulations,average_48h,numeric,null,5,2,YES,null,,null
+weekly_simulations,top_failed_questions,jsonb,null,null,null,YES,'[]'::jsonb,,null
+weekly_simulations,status,text,null,null,null,YES,'active'::text,,null
+weekly_simulations,created_at,timestamp with time zone,null,null,null,YES,now(),,null
+weekly_simulations,processed_at,timestamp with time zone,null,null,null,YES,null,,null
+weekly_simulations,updated_at,timestamp with time zone,null,null,null,YES,now(),,null
