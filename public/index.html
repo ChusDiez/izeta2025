@@ -1716,7 +1716,7 @@
         
         <!-- SISTEMA DE GAMIFICACIÓN -->
         <section class="section">
-            <h2 class="section-title"><span class="icon-trophy"></span>Sistema de Gamificación Elo-Plus</h2>
+            <h2 class="section-title"><span class="icon-trophy"></span>Sistema Elo-Plus</h2>
             
             <div class="card">
                 <h3 style="margin-bottom: 1rem;">¿Cómo funciona el sistema de puntos?</h3>
@@ -1742,84 +1742,15 @@
                 </div>
                 
                 <div class="info-box">
-                    <h3><span class="icon-check"></span>Sistema transparente y justo</h3>
+                    <h3><span class="icon-check"></span>Sistema puntuación</h3>
                     <p>• El techo de +25 puntos hace que todos sepan exactamente cuánto pueden ganar<br>
-                    • Los puntos Top-3 se muestran como medalla pero no suman al Elo para evitar inflación<br>
-                    • La racha de participación es la llave para acceder a contenido premium</p>
+                    • Los puntos Top-3 se muestran como medalla pero no suman al Elo<br>
+                    • La racha de participación es la llave para estar entre los mejores</p>
                 </div>
             </div>
         </section>
         
-        <!-- LEADERBOARD DINÁMICO -->
-        <section class="section">
-            <h2 class="section-title"><span class="icon-chart"></span>Leaderboard Dinámico - Vista de Ejemplo</h2>
-            
-            <div class="leaderboard">
-                <h3 style="margin-bottom: 1.5rem;">Ranking Semanal - RF15</h3>
-                
-                <!-- Ejemplo posición 1 -->
-                <div class="leaderboard-item">
-                    <div class="leaderboard-left">
-                        <span class="leaderboard-position position-1">1º</span>
-                        <span class="leaderboard-user">maria-2847</span>
-                        <span class="badge badge-star icon-star">Top 3 Directo</span>
-                    </div>
-                    <div class="leaderboard-stats">
-                        <span class="elo-delta delta-positive">↗ +25</span>
-                        <span class="streak streak-fire"><span class="icon-fire"></span>12</span>
-                        <span class="badge badge-elo">1,485 pts</span>
-                    </div>
-                </div>
-                
-                <!-- Ejemplo posición 2 -->
-                <div class="leaderboard-item">
-                    <div class="leaderboard-left">
-                        <span class="leaderboard-position position-2">2º</span>
-                        <span class="leaderboard-user">carlos-9182</span>
-                    </div>
-                    <div class="leaderboard-stats">
-                        <span class="elo-delta delta-positive">↗ +22</span>
-                        <span class="streak streak-fire"><span class="icon-fire"></span>8</span>
-                        <span class="badge badge-elo">1,423 pts</span>
-                    </div>
-                </div>
-                
-                <!-- Ejemplo posición 3 -->
-                <div class="leaderboard-item">
-                    <div class="leaderboard-left">
-                        <span class="leaderboard-position position-3">3º</span>
-                        <span class="leaderboard-user">lucia-5634</span>
-                        <span class="badge badge-star icon-star">Top 3 Directo</span>
-                    </div>
-                    <div class="leaderboard-stats">
-                        <span class="elo-delta delta-neutral">→ +15</span>
-                        <span class="streak streak-fire"><span class="icon-fire"></span>15</span>
-                        <span class="badge badge-elo">1,397 pts</span>
-                    </div>
-                </div>
-                
-                <!-- Más posiciones -->
-                <div class="leaderboard-item">
-                    <div class="leaderboard-left">
-                        <span class="leaderboard-position">4º</span>
-                        <span class="leaderboard-user">jorge-7823</span>
-                    </div>
-                    <div class="leaderboard-stats">
-                        <span class="elo-delta delta-negative">↘ +8</span>
-                        <span class="streak">⭐ 3</span>
-                        <span class="badge badge-elo">1,352 pts</span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 1.5rem; padding: 1rem; background: #f3f4f6; border-radius: 0.5rem;">
-                    <p><strong>Leyenda:</strong><br>
-                    • <strong>↗ ↘ →</strong> Cambio de Elo respecto a semana anterior<br>
-                    • <strong>🔥</strong> Racha de 4+ semanas consecutivas<br>
-                    • <strong>⭐</strong> Medalla Top-3 en directo (no suma Elo)<br>
-                    • <strong>Slug anónimo</strong> protege la privacidad (ej: maria-2847)</p>
-                </div>
-            </div>
-        </section>
+        
         
         <!-- BENEFICIOS CLAVE -->
         <section class="section">
@@ -1843,25 +1774,6 @@
                     <p>Métricas claras para detectar y corregir problemas a tiempo</p>
                 </div>
             </div>
-        </section>
-        
-        <!-- NOTAS PARA LA IMPLEMENTACIÓN -->
-        <section class="section">
-            <h2 class="section-title">📝 Notas para la Jefa de Estudios</h2>
-            
-            <div class="card" style="background: #fef3c7; border-left: 4px solid var(--color-alerta);">
-
-                
-                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem;">Consideraciones técnicas:</h3>
-                <ul style="margin-left: 1.5rem;">
-                    <li>El sistema real funcionará con Supabase (base de datos) + dashboard HTML</li>
-                    <li>Los cálculos de Elo se hacen automáticamente cada lunes</li>
-                    <li>El formulario de envío se integra en el LMS existente</li>
-                    <li>Coste estimado: tiempo de configuración inicial + mantenimiento mínimo</li>
-                </ul>
-                
-            </div>
-        </section>
         
         <!-- PIE -->
         <div style="text-align: center; margin-top: 4rem; padding: 2rem; color: #6b7280;">
