@@ -293,64 +293,76 @@ export class DashboardCore {
     /**
      * Mostrar página específica
      */
-async showPage(page) {
-    this.currentPage = page;
-    const contentWrapper = document.getElementById('contentWrapper');
-    
-    // Actualizar UI
-    this.updatePageHeader(page);
-    
-    // Mostrar loading
-    contentWrapper.innerHTML = this.getLoadingHTML();
-    
-    try {
-        // Renderizar según la página
-        switch(page) {
-            case 'overview':
-                await this.renderOverviewPage();
-                break;
-            case 'students':
-                const studentsModule = await this.loadModule('students');
-                await studentsModule.render(contentWrapper, this.getFilteredData());
-                break;
-            case 'results':
-                // CAMBIO: Usar el módulo de resultados
-                const resultsModule = await this.loadModule('results');
-                await resultsModule.render(contentWrapper, this.getFilteredData());
-                break;
-            case 'simulations':
-                const simulationsModule = await this.loadModule('simulations');
-                await simulationsModule.render(contentWrapper, this.data.simulations);
-                break;
-            case 'alerts':
-                const alertsModule = await this.loadModule('alerts');
-                await alertsModule.render(contentWrapper, this.data.alerts);
-                break;
-            case 'analytics':
-                const analyticsModule = await this.loadModule('analytics');
-                await analyticsModule.render(contentWrapper);
-                break;
-            case 'medals':
-                const medalsModule = await this.loadModule('medals');
-                await medalsModule.render(contentWrapper);
-                break;
-            case 'risk':
-                const riskModule = await this.loadModule('risk-analysis');
-                await riskModule.render(contentWrapper);
-                break;
-            default:
-                this.showError('Página no encontrada');
+    async showPage(page) {
+        this.currentPage = page;
+        const contentWrapper = document.getElementById('contentWrapper');
+        
+        // Actualizar UI
+        this.updatePageHeader(page);
+        
+        // Mostrar loading
+        contentWrapper.innerHTML = this.getLoadingHTML();
+        
+        try {
+            // Renderizar según la página
+            switch(page) {
+                case 'overview':
+                    await this.renderOverviewPage();
+                    break;
+                case 'students':
+                    const studentsModule = await this.loadModule('students');
+                    await studentsModule.render(contentWrapper, this.getFilteredData());
+                    break;
+                case 'results':
+                    // CAMBIO: Usar el módulo de resultados
+                    const resultsModule = await this.loadModule('results');
+                    await resultsModule.render(contentWrapper, this.getFilteredData());
+                    break;
+                case 'simulations':
+                    const simulationsModule = await this.loadModule('simulations');
+                    await simulationsModule.render(contentWrapper, this.data.simulations);
+                    break;
+                case 'alerts':
+                    const alertsModule = await this.loadModule('alerts');
+                    await alertsModule.render(contentWrapper, this.data.alerts);
+                    break;
+                case 'analytics':
+                    const analyticsModule = await this.loadModule('analytics');
+                    await analyticsModule.render(contentWrapper);
+                    break;
+                case 'medals':
+                    const medalsModule = await this.loadModule('medals');
+                    await medalsModule.render(contentWrapper);
+                    break;
+                case 'risk':
+                    const riskModule = await this.loadModule('risk-analysis');
+                    await riskModule.render(contentWrapper);
+                    break;
+                default:
+                    this.showError('Página no encontrada');
+            }
+            
+            // Registrar navegación
+            this.auth.logAdminActivity('page_view', { page });
+            
+        } catch (error) {
+            console.error(`Error mostrando página ${page}:`, error);
+            this.showError(`Error al cargar la página: ${error.message}`);
         }
-        
-        // Registrar navegación
-        this.auth.logAdminActivity('page_view', { page });
-        
-    } catch (error) {
-        console.error(`Error mostrando página ${page}:`, error);
-        this.showError(`Error al cargar la página: ${error.message}`);
     }
-}
-
+    async showStudentDetail(studentId) {
+        const contentWrapper = document.getElementById('contentWrapper');
+        
+        // Cargar el módulo si no está cargado
+        const detailModule = await this.loadModule('student-detail');
+        
+        // Renderizar la vista detallada
+        await detailModule.render(contentWrapper, studentId);
+        
+        // Actualizar navegación
+        document.getElementById('pageTitle').textContent = 'Perfil del Estudiante';
+        document.getElementById('breadcrumbCurrent').textContent = 'Perfil del Estudiante';
+    }
     /**
      * Actualizar header de la página
      */

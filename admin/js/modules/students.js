@@ -353,8 +353,8 @@ export default class StudentsModule {
                     </button>
                 </td>
                 <td>
-                    <button class="btn-icon" onclick="window.studentsModule.viewStudentDetails('${student.id}')"
-                            title="Ver detalles">
+                    <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')"
+                            title="Ver perfil completo">
                         👁️
                     </button>
                     <button class="btn-icon" onclick="window.studentsModule.toggleStudentStatus('${student.id}', ${student.active})"
