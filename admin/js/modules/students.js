@@ -1,5 +1,4 @@
 // admin/js/modules/students.js
-// Módulo de gestión de estudiantes con análisis avanzado para oposiciones CNP
 
 export default class StudentsModule {
     constructor(supabaseClient, dashboardCore) {
@@ -11,21 +10,21 @@ export default class StudentsModule {
         
         // Configuración específica para oposiciones CNP
         this.cnpConfig = {
-            // Nota de corte histórica promedio
-            historicalCutoff: 5.5,
-            // Desviación típica de notas de corte
-            cutoffStdDev: 0.3,
-            // Peso de cada bloque temático en el examen
+            // Nota de corte del año pasado (2024)
+            historicalCutoff: 7.72,
+            // Desviación típica estimada de notas de corte (basada en históricos)
+            cutoffStdDev: 0.25,
+            // Peso de cada bloque temático en el examen (75-80% jurídico)
             topicWeights: {
-                juridico: 0.4,      // Temas 1-15: Derecho
-                sociales: 0.3,      // Temas 16-31: Ciencias Sociales
-                tecnico: 0.3        // Temas 32-45: Materias Técnicas
+                juridico: 0.77,     // Temas 1-26: Ciencias Jurídicas (77%)
+                sociales: 0.15,     // Temas 27-37: Ciencias Sociales (15%)
+                tecnico: 0.08       // Temas 38-45: Materias Técnico-Científicas (8%)
             },
-            // Factores de dificultad por bloque
+            // Factores de dificultad por bloque (ajustados según peso en examen)
             topicDifficulty: {
-                juridico: 1.2,      // Más difícil
-                sociales: 1.0,      // Dificultad media
-                tecnico: 0.9        // Relativamente más fácil
+                juridico: 1.0,      // Dificultad estándar (es el núcleo del examen)
+                sociales: 1.1,      // Ligeramente más difícil (menos preguntas, más específicas)
+                tecnico: 1.2        // Más difícil (muy pocas preguntas, muy técnicas)
             }
         };
     }
@@ -214,11 +213,11 @@ export default class StudentsModule {
      * Analizar rendimiento por bloques temáticos
      */
     async analyzeTopicPerformance(student, results) {
-        // Mapeo de temas a bloques
+        // Mapeo de temas a bloques según temario CNP real
         const topicToBlock = (topicNumber) => {
-            if (topicNumber <= 15) return 'juridico';
-            if (topicNumber <= 31) return 'sociales';
-            return 'tecnico';
+            if (topicNumber <= 26) return 'juridico';  // Ciencias Jurídicas
+            if (topicNumber <= 37) return 'sociales';  // Ciencias Sociales
+            return 'tecnico';  // Materias Técnico-Científicas (38-45)
         };
         
         // Analizar temas débiles reportados
@@ -1492,9 +1491,9 @@ export default class StudentsModule {
 
     getBlockName(block) {
         const names = {
-            'juridico': 'Jurídico (T1-15)',
-            'sociales': 'Ciencias Sociales (T16-31)',
-            'tecnico': 'Técnico-Científico (T32-45)'
+            'juridico': 'Jurídico (T1-26)',
+            'sociales': 'Ciencias Sociales (T27-37)',
+            'tecnico': 'Técnico-Científico (T38-45)'
         };
         return names[block] || block;
     }
