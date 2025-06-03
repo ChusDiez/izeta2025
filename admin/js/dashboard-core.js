@@ -105,6 +105,8 @@ export class DashboardCore {
             'medals': './modules/medals.js',
             'alerts': './modules/alerts.js',
             'risk': './modules/risk-analysis.js',
+            'bulk-users': './modules/bulk-users.js',
+            'elo-manual': './modules/elo-manual.js',
             'student-detail': './modules/student-detail.js'
         };
     }
@@ -338,6 +340,14 @@ export class DashboardCore {
                 case 'risk':
                     const riskModule = await this.loadModule('risk-analysis');
                     await riskModule.render(contentWrapper);
+                    break;
+                case 'bulk-users':
+                    const bulkUsersModule = await this.loadModule('bulk-users');
+                    await bulkUsersModule.render(contentWrapper);
+                    break;
+                 case 'elo-manual':
+                    const eloManualModule = await this.loadModule('elo-manual');
+                    await eloManualModule.render(contentWrapper);
                     break;
                 default:
                     this.showError('Página no encontrada');
