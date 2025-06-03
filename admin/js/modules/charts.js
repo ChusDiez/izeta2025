@@ -26,9 +26,10 @@ export default class ChartsModule {
         // Preparar datos
         const weeklyData = this.prepareWeeklyData(data.results);
         
-        // Crear canvas
-        container.innerHTML = '<canvas id="weeklyEvolutionChart"></canvas>';
-        const ctx = document.getElementById('weeklyEvolutionChart').getContext('2d');
+        // Crear canvas con ID único
+        const canvasId = `${containerId}_canvas`;
+        container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+        const ctx = document.getElementById(canvasId).getContext('2d');
 
         // Destruir gráfico existente si existe
         if (this.charts.has('weekly')) {
@@ -138,8 +139,10 @@ export default class ChartsModule {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        container.innerHTML = '<canvas id="cohortChart"></canvas>';
-        const ctx = document.getElementById('cohortChart').getContext('2d');
+        // Crear canvas con ID único
+        const canvasId = `${containerId}_canvas`;
+        container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+        const ctx = document.getElementById(canvasId).getContext('2d');
 
         if (this.charts.has('cohort')) {
             this.charts.get('cohort').destroy();
@@ -205,8 +208,9 @@ async renderRiskAnalysis(containerId, students) {
     const riskLevels = this.calculateRiskDistribution(students);
 
     // Crear el canvas dinámicamente
-    container.innerHTML = '<canvas></canvas>';
-    const canvas = container.querySelector('canvas');
+    const canvasId = `${containerId}_canvas`;
+    container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+    const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
 
     if (this.charts.has('risk')) {
