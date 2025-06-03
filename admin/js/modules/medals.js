@@ -55,50 +55,91 @@ export default class MedalsModule {
         };
     }
 
-    async render(container) {
-        // Cargar todas las medallas
-        const { data: medals } = await this.supabase
-            .from('user_medals')
-            .select(`
-                *,
-                users!inner(username, email, slug, cohort)
-            `)
-            .order('earned_at', { ascending: false });
+// /admin/js/modules/medals.js
+async render(container) {
+    try {
+        // Mostrar un indicador de carga mientras obtenemos los datos
+        container.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 1rem;">Cargando sistema de medallas...</p>
+            </div>
+        `;
         
-        // Estadísticas de medallas
+        // Intentar cargar las medallas con manejo de errores
+        let medals = [];
+        let medalsError = null;
+        
+        try {
+            const { data, error } = await this.supabase
+                .from('user_medals')
+                .select(`
+                    *,
+                    users!inner(username, email, slug, cohort)
+                `)
+                .order('earned_at', { ascending: false });
+            
+            if (error) {
+                medalsError = error;
+                console.error('Error cargando medallas:', error);
+            } else {
+                medals = data || [];
+            }
+        } catch (err) {
+            medalsError = err;
+            console.error('Error crítico al cargar medallas:', err);
+        }
+        
+        // Calcular estadísticas incluso si hay pocos datos
         const stats = this.calculateMedalStats(medals);
         
+        // Renderizar la página con los datos disponibles
         container.innerHTML = `
             <div class="medals-page">
                 <h2>🏅 Sistema de Medallas y Logros</h2>
                 
+                ${medalsError ? `
+                    <div class="alert alert-warning" style="background: #fef3c7; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <strong>⚠️ Aviso:</strong> Hubo un problema al cargar algunas medallas. 
+                        Mostrando información disponible.
+                    </div>
+                ` : ''}
+                
                 <!-- Estadísticas generales -->
-                <div class="medals-stats">
+                <div class="medals-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
                     <div class="stat-box">
-                        <div class="stat-number">${medals?.length || 0}</div>
+                        <div class="stat-icon" style="font-size: 2rem;">🏅</div>
+                        <div class="stat-number">${medals.length}</div>
                         <div class="stat-label">Medallas Otorgadas</div>
                     </div>
                     <div class="stat-box">
+                        <div class="stat-icon" style="font-size: 2rem;">👥</div>
                         <div class="stat-number">${stats.uniqueWinners}</div>
                         <div class="stat-label">Estudiantes con Medallas</div>
                     </div>
                     <div class="stat-box">
+                        <div class="stat-icon" style="font-size: 2rem;">⭐</div>
                         <div class="stat-number">${stats.mostCommonMedal}</div>
                         <div class="stat-label">Medalla Más Común</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon" style="font-size: 2rem;">💯</div>
+                        <div class="stat-number">${stats.totalPoints}</div>
+                        <div class="stat-label">Puntos Totales</div>
                     </div>
                 </div>
                 
                 <!-- Definiciones de medallas -->
                 <div class="medals-definitions">
                     <h3>📋 Tipos de Medallas</h3>
-                    <div class="medals-grid">
+                    <div class="medals-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0;">
                         ${Object.entries(this.medalDefinitions).map(([key, medal]) => `
-                            <div class="medal-definition">
-                                <div class="medal-icon">${medal.icon}</div>
-                                <div class="medal-info">
-                                    <strong>${medal.name}</strong>
-                                    <p>${medal.description}</p>
-                                    <span class="medal-points">${medal.points} puntos</span>
+                            <div class="medal-definition" style="background: #f9fafb; padding: 1rem; border-radius: 8px; display: flex; align-items: center; gap: 1rem;">
+                                <div class="medal-icon" style="font-size: 2.5rem;">${medal.icon}</div>
+                                <div class="medal-info" style="flex: 1;">
+                                    <strong style="display: block; margin-bottom: 0.25rem;">${medal.name}</strong>
+                                    <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">${medal.description}</p>
+                                    <span class="medal-points" style="color: #10b981; font-weight: 600;">${medal.points} puntos</span>
                                 </div>
                             </div>
                         `).join('')}
@@ -106,8 +147,8 @@ export default class MedalsModule {
                 </div>
                 
                 <!-- Acciones -->
-                <div class="medal-actions">
-                    <button class="btn btn-primary" onclick="window.medalsModule.checkAndAwardMedals()">
+                <div class="medal-actions" style="margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="window.medalsModule.checkAndAwardMedalsWithFeedback()">
                         🔄 Verificar y Otorgar Medallas Pendientes
                     </button>
                     <button class="btn btn-secondary" onclick="window.medalsModule.exportMedalsReport()">
@@ -116,26 +157,150 @@ export default class MedalsModule {
                 </div>
                 
                 <!-- Hall of Fame -->
-                <div class="hall-of-fame">
-                    <h3>🌟 Hall of Fame - Top 10 Medallistas</h3>
-                    <div class="fame-list">
-                        ${this.renderHallOfFame(medals)}
+                <div class="hall-of-fame table-card">
+                    <div class="table-header">
+                        <h3>🌟 Hall of Fame - Top 10 Medallistas</h3>
+                    </div>
+                    <div class="fame-list" style="padding: 1rem;">
+                        ${medals.length > 0 ? 
+                            this.renderHallOfFame(medals) : 
+                            '<p style="text-align: center; color: #6b7280;">No hay medallistas aún. ¡Sé el primero en ganar una medalla!</p>'
+                        }
                     </div>
                 </div>
                 
                 <!-- Medallas recientes -->
-                <div class="recent-medals">
-                    <h3>🆕 Medallas Recientes</h3>
-                    <div class="medals-list">
-                        ${medals?.slice(0, 20).map(medal => this.renderMedalItem(medal)).join('') || 
-                          '<p>No hay medallas otorgadas aún</p>'}
+                <div class="recent-medals table-card" style="margin-top: 2rem;">
+                    <div class="table-header">
+                        <h3>🆕 Medallas Recientes</h3>
+                    </div>
+                    <div class="medals-list" style="padding: 1rem;">
+                        ${medals.length > 0 ? 
+                            medals.slice(0, 20).map(medal => this.renderMedalItem(medal)).join('') : 
+                            '<p style="text-align: center; color: #6b7280;">No hay medallas otorgadas aún. Completa los desafíos para ganar medallas.</p>'
+                        }
                     </div>
                 </div>
             </div>
         `;
         
+        // Guardar referencia global para eventos
         window.medalsModule = this;
+        
+        // Log de éxito
+        console.log(`Módulo de medallas cargado: ${medals.length} medallas encontradas`);
+        
+    } catch (error) {
+        console.error('Error crítico en módulo de medallas:', error);
+        
+        // Mostrar un mensaje de error amigable con opciones
+        container.innerHTML = `
+            <div class="error-container" style="background: #fee2e2; border: 1px solid #dc2626; padding: 2rem; border-radius: 8px; margin: 2rem auto; max-width: 600px;">
+                <h3 style="color: #991b1b; margin-bottom: 1rem;">❌ Error al cargar el módulo de medallas</h3>
+                <p style="margin-bottom: 1rem;">No se pudo cargar el sistema de medallas. Esto puede deberse a:</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem;">
+                    <li>Problemas de conexión con la base de datos</li>
+                    <li>Permisos insuficientes</li>
+                    <li>Error temporal del servidor</li>
+                </ul>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="window.dashboardAdmin.refreshData()">
+                        🔄 Reintentar
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.dashboardAdmin.showPage('overview')">
+                        🏠 Volver al inicio
+                    </button>
+                </div>
+                <details style="margin-top: 1rem;">
+                    <summary style="cursor: pointer; color: #6b7280;">Detalles técnicos</summary>
+                    <pre style="margin-top: 0.5rem; padding: 0.5rem; background: #f3f4f6; border-radius: 4px; font-size: 0.75rem; overflow-x: auto;">
+${error.message}
+${error.stack || 'No hay información adicional de stack trace'}
+                    </pre>
+                </details>
+            </div>
+        `;
     }
+}
+
+// Agregar este método mejorado también
+async checkAndAwardMedalsWithFeedback() {
+    try {
+        // Deshabilitar el botón temporalmente para evitar múltiples clics
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '⏳ Procesando...';
+        
+        // Llamar al método original
+        await this.checkAndAwardMedals();
+        
+        // Restaurar el botón
+        button.disabled = false;
+        button.innerHTML = originalText;
+        
+    } catch (error) {
+        console.error('Error al verificar medallas:', error);
+        this.dashboard.showNotification('error', 'Error al procesar medallas. Por favor, intenta de nuevo.');
+        
+        // Restaurar el botón en caso de error
+        if (event && event.target) {
+            event.target.disabled = false;
+            event.target.innerHTML = '🔄 Verificar y Otorgar Medallas Pendientes';
+        }
+    }
+}
+
+// Mejorar también el método calculateMedalStats para manejar casos edge
+calculateMedalStats(medals) {
+    // Validar entrada
+    if (!medals || !Array.isArray(medals) || medals.length === 0) {
+        return {
+            uniqueWinners: 0,
+            mostCommonMedal: 'Ninguna aún',
+            totalPoints: 0
+        };
+    }
+    
+    try {
+        // Calcular usuarios únicos
+        const uniqueUsers = new Set(medals.map(m => m.user_id));
+        
+        // Contar medallas por tipo
+        const medalCounts = medals.reduce((acc, medal) => {
+            if (medal.medal_type) {
+                acc[medal.medal_type] = (acc[medal.medal_type] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        
+        // Encontrar la más común
+        const mostCommon = Object.entries(medalCounts)
+            .sort(([,a], [,b]) => b - a)[0];
+        
+        // Calcular puntos totales
+        const totalPoints = medals.reduce((sum, medal) => {
+            const points = this.medalDefinitions[medal.medal_type]?.points || 0;
+            return sum + points;
+        }, 0);
+        
+        return {
+            uniqueWinners: uniqueUsers.size,
+            mostCommonMedal: mostCommon ? 
+                (this.medalDefinitions[mostCommon[0]]?.name || mostCommon[0]) : 
+                'Ninguna aún',
+            totalPoints: totalPoints
+        };
+        
+    } catch (error) {
+        console.error('Error calculando estadísticas de medallas:', error);
+        return {
+            uniqueWinners: 0,
+            mostCommonMedal: 'Error al calcular',
+            totalPoints: 0
+        };
+    }
+}
 
     calculateMedalStats(medals) {
         if (!medals || medals.length === 0) {

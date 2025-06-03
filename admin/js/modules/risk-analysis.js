@@ -12,57 +12,131 @@ export default class RiskAnalysisModule {
         };
     }
 
-    async render(container) {
-        // Calcular métricas de riesgo para todos los estudiantes
-        const students = await this.calculateComprehensiveRisk();
+// /admin/js/modules/risk-analysis.js
+async render(container) {
+    try {
+        // Asegurar que Chart.js esté disponible
+        await (window.ensureChartJS ? window.ensureChartJS() : Promise.resolve());
+        
+        // Calcular estadísticas básicas de riesgo
+        const students = this.dashboard.data.students;
+        const atRisk = students.filter(s => (s.probability_pass || 50) < 50);
+        const criticalRisk = students.filter(s => (s.probability_pass || 50) < 30);
         
         container.innerHTML = `
             <div class="risk-analysis-page">
-                <h2>⚠️ Análisis de Riesgo Avanzado</h2>
+                <h2>⚠️ Análisis de Riesgo</h2>
                 
-                <!-- Resumen ejecutivo -->
-                ${this.renderExecutiveSummary(students)}
-                
-                <!-- Matriz de riesgo -->
-                <div class="risk-matrix-container">
-                    <h3>📊 Matriz de Riesgo (Probabilidad vs Impacto)</h3>
-                    <div id="riskMatrix" class="risk-matrix">
-                        <!-- Se llenará con D3.js o Chart.js -->
+                <!-- Resumen de riesgo -->
+                <div class="risk-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div class="stat-icon danger">⚠️</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Estudiantes en Riesgo</div>
+                                <div class="stat-value">${atRisk.length}</div>
+                                <div class="stat-change">${((atRisk.length / students.length) * 100).toFixed(1)}% del total</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card danger" style="border-color: #dc2626;">
+                        <div class="stat-header">
+                            <div class="stat-icon danger">🚨</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Riesgo Crítico</div>
+                                <div class="stat-value">${criticalRisk.length}</div>
+                                <div class="stat-change">P(aprobar) < 30%</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Estudiantes de alto riesgo -->
-                <div class="high-risk-section">
-                    <h3>🚨 Estudiantes de Alto Riesgo (Top 20)</h3>
-                    <div class="risk-cards">
-                        ${students
-                            .filter(s => s.riskScore > 70)
-                            .slice(0, 20)
-                            .map(s => this.renderRiskCard(s))
-                            .join('')}
+                <!-- Lista de estudiantes en riesgo -->
+                <div class="risk-list table-card">
+                    <div class="table-header">
+                        <h3>Estudiantes que requieren atención inmediata</h3>
                     </div>
-                </div>
-                
-                <!-- Acciones recomendadas -->
-                <div class="recommended-actions">
-                    <h3>💡 Acciones Recomendadas</h3>
-                    ${this.renderRecommendedActions(students)}
-                </div>
-                
-                <!-- Exportar informe -->
-                <div class="export-section">
-                    <button class="btn btn-primary" onclick="window.riskModule.exportRiskReport()">
-                        📄 Generar Informe de Riesgo PDF
-                    </button>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Cohorte</th>
+                                    <th>Probabilidad</th>
+                                    <th>Score Promedio</th>
+                                    <th>Tendencia</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${atRisk.slice(0, 20).map(student => `
+                                    <tr>
+                                        <td><strong>${student.username}</strong></td>
+                                        <td><span class="badge badge-info">${student.cohort}</span></td>
+                                        <td>
+                                            <span class="risk-indicator ${this.getRiskClass(student.probability_pass)}">
+                                                ${(student.probability_pass || 50).toFixed(0)}%
+                                            </span>
+                                        </td>
+                                        <td>${(student.average_score || 0).toFixed(1)}/10</td>
+                                        <td>${this.getTrendIcon(student.trend_direction)}</td>
+                                        <td>
+                                            <button class="btn-icon" onclick="window.dashboardAdmin.showPage('students')" title="Ver detalles">
+                                                👁️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${atRisk.length > 20 ? `
+                        <div style="padding: 1rem; text-align: center; background: #f9fafb;">
+                            <p>Mostrando 20 de ${atRisk.length} estudiantes en riesgo</p>
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
         
         window.riskModule = this;
         
-        // Renderizar matriz de riesgo
-        await this.renderRiskMatrix(students);
+        // Si Chart.js está disponible, puedes renderizar la matriz de riesgo
+        if (typeof Chart !== 'undefined') {
+            // Aquí puedes llamar a renderRiskMatrix de forma segura
+            console.log('Chart.js disponible para gráficos de riesgo');
+        }
+        
+    } catch (error) {
+        console.error('Error en módulo de riesgo:', error);
+        container.innerHTML = `
+            <div class="error-container">
+                <h3>❌ Error al cargar el módulo</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
     }
+}
+
+// Agregar estos métodos auxiliares si no existen
+getRiskClass(probability) {
+    if (!probability) probability = 50;
+    if (probability < 30) return 'risk-critical';
+    if (probability < 50) return 'risk-high';
+    if (probability < 70) return 'risk-medium';
+    return 'risk-low';
+}
+
+getTrendIcon(trend) {
+    const icons = {
+        'up': '📈',
+        'down': '📉',
+        'stable': '➡️',
+        'neutral': '⚪'
+    };
+    return icons[trend] || '⚪';
+}
 
     async calculateComprehensiveRisk() {
         const students = [...this.dashboard.data.students];

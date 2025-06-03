@@ -75,6 +75,13 @@ export default class SimulationsModule {
             `;
         }
 
+        // Calcular estadísticas en tiempo real si no están disponibles
+        const results = this.dashboard.data.results.filter(r => r.simulation_id === simulation.id);
+        const actualParticipants = results.length;
+        const actualAverage = results.length > 0 
+            ? (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(2)
+            : 'N/A';
+
         return `
             <div class="active-simulation-card">
                 <h3>🟢 Simulacro Activo: RF${simulation.week_number}</h3>
@@ -85,11 +92,11 @@ export default class SimulationsModule {
                     </div>
                     <div class="stat">
                         <span class="stat-label">Participantes:</span>
-                        <span class="stat-value">${simulation.total_participants || 0}</span>
+                        <span class="stat-value">${actualParticipants}</span>
                     </div>
                     <div class="stat">
                         <span class="stat-label">Score Promedio:</span>
-                        <span class="stat-value">${simulation.average_score ? (simulation.average_score).toFixed(2) : 'N/A'}/10</span>
+                        <span class="stat-value">${actualAverage}/10</span>
                     </div>
                 </div>
                 <button class="btn btn-secondary" onclick="window.simulationsModule.viewDetails('${simulation.id}')">
@@ -107,6 +114,13 @@ export default class SimulationsModule {
             'future': 'secondary'
         };
 
+        // Calcular participantes reales
+        const results = this.dashboard.data.results.filter(r => r.simulation_id === simulation.id);
+        const actualParticipants = results.length;
+        const actualAverage = results.length > 0 
+            ? (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(2)
+            : 'N/A';
+
         return `
             <tr>
                 <td><strong>RF${simulation.week_number}</strong></td>
@@ -116,8 +130,8 @@ export default class SimulationsModule {
                         ${this.getStatusLabel(simulation.status)}
                     </span>
                 </td>
-                <td>${simulation.total_participants || 0}</td>
-                <td>${simulation.average_score ? (simulation.average_score).toFixed(2) : 'N/A'}/10</td>
+                <td>${actualParticipants}</td>
+                <td>${actualAverage}/10</td>
                 <td>
                     ${isProcessed ? 
                         `✅ ${this.formatDate(simulation.processed_at)}` : 

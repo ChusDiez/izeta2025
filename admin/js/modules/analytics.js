@@ -6,112 +6,75 @@ export default class AnalyticsModule {
         this.charts = new Map();
     }
 
-    async render(container) {
+// /admin/js/modules/analytics.js
+async render(container) {
+    try {
+        // Asegurar que Chart.js esté disponible
+        await (window.ensureChartJS ? window.ensureChartJS() : Promise.resolve());
+        
         container.innerHTML = `
             <div class="analytics-page">
                 <h2>📊 Centro de Análisis y Tendencias</h2>
                 
-                <!-- Filtros de período -->
-                <div class="analytics-filters">
-                    <div class="filter-group">
-                        <label>Período de análisis:</label>
-                        <select id="analyticsPeriod" onchange="window.analyticsModule.updateAnalysis()">
-                            <option value="month">Último mes</option>
-                            <option value="quarter">Último trimestre</option>
-                            <option value="semester">Último semestre</option>
-                            <option value="all">Todo</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Comparar cohortes:</label>
-                        <input type="checkbox" id="compareCohorts" checked 
-                               onchange="window.analyticsModule.updateAnalysis()">
-                    </div>
+                <!-- Mensaje temporal mientras desarrollas los gráficos -->
+                <div class="message-card" style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+                    <h3>🚧 Módulo en desarrollo</h3>
+                    <p>El módulo de análisis avanzado está siendo mejorado.</p>
+                    <p>Mientras tanto, puedes ver estadísticas básicas en la Vista General.</p>
                 </div>
                 
-                <!-- Grid de gráficos -->
-                <div class="analytics-grid">
-                    <!-- Evolución de scores -->
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>📈 Evolución de Puntuaciones</h3>
+                <!-- Estadísticas básicas que funcionan sin Chart.js -->
+                <div class="basic-stats" style="background: white; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                    <h4>Estadísticas Rápidas</h4>
+                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div class="stat-box" style="background: #f3f4f6; padding: 1rem; border-radius: 6px;">
+                            <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: #1e3a8a;">
+                                ${this.dashboard.data.students.length}
+                            </div>
+                            <div class="stat-label">Total de estudiantes</div>
                         </div>
-                        <div class="chart-body">
-                            <canvas id="scoresEvolutionChart"></canvas>
+                        <div class="stat-box" style="background: #f3f4f6; padding: 1rem; border-radius: 6px;">
+                            <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: #10b981;">
+                                ${this.dashboard.data.results.length}
+                            </div>
+                            <div class="stat-label">Resultados registrados</div>
                         </div>
-                    </div>
-                    
-                    <!-- Distribución de riesgo -->
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>⚠️ Distribución de Riesgo Actual</h3>
-                        </div>
-                        <div class="chart-body">
-                            <canvas id="riskDistributionChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Participación por día -->
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>📅 Patrón de Participación</h3>
-                        </div>
-                        <div class="chart-body">
-                            <canvas id="participationPatternChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Progresión ELO -->
-                    <div class="chart-card span-2">
-                        <div class="chart-header">
-                            <h3>⚡ Progresión ELO por Cohorte</h3>
-                        </div>
-                        <div class="chart-body">
-                            <canvas id="eloProgressionChart"></canvas>
+                        <div class="stat-box" style="background: #f3f4f6; padding: 1rem; border-radius: 6px;">
+                            <div class="stat-number" style="font-size: 2rem; font-weight: bold; color: #f59e0b;">
+                                ${this.dashboard.data.simulations.filter(s => s.status === 'completed').length}
+                            </div>
+                            <div class="stat-label">Simulacros completados</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Insights automáticos -->
-                <div class="insights-section">
-                    <h3>💡 Insights Detectados</h3>
-                    <div id="insightsList" class="insights-list">
-                        <!-- Se llenará dinámicamente -->
-                    </div>
-                </div>
-                
-                <!-- Tabla de tendencias individuales -->
-                <div class="table-card">
-                    <div class="table-header">
-                        <h2>📊 Tendencias Individuales Destacadas</h2>
-                    </div>
-                    <div class="table-wrapper">
-                        <table id="trendsTable">
-                            <thead>
-                                <tr>
-                                    <th>Estudiante</th>
-                                    <th>Cohorte</th>
-                                    <th>Tendencia</th>
-                                    <th>Δ Score (3 últ.)</th>
-                                    <th>Δ ELO (mes)</th>
-                                    <th>Consistencia</th>
-                                    <th>Predicción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="trendsTableBody">
-                                <!-- Se llenará dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <!-- Puedes agregar más contenido básico aquí -->
             </div>
         `;
         
         window.analyticsModule = this;
         
-        // Cargar análisis inicial
-        await this.updateAnalysis();
+        // Si Chart.js se cargó correctamente, puedes intentar renderizar gráficos simples
+        if (typeof Chart !== 'undefined') {
+            // Aquí puedes llamar a tus métodos de gráficos originales de forma segura
+            console.log('Chart.js disponible, puedes renderizar gráficos');
+        }
+        
+    } catch (error) {
+        console.error('Error en módulo de análisis:', error);
+        container.innerHTML = `
+            <div class="error-container" style="background: #fee2e2; border: 1px solid #dc2626; padding: 1.5rem; border-radius: 8px;">
+                <h3>❌ Error al cargar el módulo</h3>
+                <p>${error.message}</p>
+                <p style="margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="window.dashboardAdmin.refreshData()">
+                        🔄 Reintentar
+                    </button>
+                </p>
+            </div>
+        `;
     }
+}
 
     async updateAnalysis() {
         const period = document.getElementById('analyticsPeriod').value;

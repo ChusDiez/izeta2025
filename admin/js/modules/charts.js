@@ -193,72 +193,78 @@ export default class ChartsModule {
     /**
      * Renderizar gráfico de análisis de riesgo
      */
-    async renderRiskAnalysis(containerId, students) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+// En charts.js, modificar el método renderRiskAnalysis:
+async renderRiskAnalysis(containerId, students) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        console.warn(`Contenedor ${containerId} no encontrado`);
+        return;
+    }
 
-        // Agrupar por niveles de riesgo
-        const riskLevels = this.calculateRiskDistribution(students);
+    // Agrupar por niveles de riesgo
+    const riskLevels = this.calculateRiskDistribution(students);
 
-        container.innerHTML = '<canvas id="riskChart"></canvas>';
-        const ctx = document.getElementById('riskChart').getContext('2d');
+    // Crear el canvas dinámicamente
+    container.innerHTML = '<canvas></canvas>';
+    const canvas = container.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
 
-        if (this.charts.has('risk')) {
-            this.charts.get('risk').destroy();
-        }
+    if (this.charts.has('risk')) {
+        this.charts.get('risk').destroy();
+    }
 
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Crítico (<30%)', 'Alto (30-50%)', 'Medio (50-70%)', 'Bajo (>70%)'],
-                datasets: [{
-                    label: 'Número de Estudiantes',
-                    data: [
-                        riskLevels.critical,
-                        riskLevels.high,
-                        riskLevels.medium,
-                        riskLevels.low
-                    ],
-                    backgroundColor: [
-                        this.chartColors.danger,
-                        this.chartColors.warning,
-                        this.chartColors.info,
-                        this.chartColors.success
-                    ]
-                }]
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Crítico (<30%)', 'Alto (30-50%)', 'Medio (50-70%)', 'Bajo (>70%)'],
+            datasets: [{
+                label: 'Número de Estudiantes',
+                data: [
+                    riskLevels.critical,
+                    riskLevels.high,
+                    riskLevels.medium,
+                    riskLevels.low
+                ],
+                backgroundColor: [
+                    this.chartColors.danger,
+                    this.chartColors.warning,
+                    this.chartColors.info,
+                    this.chartColors.success
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Riesgo - Probabilidad de Aprobar'
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
+            scales: {
+                y: {
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Distribución de Riesgo - Probabilidad de Aprobar'
+                        text: 'Estudiantes'
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Estudiantes'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Nivel de Riesgo'
-                        }
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Nivel de Riesgo'
                     }
                 }
             }
-        });
+        }
+    });
 
-        this.charts.set('risk', chart);
-    }
+    this.charts.set('risk', chart);
+}
 
     /**
      * Renderizar gráfico de tendencias de ELO

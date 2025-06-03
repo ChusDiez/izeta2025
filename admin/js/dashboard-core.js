@@ -3,6 +3,27 @@
 
 import { getAuthInstance } from './modules/auth.js';
 
+window.ensureChartJS = function() {
+    return new Promise((resolve) => {
+        if (typeof Chart !== 'undefined') {
+            resolve();
+        } else {
+            console.warn('Chart.js no está cargado, intentando cargar...');
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = () => {
+                console.log('Chart.js cargado exitosamente');
+                resolve();
+            };
+            script.onerror = () => {
+                console.error('Error al cargar Chart.js');
+                resolve(); // Continuar de todos modos
+            };
+            document.head.appendChild(script);
+        }
+    });
+}
+
 export class DashboardCore {
     constructor(supabaseClient) {
         this.supabase = supabaseClient;
@@ -77,6 +98,7 @@ export class DashboardCore {
         this.availableModules = {
             'charts': './modules/charts.js',
             'students': './modules/students.js',
+            'results': './modules/results.js',
             'simulations': './modules/simulations.js',
             'analytics': './modules/analytics.js',
             'exports': './modules/exports.js',
@@ -271,49 +293,63 @@ export class DashboardCore {
     /**
      * Mostrar página específica
      */
-    async showPage(page) {
-        this.currentPage = page;
-        const contentWrapper = document.getElementById('contentWrapper');
-        
-        // Actualizar UI
-        this.updatePageHeader(page);
-        
-        // Mostrar loading
-        contentWrapper.innerHTML = this.getLoadingHTML();
-        
-        try {
-            // Renderizar según la página
-            switch(page) {
-                case 'overview':
-                    await this.renderOverviewPage();
-                    break;
-                case 'students':
-                    const studentsModule = await this.loadModule('students');
-                    await studentsModule.render(contentWrapper, this.getFilteredData());
-                    break;
-                case 'results':
-                    await this.renderResultsPage();
-                    break;
-                case 'simulations':
-                    const simulationsModule = await this.loadModule('simulations');
-                    await simulationsModule.render(contentWrapper, this.data.simulations);
-                    break;
-                case 'alerts':
-                    const alertsModule = await this.loadModule('alerts');
-                    await alertsModule.render(contentWrapper, this.data.alerts);
-                    break;
-                default:
-                    this.showError('Página no encontrada');
-            }
-            
-            // Registrar navegación
-            this.auth.logAdminActivity('page_view', { page });
-            
-        } catch (error) {
-            console.error(`Error mostrando página ${page}:`, error);
-            this.showError(`Error al cargar la página: ${error.message}`);
+async showPage(page) {
+    this.currentPage = page;
+    const contentWrapper = document.getElementById('contentWrapper');
+    
+    // Actualizar UI
+    this.updatePageHeader(page);
+    
+    // Mostrar loading
+    contentWrapper.innerHTML = this.getLoadingHTML();
+    
+    try {
+        // Renderizar según la página
+        switch(page) {
+            case 'overview':
+                await this.renderOverviewPage();
+                break;
+            case 'students':
+                const studentsModule = await this.loadModule('students');
+                await studentsModule.render(contentWrapper, this.getFilteredData());
+                break;
+            case 'results':
+                // CAMBIO: Usar el módulo de resultados
+                const resultsModule = await this.loadModule('results');
+                await resultsModule.render(contentWrapper, this.getFilteredData());
+                break;
+            case 'simulations':
+                const simulationsModule = await this.loadModule('simulations');
+                await simulationsModule.render(contentWrapper, this.data.simulations);
+                break;
+            case 'alerts':
+                const alertsModule = await this.loadModule('alerts');
+                await alertsModule.render(contentWrapper, this.data.alerts);
+                break;
+            case 'analytics':
+                const analyticsModule = await this.loadModule('analytics');
+                await analyticsModule.render(contentWrapper);
+                break;
+            case 'medals':
+                const medalsModule = await this.loadModule('medals');
+                await medalsModule.render(contentWrapper);
+                break;
+            case 'risk':
+                const riskModule = await this.loadModule('risk-analysis');
+                await riskModule.render(contentWrapper);
+                break;
+            default:
+                this.showError('Página no encontrada');
         }
+        
+        // Registrar navegación
+        this.auth.logAdminActivity('page_view', { page });
+        
+    } catch (error) {
+        console.error(`Error mostrando página ${page}:`, error);
+        this.showError(`Error al cargar la página: ${error.message}`);
     }
+}
 
     /**
      * Actualizar header de la página
