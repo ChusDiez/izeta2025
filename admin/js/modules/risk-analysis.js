@@ -12,12 +12,10 @@ export default class RiskAnalysisModule {
         };
     }
 
+
 // /admin/js/modules/risk-analysis.js
 async render(container) {
     try {
-        // Asegurar que Chart.js esté disponible
-        await (window.ensureChartJS ? window.ensureChartJS() : Promise.resolve());
-        
         // Calcular estadísticas básicas de riesgo
         const students = this.dashboard.data.students;
         const atRisk = students.filter(s => (s.probability_pass || 50) < 50);
@@ -50,12 +48,32 @@ async render(container) {
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-icon success">✅</div>
+                            <div class="stat-content">
+                                <div class="stat-label">Sin Riesgo</div>
+                                <div class="stat-value">${students.filter(s => (s.probability_pass || 50) >= 70).length}</div>
+                                <div class="stat-change">P(aprobar) ≥ 70%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Distribución por niveles de riesgo -->
+                <div class="risk-distribution card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <h3>📊 Distribución por Niveles de Riesgo</h3>
+                    ${this.renderRiskDistributionBars(students)}
                 </div>
                 
                 <!-- Lista de estudiantes en riesgo -->
                 <div class="risk-list table-card">
                     <div class="table-header">
                         <h3>Estudiantes que requieren atención inmediata</h3>
+                        <button class="btn btn-primary" onclick="window.riskModule.exportRiskReport()">
+                            📊 Exportar Informe de Riesgo
+                        </button>
                     </div>
                     <div class="table-wrapper">
                         <table>
@@ -66,7 +84,8 @@ async render(container) {
                                     <th>Probabilidad</th>
                                     <th>Score Promedio</th>
                                     <th>Tendencia</th>
-                                    <th>Acción</th>
+                                    <th>Nivel de Riesgo</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -82,8 +101,16 @@ async render(container) {
                                         <td>${(student.average_score || 0).toFixed(1)}/10</td>
                                         <td>${this.getTrendIcon(student.trend_direction)}</td>
                                         <td>
-                                            <button class="btn-icon" onclick="window.dashboardAdmin.showPage('students')" title="Ver detalles">
+                                            <span class="badge badge-${this.getRiskBadgeClass(student.probability_pass)}">
+                                                ${this.getRiskLevelText(student.probability_pass)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')" title="Ver detalles">
                                                 👁️
+                                            </button>
+                                            <button class="btn-icon" onclick="window.riskModule.createIntervention('${student.id}')" title="Crear intervención">
+                                                💬
                                             </button>
                                         </td>
                                     </tr>
@@ -94,19 +121,22 @@ async render(container) {
                     ${atRisk.length > 20 ? `
                         <div style="padding: 1rem; text-align: center; background: #f9fafb;">
                             <p>Mostrando 20 de ${atRisk.length} estudiantes en riesgo</p>
+                            <button class="btn btn-secondary" onclick="window.riskModule.showAllAtRisk()">
+                                Ver todos
+                            </button>
                         </div>
                     ` : ''}
+                </div>
+                
+                <!-- Recomendaciones generales -->
+                <div class="recommendations-section card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+                    <h3>💡 Recomendaciones Generales</h3>
+                    ${this.renderGeneralRecommendations(students, atRisk, criticalRisk)}
                 </div>
             </div>
         `;
         
         window.riskModule = this;
-        
-        // Si Chart.js está disponible, puedes renderizar la matriz de riesgo
-        if (typeof Chart !== 'undefined') {
-            // Aquí puedes llamar a renderRiskMatrix de forma segura
-            console.log('Chart.js disponible para gráficos de riesgo');
-        }
         
     } catch (error) {
         console.error('Error en módulo de riesgo:', error);

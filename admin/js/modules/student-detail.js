@@ -506,7 +506,79 @@ Un saludo,
             </div>
         `;
     }
+    getRiskText(probability) {
+        if (probability >= 80) return 'Excelente';
+        if (probability >= 60) return 'Buena';
+        if (probability >= 40) return 'Preocupante';
+        return 'Crítica';
+    }
     
+    getTrendIndicator(trend) {
+        if (trend === 'up') return '↗️';
+        if (trend === 'down') return '↘️';
+        return '→';
+    }
+    
+    renderRiskAlert(student, analytics) {
+        const probability = student.probability_pass || 50;
+        
+        if (probability >= 50) {
+            return ''; // No mostrar alerta si no hay riesgo
+        }
+        
+        const riskLevel = probability < 30 ? 'critical' : 'high';
+        const riskClass = riskLevel === 'critical' ? 'danger' : 'warning';
+        
+        return `
+            <div class="risk-alert ${riskClass}">
+                <div class="risk-alert-icon">
+                    ${riskLevel === 'critical' ? '🚨' : '⚠️'}
+                </div>
+                <div class="risk-alert-content">
+                    <h3>Estudiante en Riesgo ${riskLevel === 'critical' ? 'Crítico' : 'Alto'}</h3>
+                    <p>
+                        Con una probabilidad de aprobar del ${probability}%, este estudiante requiere 
+                        ${riskLevel === 'critical' ? 'intervención inmediata' : 'seguimiento cercano'}.
+                    </p>
+                    <div class="risk-factors">
+                        ${this.getRiskFactors(student, analytics)}
+                    </div>
+                    <div class="risk-recommendations">
+                        <h4>Acciones Recomendadas:</h4>
+                        <ul>
+                            ${this.getRiskRecommendations(student, analytics).map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    getRiskFactors(student, analytics) {
+        const factors = [];
+        
+        if (student.average_score < 6) {
+            factors.push(`📉 Score promedio bajo: ${student.average_score?.toFixed(2) || 'N/A'}/10`);
+        }
+        
+        if (analytics.participationRate < 50) {
+            factors.push(`📅 Baja participación: ${analytics.participationRate}%`);
+        }
+        
+        if (analytics.scoreTrend === 'down') {
+            factors.push(`📊 Tendencia negativa en puntuaciones`);
+        }
+        
+        if (student.current_streak === 0) {
+            factors.push(`🔥 Sin racha activa de participación`);
+        }
+        
+        return factors.length > 0 ? 
+            `<ul class="risk-factor-list">${factors.map(f => `<li>${f}</li>`).join('')}</ul>` :
+            '<p>No se identificaron factores de riesgo específicos.</p>';
+    }
+    
+
     renderInsights(analytics) {
         const insights = [];
         
@@ -839,5 +911,29 @@ Un saludo,
         if (trend === 'up') return '↗️';
         if (trend === 'down') return '↘️';
         return '→';
+    }
+        getRiskRecommendations(student, analytics) {
+        const recommendations = [];
+        const probability = student.probability_pass || 50;
+        
+        if (probability < 30) {
+            recommendations.push('Programar sesión individual urgente');
+            recommendations.push('Evaluar necesidad de plan de refuerzo personalizado');
+            recommendations.push('Contactar inmediatamente para evaluar situación');
+        } else if (probability < 50) {
+            recommendations.push('Aumentar frecuencia de seguimiento');
+            recommendations.push('Identificar temas específicos de dificultad');
+            recommendations.push('Ofrecer recursos adicionales de estudio');
+        }
+        
+        if (student.average_score < 6) {
+            recommendations.push('Revisar conceptos fundamentales');
+        }
+        
+        if (analytics.participationRate < 50) {
+            recommendations.push('Incentivar participación regular en simulacros');
+        }
+        
+        return recommendations;
     }
 }
