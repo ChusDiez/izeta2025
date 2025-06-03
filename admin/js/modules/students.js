@@ -63,7 +63,7 @@ export default class StudentsModule {
                 student.z_score = ((student.average_score - mean) / stdDev).toFixed(2);
                 
                 // Probabilidad de aprobar basada en z-score y otros factores
-                const baseProbability = this.calculateProbabilityFromZScore(student.z_score);
+                const baseProbability = this.calculateAdvancedProbability(student.z_score);
                 const streakBonus = student.current_streak * 0.5; // 0.5% por semana de racha
                 const participationPenalty = student.total_simulations < 4 ? -10 : 0;
                 
@@ -83,19 +83,61 @@ export default class StudentsModule {
     /**
      * Calcular probabilidad desde z-score usando distribución normal
      */
-    calculateProbabilityFromZScore(zScore) {
-        // Aproximación de la función de distribución acumulativa normal
-        const z = parseFloat(zScore);
-        const t = 1 / (1 + 0.2316419 * Math.abs(z));
-        const d = 0.3989423 * Math.exp(-z * z / 2);
-        const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
         
-        if (z > 0) {
-            return (1 - probability) * 100;
-        } else {
-            return probability * 100;
+        async calculateAdvancedProbability(student, results) {
+            // 1. Factor Base: Score promedio ponderado (más peso a resultados recientes)
+            const weightedScore = this.calculateWeightedAverage(results);
+            
+            // 2. Factor Tendencia: Usar regresión para ver si mejora o empeora
+            const trendFactor = this.calculateTrendFactor(results);
+            
+            // 3. Factor Consistencia: Penalizar alta variabilidad
+            const consistencyFactor = this.calculateConsistencyFactor(results);
+            
+            // 4. Factor Participación: No lineal
+            const participationFactor = this.calculateParticipationFactor(student, results);
+            
+            // 5. Factor Psicológico: Basado en stress_level promedio
+            const psychologicalFactor = this.calculatePsychologicalFactor(results);
+            
+            // 6. Factor de Mejora: Basado en review_time y cambios posteriores
+            const improvementFactor = this.calculateImprovementFactor(results);
+            
+            // 7. Factor Temporal: Ajustar según qué tan cerca estamos del examen
+            const temporalFactor = this.calculateTemporalFactor();
+            
+            // Modelo no lineal con pesos adaptativos
+            const probability = this.neuralNetworkModel({
+                weightedScore,
+                trendFactor,
+                consistencyFactor,
+                participationFactor,
+                psychologicalFactor,
+                improvementFactor,
+                temporalFactor
+            });
+            
+            return probability;
         }
-    }
+
+        // Ejemplo de cálculo de factor de mejora
+        calculateImprovementFactor(results) {
+            let improvementScore = 0;
+            
+            for (let i = 1; i < results.length; i++) {
+                const current = results[i];
+                const previous = results[i-1];
+                
+                // Si dedicó tiempo a revisar Y mejoró en el siguiente
+                if (previous.review_time > 30 && current.score > previous.score) {
+                    const improvement = current.score - previous.score;
+                    const reviewEfficiency = improvement / (previous.review_time / 60);
+                    improvementScore += reviewEfficiency;
+                }
+            }
+            
+            return Math.min(1, improvementScore / results.length);
+        }
 
     /**
      * Calcular tendencia basada en últimos resultados
