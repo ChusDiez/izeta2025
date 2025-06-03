@@ -181,47 +181,53 @@ export default class RiskAnalysisModule {
     // Renderizar fila de la tabla de riesgo
     renderRiskTableRow(student) {
         const mainFactors = this.getMainRiskFactors(student);
-        
+        const patterns = student.responsePatterns;
+        const hasPatternIssues = patterns?.hasEnoughData && 
+
+        Object.values(patterns.patterns).some(p => p.detected);
         return `
-            <tr>
-                <td>
-                    <strong>${student.username}</strong>
-                    <div style="font-size: 0.875rem; color: var(--text-secondary);">${student.email}</div>
-                </td>
-                <td><span class="badge badge-info">${student.cohort}</span></td>
-                <td>
-                    <span class="risk-indicator ${this.getRiskClass(student.probability_pass)}">
-                        ${(student.probability_pass || 50).toFixed(0)}%
-                    </span>
-                </td>
-                <td>${(student.average_score || 0).toFixed(1)}/10</td>
-                <td>${this.getTrendIcon(student.trend_direction)}</td>
-                <td>
-                    <div style="font-size: 0.875rem;">
-                        ${mainFactors.map(f => `<span class="risk-factor-tag">${f}</span>`).join(' ')}
-                    </div>
-                </td>
-                <td>
-                    <span class="badge badge-${this.getRiskBadgeClass(student.probability_pass)}">
-                        ${this.getRiskLevelText(student.probability_pass)}
-                    </span>
-                </td>
-                <td>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')" title="Ver detalles">
-                            👁️
+        <tr>
+            <td>
+                <strong>${student.username}</strong>
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">${student.email}</div>
+            </td>
+            <td><span class="badge badge-info">${student.cohort}</span></td>
+            <td>
+                <span class="risk-indicator ${this.getRiskClass(student.probability_pass)}">
+                    ${(student.probability_pass || 50).toFixed(0)}%
+                </span>
+            </td>
+            <td>${(student.average_score || 0).toFixed(1)}/10</td>
+            <td>${this.getTrendIcon(student.trend_direction)}</td>
+            <td>
+                <div style="font-size: 0.875rem;">
+                    ${mainFactors.map(f => `<span class="risk-factor-tag">${f}</span>`).join(' ')}
+                    ${hasPatternIssues ? '<span class="risk-factor-tag pattern-alert">⚠️ Patrones</span>' : ''}
+                </div>
+            </td>
+            <td>
+                <span class="badge badge-${this.getRiskBadgeClass(student.probability_pass)}">
+                    ${this.getRiskLevelText(student.probability_pass)}
+                </span>
+            </td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')" title="Ver detalles">
+                        👁️
+                    </button>
+                    ${hasPatternIssues ? `
+                        <button class="btn-icon" onclick="window.riskAnalysisModule.showPatternDetails('${student.id}')" title="Ver patrones">
+                            📊
                         </button>
-                        <button class="btn-icon" onclick="window.riskAnalysisModule.createIntervention('${student.id}')" title="Crear intervención">
-                            💬
-                        </button>
-                        <button class="btn-icon" onclick="window.riskAnalysisModule.createAlert('${student.id}')" title="Crear alerta">
-                            🔔
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
+                    ` : ''}
+                    <button class="btn-icon" onclick="window.riskAnalysisModule.createIntervention('${student.id}')" title="Crear intervención">
+                        💬
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
 
     // Obtener los principales factores de riesgo
     getMainRiskFactors(student) {
@@ -552,7 +558,79 @@ export default class RiskAnalysisModule {
         
         return students;
     }
+    /**
+     * Analiza patrones de respuesta del estudiante para detectar problemas específicos
+     * @param {Object} student - Datos del estudiante
+     * @param {Array} results - Resultados históricos del estudiante
+     * @returns {Object} Patrones detectados con su análisis
+     */
 
+    async analyzeResponsePatterns(student, results) {
+            if (!results || results.length < 2) {
+        return {
+            hasEnoughData: false,
+            patterns: {}
+        };
+    }
+    const patterns = {
+        // 1. Patrón de fatiga: ¿El rendimiento empeora hacia el final del examen?
+        fatiguePattern: this.detectFatiguePattern(results),
+        
+        // 2. Patrón de abandono: ¿Deja muchas preguntas sin contestar?
+        abandonmentPattern: this.detectAbandonmentPattern(results),
+        
+        // 3. Patrón de prisa: ¿Termina muy rápido comprometiendo calidad?
+        rushPattern: this.detectRushPattern(results),
+        
+        // 4. Patrón de temas débiles: ¿Falla consistentemente en ciertos temas?
+        topicWeaknessPattern: this.analyzeTopicFailures(results),
+        
+        // 5. Patrón de confianza: ¿Su confianza se alinea con su rendimiento?
+        confidenceAlignmentPattern: this.analyzeConfidenceAccuracy(results),
+        
+        // 6. Patrón de estrés: ¿Cómo afecta el estrés a su rendimiento?
+        stressImpactPattern: this.analyzeStressImpact(results)
+    };
+    return {
+
+        hasEnoughData: true,
+        patterns: patterns,
+        summary: this.generatePatternSummary(patterns),
+        recommendations: this.generatePatternRecommendations(patterns)
+    };
+}
+
+    analyzeTopicFailures(results) {
+    const topicFrequency = {};
+    let totalMentions = 0;
+    
+    results.forEach(result => {
+        if (result.weakest_topics && Array.isArray(result.weakest_topics)) {
+            result.weakest_topics.forEach(topic => {
+                topicFrequency[topic] = (topicFrequency[topic] || 0) + 1;
+                totalMentions++;
+            });
+        }
+    });
+    
+    // Identificar temas persistentemente problemáticos
+    const persistentWeaknesses = Object.entries(topicFrequency)
+        .filter(([topic, count]) => count >= results.length * 0.3) // Aparece en 30% o más
+        .sort(([,a], [,b]) => b - a);
+    
+    return {
+        detected: persistentWeaknesses.length > 0,
+        persistentTopics: persistentWeaknesses.map(([topic, count]) => ({
+            topic: topic,
+            frequency: count / results.length,
+            severity: 'high'
+        })),
+        totalUniqueWeaknesses: Object.keys(topicFrequency).length,
+        message: persistentWeaknesses.length > 0 ?
+            `Debilidades persistentes en: ${persistentWeaknesses.slice(0, 3).map(([t]) => t).join(', ')}` :
+            'No hay patrones claros de debilidad en temas específicos'
+    };
+}
     calculateConsistency(results) {
         if (results.length < 3) return 0;
         
