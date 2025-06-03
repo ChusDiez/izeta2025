@@ -317,7 +317,6 @@ export class DashboardCore {
                     await studentsModule.render(contentWrapper, this.getFilteredData());
                     break;
                 case 'results':
-                    // CAMBIO: Usar el módulo de resultados
                     const resultsModule = await this.loadModule('results');
                     await resultsModule.render(contentWrapper, this.getFilteredData());
                     break;
@@ -338,14 +337,14 @@ export class DashboardCore {
                     await medalsModule.render(contentWrapper);
                     break;
                 case 'risk':
-                    const riskModule = await this.loadModule('risk-analysis');
+                    const riskModule = await this.loadModule('risk');
                     await riskModule.render(contentWrapper);
                     break;
                 case 'bulk-users':
                     const bulkUsersModule = await this.loadModule('bulk-users');
                     await bulkUsersModule.render(contentWrapper);
                     break;
-                 case 'elo-manual':
+                case 'elo-manual':
                     const eloManualModule = await this.loadModule('elo-manual');
                     await eloManualModule.render(contentWrapper);
                     break;
@@ -361,6 +360,7 @@ export class DashboardCore {
             this.showError(`Error al cargar la página: ${error.message}`);
         }
     }
+
     async showStudentDetail(studentId) {
         const contentWrapper = document.getElementById('contentWrapper');
         
@@ -374,6 +374,7 @@ export class DashboardCore {
         document.getElementById('pageTitle').textContent = 'Perfil del Estudiante';
         document.getElementById('breadcrumbCurrent').textContent = 'Perfil del Estudiante';
     }
+
     /**
      * Actualizar header de la página
      */
@@ -383,7 +384,12 @@ export class DashboardCore {
             'students': 'Gestión de Alumnos',
             'results': 'Resultados',
             'simulations': 'Gestión de Simulacros',
-            'alerts': 'Alertas y Notificaciones'
+            'alerts': 'Alertas y Notificaciones',
+            'analytics': 'Análisis y Tendencias',
+            'medals': 'Medallas y Logros',
+            'risk': 'Análisis de Riesgo',
+            'bulk-users': 'Carga Masiva de Alumnos',
+            'elo-manual': 'Actualización Manual ELO'
         };
         
         document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -545,8 +551,6 @@ export class DashboardCore {
         const contentWrapper = document.getElementById('contentWrapper');
         const data = this.getFilteredData();
         
-        // Aquí iría el HTML de la vista general
-        // Por ahora uso una versión simplificada
         contentWrapper.innerHTML = `
             <div class="stats-grid">
                 ${this.renderStatsCards(data)}
@@ -560,13 +564,51 @@ export class DashboardCore {
                         <!-- Chart.js canvas aquí -->
                     </div>
                 </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📈 Distribución por Cohortes</h3>
+                    </div>
+                    <div class="chart-body" id="cohortChart">
+                        <!-- Chart.js canvas aquí -->
+                    </div>
+                </div>
             </div>
+            
+            <!-- Acciones rápidas -->
+            <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
+                <button class="action-card" onclick="window.dashboardAdmin.showPage('bulk-users')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
+                    <h3 style="margin-bottom: 0.5rem;">Carga Masiva</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Añadir múltiples alumnos</p>
+                </button>
+                
+                <button class="action-card" onclick="window.dashboardAdmin.showPage('elo-manual')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
+                    <h3 style="margin-bottom: 0.5rem;">Actualizar ELO</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Procesar resultados manualmente</p>
+                </button>
+                
+                <button class="action-card" onclick="window.dashboardAdmin.showPage('risk')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+                    <h3 style="margin-bottom: 0.5rem;">Análisis de Riesgo</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Ver estudiantes en riesgo</p>
+                </button>
+            </div>
+            
+            <style>
+                .action-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    border-color: #1e3a8a !important;
+                }
+            </style>
         `;
         
         // Cargar módulo de gráficos si es necesario
         if (this.data.results.length > 0) {
             const chartsModule = await this.loadModule('charts');
             await chartsModule.renderWeeklyChart('weeklyChart', this.data);
+            await chartsModule.renderCohortDistribution('cohortChart', this.data.cohortStats);
         }
     }
 
@@ -617,29 +659,6 @@ export class DashboardCore {
                 </div>
             </div>
         `).join('');
-    }
-
-    /**
-     * Renderizar página de resultados
-     */
-    async renderResultsPage() {
-        // Por ahora mantenemos la implementación existente
-        // Luego la moveríamos a un módulo separado
-        const contentWrapper = document.getElementById('contentWrapper');
-        const data = this.getFilteredData();
-        
-        contentWrapper.innerHTML = `
-            <div class="table-card">
-                <div class="table-header">
-                    <h2 class="table-title">📈 Todos los Resultados (${data.results.length})</h2>
-                </div>
-                <div class="table-wrapper">
-                    <table id="resultsTable">
-                        <!-- Contenido de la tabla -->
-                    </table>
-                </div>
-            </div>
-        `;
     }
 
     /**

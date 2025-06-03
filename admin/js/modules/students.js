@@ -260,7 +260,7 @@ export default class StudentsModule {
                                    placeholder="Buscar por nombre, email o slug..." 
                                    onkeyup="window.studentsModule.filterStudents(this.value)">
                         </div>
-                        <button class="btn btn-primary" onclick="window.location.href='bulk-users.html'">
+                        <button class="btn btn-primary" onclick="window.dashboardAdmin.showPage('bulk-users')">
                             ➕ Añadir alumnos
                         </button>
                     </div>

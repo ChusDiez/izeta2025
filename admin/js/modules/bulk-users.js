@@ -135,10 +135,37 @@ maria.garcia@email.com,María García,36h"></textarea>
         if (!confirm(`¿Confirmas la carga de ${this.previewData.length} alumnos?`)) return;
         
         try {
-            // Aquí iría la lógica de inserción en Supabase
-            // Por ahora simulamos el proceso
+            // Generar slugs únicos para cada usuario
+            const usersToInsert = this.previewData.map(user => ({
+                email: user.email,
+                username: user.username,
+                cohort: user.cohort,
+                slug: this.generateSlug(user.username || user.email),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                active: true,
+                current_elo: 1000,
+                current_streak: 0,
+                longest_streak: 0,
+                total_simulations: 0,
+                average_score: 0,
+                probability_pass: 50,
+                z_score: 0,
+                trend_direction: 'neutral',
+                risk_level: 'medium',
+                notes: [],
+                is_admin: false
+            }));
             
-            this.showSuccess(`${this.previewData.length} usuarios procesados correctamente`);
+            // Insertar usuarios en Supabase
+            const { data, error } = await this.supabase
+                .from('users')
+                .insert(usersToInsert)
+                .select();
+            
+            if (error) throw error;
+            
+            this.showSuccess(`${data.length} usuarios creados correctamente`);
             
             // Limpiar formularios
             document.getElementById('emailList').value = '';
@@ -149,9 +176,23 @@ maria.garcia@email.com,María García,36h"></textarea>
             // Recargar datos
             await this.dashboard.loadInitialData();
             
+            // Redirigir a la página de estudiantes
+            setTimeout(() => {
+                this.dashboard.showPage('students');
+            }, 1500);
+            
         } catch (error) {
             this.showError('Error al procesar usuarios: ' + error.message);
         }
+    }
+
+    // Añadir este método si no existe:
+    generateSlug(input) {
+        // Tomar los primeros 8 caracteres del email o nombre
+        const base = input.split('@')[0].substring(0, 8).toUpperCase();
+        // Añadir un número aleatorio para evitar duplicados
+        const random = Math.floor(Math.random() * 1000);
+        return `${base}${random}`;
     }
     
     validateEmail(email) {

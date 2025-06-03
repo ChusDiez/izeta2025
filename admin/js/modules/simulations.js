@@ -22,7 +22,7 @@ export default class SimulationsModule {
                         <button class="btn btn-primary" onclick="window.simulationsModule.createNewSimulation()">
                             ➕ Crear Nuevo Simulacro
                         </button>
-                        <button class="btn btn-warning" onclick="window.location.href='elo_manual.html'">
+                        <button class="btn btn-warning" onclick="window.dashboardAdmin.showPage('elo-manual')">
                             ⚡ Actualizar ELO Manual
                         </button>
                         <button class="btn btn-secondary" onclick="window.simulationsModule.processWeeklyResults()">
@@ -320,8 +320,9 @@ export default class SimulationsModule {
     }
 
     async viewDetails(simulationId) {
-        // Por ahora, abrir la página de ELO manual con el simulacro seleccionado
-        window.location.href = `elo_manual.html?simulation=${simulationId}`;
+        // Navegar a ELO manual con el simulacro seleccionado
+        window.dashboardAdmin.showPage('elo-manual');
+        // TODO: Pasar el simulationId al módulo elo-manual
     }
 
     closeModal() {
