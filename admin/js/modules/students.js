@@ -12,27 +12,18 @@ export default class StudentsModule {
         this.currentStudentId = null;
     }
 
-    /**
-     * Renderizar la página principal de estudiantes
-     */
     async render(container, data) {
         const students = data.students || [];
         
-        // Delegar el análisis complejo al módulo de analytics
-        await this.calculateComprehensiveMetrics(students);
+        // Solo calcular métricas básicas necesarias para la tabla
+        await this.calculateBasicMetrics(students);
         
         container.innerHTML = `
             <div class="students-page">
-                <!-- Resumen ejecutivo para oposiciones -->
-                ${this.renderExecutiveSummary(students)}
-                
-                <!-- Panel de análisis predictivo -->
-                ${this.renderPredictiveAnalysis(students)}
-                
                 <!-- Acciones masivas -->
                 ${this.renderBulkActions()}
                 
-                <!-- Tabla principal con métricas avanzadas -->
+                <!-- Tabla principal de estudiantes -->
                 ${this.renderAdvancedStudentsTable(students)}
                 
                 <!-- Modales -->
@@ -43,11 +34,6 @@ export default class StudentsModule {
         
         // Configurar event listeners
         this.setupEventListeners();
-        
-        // Renderizar gráficos si hay datos
-        if (students.length > 0) {
-            setTimeout(() => this.renderAnalyticsCharts(students), 100);
-        }
     }
 
     /**
@@ -82,86 +68,6 @@ export default class StudentsModule {
             students.forEach(student => this.assignDefaultMetrics(student));
         }
     }
-
-    /**
-     * Renderizar resumen ejecutivo
-     */
-    renderExecutiveSummary(students) {
-        const totalStudents = students.length;
-        const atRisk = students.filter(s => s.probability_pass < 50).length;
-        const improving = students.filter(s => s.trendAnalysis?.direction === 'up').length;
-        const declining = students.filter(s => s.trendAnalysis?.direction === 'down').length;
-        const avgProbability = students.reduce((sum, s) => sum + (s.probability_pass || 50), 0) / totalStudents;
-        
-        return `
-            <div class="executive-summary card">
-                <h3>📊 Resumen Ejecutivo - Oposiciones CNP</h3>
-                <div class="summary-grid">
-                    <div class="summary-stat">
-                        <div class="stat-icon danger">${atRisk}</div>
-                        <div class="stat-label">En riesgo de suspender</div>
-                        <div class="stat-detail">${((atRisk / totalStudents) * 100).toFixed(1)}% del total</div>
-                    </div>
-                    <div class="summary-stat">
-                        <div class="stat-icon success">${improving}</div>
-                        <div class="stat-label">Mejorando</div>
-                        <div class="stat-detail">Tendencia positiva</div>
-                    </div>
-                    <div class="summary-stat">
-                        <div class="stat-icon warning">${declining}</div>
-                        <div class="stat-label">Empeorando</div>
-                        <div class="stat-detail">Requieren atención</div>
-                    </div>
-                    <div class="summary-stat">
-                        <div class="stat-icon info">${avgProbability.toFixed(0)}%</div>
-                        <div class="stat-label">Probabilidad media</div>
-                        <div class="stat-detail">De aprobar</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Renderizar panel de análisis predictivo
-     */
-    renderPredictiveAnalysis(students) {
-        // Proyección de aprobados
-        const projectedPass = students.filter(s => s.probability_pass >= 50).length;
-        const confidenceHigh = students.filter(s => s.probability_pass >= 70).length;
-        const borderline = students.filter(s => s.probability_pass >= 45 && s.probability_pass < 55).length;
-        
-        return `
-            <div class="predictive-panel card">
-                <h3>🎯 Análisis Predictivo</h3>
-                <div class="prediction-content">
-                    <div class="prediction-main">
-                        <div class="big-number">${projectedPass}</div>
-                        <div class="big-label">Proyección de aprobados</div>
-                        <div class="prediction-detail">
-                            De ${students.length} estudiantes activos
-                        </div>
-                    </div>
-                    <div class="prediction-breakdown">
-                        <div class="prediction-item">
-                            <span class="prediction-count success">${confidenceHigh}</span>
-                            <span class="prediction-label">Alta probabilidad (>70%)</span>
-                        </div>
-                        <div class="prediction-item">
-                            <span class="prediction-count warning">${borderline}</span>
-                            <span class="prediction-label">En el límite (45-55%)</span>
-                        </div>
-                        <div class="prediction-note">
-                            <strong>Nota de corte estimada:</strong> 7.72/10
-                            <br>
-                            <small>Basado en históricos CNP</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
     /**
      * Renderizar acciones masivas
      */
