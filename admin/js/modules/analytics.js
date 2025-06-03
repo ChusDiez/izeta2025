@@ -24,6 +24,42 @@ export default class AnalyticsModule {
 
     async render(container) {
         try {
+            const style = document.createElement('style');
+        style.textContent = `
+            .analytics-page .charts-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+                gap: 2rem;
+                margin: 2rem 0;
+            }
+            
+            .analytics-page .chart-card {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                height: 400px;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .analytics-page .chart-card h3 {
+                margin: 0 0 1rem 0;
+                flex-shrink: 0;
+            }
+            
+            .analytics-page .chart-card canvas {
+                flex: 1;
+                max-height: 350px;
+            }
+            
+            .analytics-page .chart-container {
+                position: relative;
+                height: 350px;
+                width: 100%;
+            }
+        `;
+        document.head.appendChild(style);
             container.innerHTML = `
                 <div class="analytics-page">
                     <h2>📊 Centro de Análisis Estadístico Avanzado</h2>
@@ -69,21 +105,25 @@ export default class AnalyticsModule {
                     <div class="charts-grid">
                         <div class="chart-card">
                             <h3>📊 Evolución de Puntuaciones</h3>
-                            <canvas id="scoresEvolutionChart"></canvas>
+                            <div class="chart-container">
+                                <canvas id="scoresEvolutionChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>📈 Distribución de Riesgo</h3>
+                            <div class="chart-container">
                             <canvas id="riskDistributionChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>🎯 Patrones de Participación</h3>
+                            <div class="chart-container">
                             <canvas id="participationPatternChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>⚡ Progresión ELO</h3>
+                            <div class="chart-container">
                             <canvas id="eloProgressionChart"></canvas>
                         </div>
                     </div>
@@ -92,6 +132,7 @@ export default class AnalyticsModule {
                     <div class="patterns-analysis-section">
                         <h3>🔍 Análisis de Patrones Globales</h3>
                         <div id="patternsGrid" class="patterns-grid">
+                        
                             <!-- Se llenará dinámicamente -->
                         </div>
                     </div>

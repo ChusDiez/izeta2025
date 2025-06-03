@@ -16,7 +16,7 @@ export default class StudentsModule {
         const students = data.students || [];
         
         // Solo calcular métricas básicas necesarias para la tabla
-        await this.calculateBasicMetrics(students);
+        await this.calculateComprehensiveMetrics(students);
         
         container.innerHTML = `
             <div class="students-page">
