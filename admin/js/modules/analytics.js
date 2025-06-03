@@ -24,52 +24,482 @@ export default class AnalyticsModule {
 
     async render(container) {
         try {
-            const style = document.createElement('style');
-        style.textContent = `
-            .analytics-page .charts-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-                gap: 2rem;
-                margin: 2rem 0;
-            }
+            // Asegurar que Chart.js esté disponible
+            await window.ensureChartJS();
             
-            .analytics-page .chart-card {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                height: 400px;
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .analytics-page .chart-card h3 {
-                margin: 0 0 1rem 0;
-                flex-shrink: 0;
-            }
-            
-            .analytics-page .chart-card canvas {
-                flex: 1;
-                max-height: 350px;
-            }
-            
-            .analytics-page .chart-container {
-                position: relative;
-                height: 350px;
-                width: 100%;
-            }
-        `;
-        document.head.appendChild(style);
             container.innerHTML = `
                 <div class="analytics-page">
-                    <h2>📊 Centro de Análisis Estadístico Avanzado</h2>
+                    <style>
+                        /* Estilos específicos para Analytics */
+                        .analytics-page {
+                            padding: 0;
+                            max-width: 100%;
+                        }
+                        
+                        .analytics-header {
+                            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                            color: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .analytics-header h2 {
+                            margin: 0 0 0.5rem 0;
+                            font-size: 1.75rem;
+                        }
+                        
+                        .analytics-header p {
+                            margin: 0;
+                            opacity: 0.9;
+                        }
+                        
+                        /* Resumen Ejecutivo */
+                        .executive-summary {
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .executive-summary h3 {
+                            margin: 0 0 1.5rem 0;
+                            color: #1f2937;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+                        
+                        .summary-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                            gap: 1.5rem;
+                            margin-bottom: 2rem;
+                        }
+                        
+                        .summary-stat {
+                            text-align: center;
+                            padding: 1.5rem;
+                            background: #f9fafb;
+                            border-radius: 12px;
+                            border: 1px solid #e5e7eb;
+                            transition: transform 0.2s, box-shadow 0.2s;
+                        }
+                        
+                        .summary-stat:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .stat-icon {
+                            font-size: 2.5rem;
+                            font-weight: 700;
+                            margin-bottom: 0.5rem;
+                        }
+                        
+                        .stat-icon.danger { color: #dc2626; }
+                        .stat-icon.success { color: #10b981; }
+                        .stat-icon.warning { color: #f59e0b; }
+                        .stat-icon.info { color: #3b82f6; }
+                        
+                        .stat-label {
+                            font-size: 0.875rem;
+                            color: #6b7280;
+                            font-weight: 600;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                        
+                        .stat-detail {
+                            font-size: 0.75rem;
+                            color: #9ca3af;
+                            margin-top: 0.25rem;
+                        }
+                        
+                        /* Métricas ejecutivas */
+                        .executive-metrics {
+                            background: #f9fafb;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .metric-row {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 0.75rem;
+                            border-bottom: 1px solid #e5e7eb;
+                        }
+                        
+                        .metric-row:last-child {
+                            border-bottom: none;
+                        }
+                        
+                        .metric-label {
+                            font-weight: 500;
+                            color: #4b5563;
+                        }
+                        
+                        .metric-value {
+                            font-weight: 700;
+                            font-size: 1.125rem;
+                        }
+                        
+                        .metric-value.danger { color: #dc2626; }
+                        .metric-value.success { color: #10b981; }
+                        
+                        /* Panel Predictivo */
+                        .predictive-panel {
+                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                            padding: 2rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            border: 1px solid #fbbf24;
+                        }
+                        
+                        .predictive-panel h3 {
+                            margin: 0 0 1.5rem 0;
+                            color: #92400e;
+                        }
+                        
+                        .prediction-content {
+                            display: grid;
+                            grid-template-columns: 1fr 2fr;
+                            gap: 2rem;
+                            align-items: center;
+                        }
+                        
+                        .prediction-main {
+                            text-align: center;
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .big-number {
+                            font-size: 4rem;
+                            font-weight: 700;
+                            color: #92400e;
+                            line-height: 1;
+                        }
+                        
+                        .big-label {
+                            font-size: 1.125rem;
+                            color: #78350f;
+                            font-weight: 600;
+                            margin-top: 0.5rem;
+                        }
+                        
+                        .prediction-detail {
+                            font-size: 0.875rem;
+                            color: #92400e;
+                            margin-top: 0.5rem;
+                        }
+                        
+                        .prediction-breakdown {
+                            display: grid;
+                            gap: 1rem;
+                        }
+                        
+                        .prediction-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 1rem;
+                            background: white;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        .prediction-count {
+                            font-size: 2rem;
+                            font-weight: 700;
+                            min-width: 3rem;
+                            text-align: center;
+                        }
+                        
+                        .prediction-count.success { color: #10b981; }
+                        .prediction-count.warning { color: #f59e0b; }
+                        .prediction-count.danger { color: #dc2626; }
+                        
+                        .prediction-label {
+                            color: #4b5563;
+                            font-weight: 500;
+                        }
+                        
+                        .prediction-note {
+                            background: rgba(255, 255, 255, 0.8);
+                            padding: 1rem;
+                            border-radius: 8px;
+                            font-size: 0.875rem;
+                            color: #78350f;
+                            margin-top: 1rem;
+                        }
+                        
+                        /* Controles */
+                        .analytics-controls {
+                            background: white;
+                            padding: 1.5rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            gap: 2rem;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .period-selector label,
+                        .comparison-toggle label {
+                            font-weight: 500;
+                            color: #4b5563;
+                            margin-right: 0.5rem;
+                        }
+                        
+                        .period-selector select {
+                            padding: 0.5rem 1rem;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                            background: white;
+                            font-size: 0.875rem;
+                            cursor: pointer;
+                        }
+                        
+                        /* Estadísticas Globales */
+                        .global-stats-panel {
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .global-stats-panel h3 {
+                            margin: 0 0 1.5rem 0;
+                            color: #1f2937;
+                        }
+                        
+                        .stats-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                            gap: 1rem;
+                        }
+                        
+                        .stat-box {
+                            background: #f9fafb;
+                            padding: 1.25rem;
+                            border-radius: 8px;
+                            border: 1px solid #e5e7eb;
+                            text-align: center;
+                        }
+                        
+                        .stat-box.danger {
+                            border-color: #fecaca;
+                            background: #fef2f2;
+                        }
+                        
+                        .stat-box.success {
+                            border-color: #bbf7d0;
+                            background: #f0fdf4;
+                        }
+                        
+                        /* Gráficos */
+                        .charts-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+                            gap: 1.5rem;
+                            margin-bottom: 2rem;
+                        }
+                        
+                        .chart-card {
+                            background: white;
+                            padding: 1.5rem;
+                            border-radius: 12px;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                            min-height: 350px;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        
+                        .chart-card h3 {
+                            margin: 0 0 1rem 0;
+                            color: #1f2937;
+                            font-size: 1.125rem;
+                        }
+                        
+                        .chart-card canvas {
+                            flex: 1;
+                            max-height: 300px;
+                        }
+                        
+                        /* Secciones adicionales */
+                        .patterns-analysis-section,
+                        .predictive-analysis-section,
+                        .insights-section,
+                        .trends-table-section {
+                            background: white;
+                            padding: 2rem;
+                            border-radius: 12px;
+                            margin-bottom: 2rem;
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .patterns-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                            gap: 1rem;
+                            margin-top: 1rem;
+                        }
+                        
+                        .pattern-card {
+                            background: #f9fafb;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                            border: 1px solid #e5e7eb;
+                            text-align: center;
+                        }
+                        
+                        .pattern-card.warning {
+                            border-color: #fbbf24;
+                            background: #fef3c7;
+                        }
+                        
+                        .pattern-card.danger {
+                            border-color: #f87171;
+                            background: #fee2e2;
+                        }
+                        
+                        .pattern-card h4 {
+                            margin: 0 0 1rem 0;
+                            color: #374151;
+                            font-size: 1rem;
+                        }
+                        
+                        .pattern-stat {
+                            font-size: 2rem;
+                            font-weight: 700;
+                            color: #1f2937;
+                        }
+                        
+                        .pattern-detail {
+                            font-size: 0.875rem;
+                            color: #6b7280;
+                            margin-top: 0.5rem;
+                        }
+                        
+                        /* Insights */
+                        .insights-list {
+                            display: grid;
+                            gap: 1rem;
+                            margin-top: 1rem;
+                        }
+                        
+                        .insight-card {
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 1rem;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            border: 1px solid #e5e7eb;
+                        }
+                        
+                        .insight-card.positive {
+                            background: #f0fdf4;
+                            border-color: #bbf7d0;
+                        }
+                        
+                        .insight-card.negative {
+                            background: #fef2f2;
+                            border-color: #fecaca;
+                        }
+                        
+                        .insight-card.warning {
+                            background: #fef3c7;
+                            border-color: #fde68a;
+                        }
+                        
+                        .insight-icon {
+                            font-size: 1.5rem;
+                            flex-shrink: 0;
+                        }
+                        
+                        .insight-content strong {
+                            display: block;
+                            margin-bottom: 0.25rem;
+                            color: #1f2937;
+                        }
+                        
+                        .insight-content p {
+                            margin: 0;
+                            color: #4b5563;
+                            font-size: 0.875rem;
+                        }
+                        
+                        /* Tabla de tendencias */
+                        #trendsTable {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 1rem;
+                        }
+                        
+                        #trendsTable th {
+                            background: #f9fafb;
+                            padding: 0.75rem;
+                            text-align: left;
+                            font-weight: 600;
+                            color: #374151;
+                            border-bottom: 2px solid #e5e7eb;
+                        }
+                        
+                        #trendsTable td {
+                            padding: 0.75rem;
+                            border-bottom: 1px solid #e5e7eb;
+                        }
+                        
+                        #trendsTable tr:hover {
+                            background: #f9fafb;
+                        }
+                        
+                        .text-success { color: #10b981; }
+                        .text-danger { color: #dc2626; }
+                        
+                        /* Responsive */
+                        @media (max-width: 768px) {
+                            .prediction-content {
+                                grid-template-columns: 1fr;
+                            }
+                            
+                            .charts-grid {
+                                grid-template-columns: 1fr;
+                            }
+                            
+                            .analytics-controls {
+                                flex-direction: column;
+                                align-items: stretch;
+                            }
+                        }
+                    </style>
                     
-                    <!-- Resumen ejecutivo para oposiciones (NUEVO) -->
+                    <div class="analytics-header">
+                        <h2>📊 Centro de Análisis Estadístico Avanzado</h2>
+                        <p>Análisis completo de rendimiento y predicciones basadas en datos históricos</p>
+                    </div>
+                    
+                    <!-- Resumen ejecutivo para oposiciones -->
                     <div id="executiveSummarySection">
                         <!-- Se llenará dinámicamente -->
                     </div>
                     
-                    <!-- Panel de análisis predictivo (NUEVO) -->
+                    <!-- Panel de análisis predictivo -->
                     <div id="predictiveAnalysisSection">
                         <!-- Se llenará dinámicamente -->
                     </div>
@@ -105,25 +535,21 @@ export default class AnalyticsModule {
                     <div class="charts-grid">
                         <div class="chart-card">
                             <h3>📊 Evolución de Puntuaciones</h3>
-                            <div class="chart-container">
-                                <canvas id="scoresEvolutionChart"></canvas>
+                            <canvas id="scoresEvolutionChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>📈 Distribución de Riesgo</h3>
-                            <div class="chart-container">
                             <canvas id="riskDistributionChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>🎯 Patrones de Participación</h3>
-                            <div class="chart-container">
                             <canvas id="participationPatternChart"></canvas>
                         </div>
                         
                         <div class="chart-card">
                             <h3>⚡ Progresión ELO</h3>
-                            <div class="chart-container">
                             <canvas id="eloProgressionChart"></canvas>
                         </div>
                     </div>
@@ -132,7 +558,6 @@ export default class AnalyticsModule {
                     <div class="patterns-analysis-section">
                         <h3>🔍 Análisis de Patrones Globales</h3>
                         <div id="patternsGrid" class="patterns-grid">
-                        
                             <!-- Se llenará dinámicamente -->
                         </div>
                     </div>
@@ -178,8 +603,10 @@ export default class AnalyticsModule {
             
             window.analyticsModule = this;
             
-            // Cargar análisis inicial
-            await this.updateAnalysis();
+            // Cargar análisis inicial después de un pequeño delay para asegurar DOM
+            setTimeout(() => {
+                this.updateAnalysis();
+            }, 100);
             
         } catch (error) {
             console.error('Error en módulo de análisis:', error);
@@ -187,9 +614,503 @@ export default class AnalyticsModule {
                 <div class="error-container">
                     <h3>❌ Error al cargar el módulo</h3>
                     <p>${error.message}</p>
+                    <button class="btn btn-secondary" onclick="window.dashboardAdmin.refreshData()">
+                        🔄 Reintentar
+                    </button>
                 </div>
             `;
         }
+    }
+
+    // === MÉTODOS DE RENDERIZADO DE GRÁFICOS MEJORADOS ===
+    
+    async renderScoresEvolution(data, compareCohorts) {
+        // Esperar un momento para asegurar que el canvas esté en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const canvas = document.getElementById('scoresEvolutionChart');
+        if (!canvas) {
+            console.warn('Canvas scoresEvolutionChart no encontrado');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.has('scores')) {
+            this.charts.get('scores').destroy();
+        }
+        
+        const weeklyData = this.groupByWeek(data.results);
+        let datasets = [];
+        
+        if (compareCohorts) {
+            const cohorts = ['20h', '36h', '48h'];
+            const colors = {
+                '20h': '#3B82F6',
+                '36h': '#8B5CF6',
+                '48h': '#DC2626'
+            };
+            
+            datasets = cohorts.map((cohort) => ({
+                label: `Cohorte ${cohort}`,
+                data: Object.entries(weeklyData).map(([week, results]) => {
+                    const cohortResults = results.filter(r => r.users?.cohort === cohort);
+                    return cohortResults.length > 0 ?
+                        cohortResults.reduce((sum, r) => sum + r.score, 0) / cohortResults.length : null;
+                }),
+                borderColor: colors[cohort],
+                backgroundColor: colors[cohort] + '20',
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }));
+        } else {
+            datasets = [{
+                label: 'Score Promedio',
+                data: Object.entries(weeklyData).map(([week, results]) => 
+                    results.reduce((sum, r) => sum + r.score, 0) / results.length
+                ),
+                borderColor: '#1E3A8A',
+                backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#1E3A8A',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }];
+        }
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Object.keys(weeklyData),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: (context) => 
+                                `${context.dataset.label}: ${context.parsed.y?.toFixed(2) || 'N/A'}/10`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Score Promedio',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Semana',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        this.charts.set('scores', chart);
+    }
+
+    async renderRiskDistribution(distribution) {
+        // Esperar un momento para asegurar que el canvas esté en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const canvas = document.getElementById('riskDistributionChart');
+        if (!canvas) {
+            console.warn('Canvas riskDistributionChart no encontrado');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.has('risk')) {
+            this.charts.get('risk').destroy();
+        }
+        
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Crítico', 'Alto', 'Medio', 'Bajo'],
+                datasets: [{
+                    data: [
+                        distribution.critical.count,
+                        distribution.high.count,
+                        distribution.medium.count,
+                        distribution.low.count
+                    ],
+                    backgroundColor: [
+                        'rgba(220, 38, 38, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)'
+                    ],
+                    borderColor: [
+                        '#DC2626',
+                        '#F59E0B',
+                        '#3B82F6',
+                        '#10B981'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+                                
+                                labels.forEach((label, index) => {
+                                    const level = ['critical', 'high', 'medium', 'low'][index];
+                                    const data = distribution[level];
+                                    label.text = `${label.text}: ${data.count} (${data.percentage}%)`;
+                                });
+                                
+                                return labels;
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: (context) => {
+                                const label = context.label;
+                                const value = context.parsed;
+                                const level = label.toLowerCase();
+                                const percentage = distribution[level].percentage;
+                                return `${label}: ${value} estudiantes (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        this.charts.set('risk', chart);
+    }
+
+    async renderParticipationPattern(data) {
+        // Esperar un momento para asegurar que el canvas esté en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const canvas = document.getElementById('participationPatternChart');
+        if (!canvas) {
+            console.warn('Canvas participationPatternChart no encontrado');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.has('participation')) {
+            this.charts.get('participation').destroy();
+        }
+        
+        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const participationByDay = Array(7).fill(0);
+        const saturdayLive = Array(7).fill(0);
+        
+        data.results.forEach(result => {
+            const date = new Date(result.submitted_at);
+            const day = date.getDay();
+            participationByDay[day]++;
+            if (result.is_saturday_live && day === 6) {
+                saturdayLive[day]++;
+            }
+        });
+        
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dayNames,
+                datasets: [
+                    {
+                        label: 'Total Participación',
+                        data: participationByDay,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: '#3B82F6',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'En Directo (Sábados)',
+                        data: saturdayLive,
+                        backgroundColor: 'rgba(220, 38, 38, 0.8)',
+                        borderColor: '#DC2626',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Número de Participaciones',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        this.charts.set('participation', chart);
+    }
+
+    async renderEloProgression(data, compareCohorts) {
+        // Esperar un momento para asegurar que el canvas esté en el DOM
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const canvas = document.getElementById('eloProgressionChart');
+        if (!canvas) {
+            console.warn('Canvas eloProgressionChart no encontrado');
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (this.charts.has('elo')) {
+            this.charts.get('elo').destroy();
+        }
+        
+        const eloByWeek = {};
+        
+        data.eloHistory.forEach(record => {
+            const week = `S${record.week_number}`;
+            if (!eloByWeek[week]) {
+                eloByWeek[week] = { '20h': [], '36h': [], '48h': [], 'all': [] };
+            }
+            
+            const user = data.students.find(s => s.id === record.user_id);
+            if (user) {
+                if (eloByWeek[week][user.cohort]) {
+                    eloByWeek[week][user.cohort].push(record.elo_after);
+                }
+                eloByWeek[week]['all'].push(record.elo_after);
+            }
+        });
+        
+        const weeks = Object.keys(eloByWeek).sort();
+        const colors = {
+            '20h': '#3B82F6',
+            '36h': '#8B5CF6',
+            '48h': '#DC2626'
+        };
+        
+        const datasets = compareCohorts ? 
+            ['20h', '36h', '48h'].map((cohort) => ({
+                label: `Cohorte ${cohort}`,
+                data: weeks.map(week => {
+                    const cohortElos = eloByWeek[week][cohort];
+                    return cohortElos.length > 0 ?
+                        cohortElos.reduce((a, b) => a + b, 0) / cohortElos.length : null;
+                }),
+                borderColor: colors[cohort],
+                backgroundColor: colors[cohort] + '20',
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            })) :
+            [{
+                label: 'ELO Promedio General',
+                data: weeks.map(week => {
+                    const allElos = eloByWeek[week]['all'];
+                    return allElos.length > 0 ?
+                        allElos.reduce((a, b) => a + b, 0) / allElos.length : null;
+                }),
+                borderColor: '#1E3A8A',
+                backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointBackgroundColor: '#1E3A8A',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }];
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: weeks,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { 
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: (context) => 
+                                `${context.dataset.label}: ${context.parsed.y?.toFixed(0) || 'N/A'} ELO`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            drawBorder: false,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'ELO Promedio',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        title: { 
+                            display: true, 
+                            text: 'Semana',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        this.charts.set('elo', chart);
     }
 
     async updateAnalysis() {
@@ -1352,241 +2273,6 @@ export default class AnalyticsModule {
         });
         
         return Math.max(0, Math.min(10, prediction));
-    }
-
-    // =====================================================
-    // MÉTODOS DE GRÁFICOS
-    // =====================================================
-
-    async renderScoresEvolution(data, compareCohorts) {
-        const ctx = document.getElementById('scoresEvolutionChart').getContext('2d');
-        
-        if (this.charts.has('scores')) {
-            this.charts.get('scores').destroy();
-        }
-        
-        const weeklyData = this.groupByWeek(data.results);
-        let datasets = [];
-        
-        if (compareCohorts) {
-            const cohorts = ['20h', '36h', '48h'];
-            datasets = cohorts.map((cohort, index) => ({
-                label: `Cohorte ${cohort}`,
-                data: Object.entries(weeklyData).map(([week, results]) => {
-                    const cohortResults = results.filter(r => r.users.cohort === cohort);
-                    return cohortResults.length > 0 ?
-                        cohortResults.reduce((sum, r) => sum + r.score, 0) / cohortResults.length : null;
-                }),
-                borderColor: ['#3B82F6', '#8B5CF6', '#DC2626'][index],
-                backgroundColor: ['#3B82F620', '#8B5CF620', '#DC262620'][index],
-                tension: 0.4
-            }));
-        } else {
-            datasets = [{
-                label: 'Score Promedio',
-                data: Object.entries(weeklyData).map(([week, results]) => 
-                    results.reduce((sum, r) => sum + r.score, 0) / results.length
-                ),
-                borderColor: '#1E3A8A',
-                backgroundColor: '#1E3A8A20',
-                tension: 0.4,
-                fill: true
-            }];
-        }
-        
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Object.keys(weeklyData),
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => 
-                                `${context.dataset.label}: ${context.parsed.y?.toFixed(2) || 'N/A'}/10`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10,
-                        title: { display: true, text: 'Score Promedio' }
-                    }
-                }
-            }
-        });
-        
-        this.charts.set('scores', chart);
-    }
-
-    async renderRiskDistribution(distribution) {
-        const ctx = document.getElementById('riskDistributionChart').getContext('2d');
-        
-        if (this.charts.has('risk')) {
-            this.charts.get('risk').destroy();
-        }
-        
-        const chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Crítico', 'Alto', 'Medio', 'Bajo'],
-                datasets: [{
-                    data: [
-                        distribution.critical.count,
-                        distribution.high.count,
-                        distribution.medium.count,
-                        distribution.low.count
-                    ],
-                    backgroundColor: ['#DC2626', '#F59E0B', '#3B82F6', '#10B981']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                const label = context.label;
-                                const value = context.parsed;
-                                const percentage = distribution[label.toLowerCase()].percentage;
-                                return `${label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        this.charts.set('risk', chart);
-    }
-
-    async renderParticipationPattern(data) {
-        const ctx = document.getElementById('participationPatternChart').getContext('2d');
-        
-        if (this.charts.has('participation')) {
-            this.charts.get('participation').destroy();
-        }
-        
-        const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const participationByDay = Array(7).fill(0);
-        const saturdayLive = Array(7).fill(0);
-        
-        data.results.forEach(result => {
-            const date = new Date(result.submitted_at);
-            const day = date.getDay();
-            participationByDay[day]++;
-            if (result.is_saturday_live && day === 6) {
-                saturdayLive[day]++;
-            }
-        });
-        
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: dayNames,
-                datasets: [
-                    {
-                        label: 'Total Participación',
-                        data: participationByDay,
-                        backgroundColor: '#3B82F6'
-                    },
-                    {
-                        label: 'En Directo (Sábados)',
-                        data: saturdayLive,
-                        backgroundColor: '#DC2626'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Número de Participaciones' }
-                    }
-                }
-            }
-        });
-        
-        this.charts.set('participation', chart);
-    }
-
-    async renderEloProgression(data, compareCohorts) {
-        const ctx = document.getElementById('eloProgressionChart').getContext('2d');
-        
-        if (this.charts.has('elo')) {
-            this.charts.get('elo').destroy();
-        }
-        
-        const eloByWeek = {};
-        
-        data.eloHistory.forEach(record => {
-            const week = `S${record.week_number}`;
-            if (!eloByWeek[week]) {
-                eloByWeek[week] = { '20h': [], '36h': [], '48h': [] };
-            }
-            
-            const user = data.students.find(s => s.id === record.user_id);
-            if (user && eloByWeek[week][user.cohort]) {
-                eloByWeek[week][user.cohort].push(record.elo_after);
-            }
-        });
-        
-        const weeks = Object.keys(eloByWeek).sort();
-        const datasets = compareCohorts ? 
-            ['20h', '36h', '48h'].map((cohort, index) => ({
-                label: `Cohorte ${cohort}`,
-                data: weeks.map(week => {
-                    const cohortElos = eloByWeek[week][cohort];
-                    return cohortElos.length > 0 ?
-                        cohortElos.reduce((a, b) => a + b, 0) / cohortElos.length : null;
-                }),
-                borderColor: ['#3B82F6', '#8B5CF6', '#DC2626'][index],
-                tension: 0.4
-            })) :
-            [{
-                label: 'ELO Promedio General',
-                data: weeks.map(week => {
-                    const allElos = [...eloByWeek[week]['20h'], ...eloByWeek[week]['36h'], ...eloByWeek[week]['48h']];
-                    return allElos.length > 0 ?
-                        allElos.reduce((a, b) => a + b, 0) / allElos.length : null;
-                }),
-                borderColor: '#1E3A8A',
-                backgroundColor: '#1E3A8A20',
-                tension: 0.4,
-                fill: true
-            }];
-        
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: weeks,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' }
-                },
-                scales: {
-                    y: {
-                        title: { display: true, text: 'ELO Promedio' }
-                    }
-                }
-            }
-        });
-        
-        this.charts.set('elo', chart);
     }
 
     async generateInsights(analysis) {
