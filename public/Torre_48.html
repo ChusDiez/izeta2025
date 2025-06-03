@@ -59,7 +59,7 @@
         }
         
         .chess-piece {
-            font-size: 2rem;
+            font-size: 3rem;
             opacity: 0.7;
         }
         
@@ -177,6 +177,11 @@
             color: white;
         }
         
+        .day-header.light {
+            background: var(--success-green);
+            color: white;
+        }
+        
         .time-slot {
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #e9ecef;
@@ -192,6 +197,11 @@
         
         .time-slot.intensive {
             border-left: 3px solid var(--success-green);
+        }
+        
+        .time-slot.conditional {
+            background: #fffbf0;
+            border-left: 3px solid var(--accent-gold);
         }
         
         .time-slot:last-child {
@@ -222,6 +232,13 @@
             margin-top: 0.25rem;
         }
         
+        .conditional-note {
+            font-size: 0.8rem;
+            color: var(--accent-gold);
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
+        
         .duration {
             background: var(--secondary-navy);
             color: white;
@@ -229,6 +246,11 @@
             border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 600;
+        }
+        
+        .duration.conditional {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
         }
         
         .task-type {
@@ -251,6 +273,7 @@
         .type-technique { background: #e0f2f1; color: #004d40; }
         .type-speed { background: #f3e5f5; color: #4a148c; }
         .type-lab { background: #e8eaf6; color: #283593; }
+        .type-conditional { background: #fff8e1; color: #f57c00; }
         
         .daily-summary {
             background: var(--primary-dark);
@@ -373,7 +396,7 @@
             }
             
             .chess-piece {
-                font-size: 1.5rem;
+                font-size: 1.75rem;
             }
             
             .summary-grid {
@@ -409,7 +432,7 @@
                 <span class="chess-piece">♜</span>
             </h1>
             <p style="font-size: 1.3rem; margin-top: 0.5rem;">48 horas semanales - Dedicación completa</p>
-            <div class="elite-badge">Preparación Profesional Máxima</div>
+            <div class="elite-badge">Preparación Máxima</div>
             <p style="margin-top: 1.5rem; opacity: 0.9; font-size: 1.1rem;">Programa de alta intensidad para opositores sin carga laboral</p>
         </div>
         
@@ -427,7 +450,7 @@
                 </div>
                 <div class="summary-item">
                     <div class="summary-number">3×</div>
-                    <div>Bloques diarios</div>
+                    <div>Bloques Ma-Ju</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-number">15</div>
@@ -438,7 +461,7 @@
                     <div>Feynman/sem</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-number">Dual</div>
+                    <div class="summary-number">Doble</div>
                     <div>Leitner E+A</div>
                 </div>
             </div>
@@ -450,7 +473,8 @@
             <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
                 <li>Elige 1 día libre a la semana según tu disponibilidad</li>
                 <li>Sugerencia: Miércoles (para dividir la semana)</li>
-                <li>Las horas se redistribuyen automáticamente en los demás días</li>
+                <li>El viernes es de descanso activo (50% de carga normal)</li>
+                <li>Las horas se redistribuyen</li>
             </ul>
         </div>
         
@@ -470,12 +494,12 @@
         <div class="weekly-grid">
             <!-- LUNES -->
             <div class="day-card">
-                <div class="day-header">LUNES</div>
+                <div class="day-header">LUNES - Análisis profundo</div>
                 <div class="time-slot intensive">
                     <span class="time">06:00-06:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas aleatorias - Mente fresca</div>
+                        <div class="activity-name">Test de entrenamiento <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas aleatorias del banco completo</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
@@ -483,7 +507,7 @@
                     <span class="time">06:45-08:15</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 1-3 (lectura activa + subrayado)</div>
+                        <div class="activity-detail">Temas 1-4 (lectura activa + subrayado)</div>
                     </div>
                     <span class="duration">1h 30min</span>
                 </div>
@@ -498,63 +522,56 @@
                 <div class="time-slot intensive">
                     <span class="time">11:00-12:00</span>
                     <div class="activity">
-                        <div class="activity-name">Test dirigido temático <span class="task-type type-test">TEST-T</span></div>
-                        <div class="activity-detail">40-50 preguntas temas específicos</div>
+                        <div class="activity-name">Test entrenamiento temático <span class="task-type type-test">TEST-T</span></div>
+                        <div class="activity-detail">40-50 preguntas de temas específicos</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot intensive">
-                    <span class="time">14:00-14:45</span>
+                    <span class="time">15:00-15:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
-                        <div class="activity-detail">30-40 preguntas - Enfoque diferente</div>
+                        <div class="activity-name">2º bloque test diario <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas post-comida</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">16:00-17:00</span>
+                    <span class="time">17:00-18:00</span>
                     <div class="activity">
-                        <div class="activity-name">Top-10 Fallos + Análisis <span class="task-type type-analysis">ANÁLISIS</span></div>
-                        <div class="activity-detail">Preguntas más falladas + patrones de error</div>
+                        <div class="activity-name">Análisis personal de errores <span class="task-type type-analysis">ANÁLISIS</span></div>
+                        <div class="activity-detail">Revisión profunda de tus fallos del fin de semana</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
-                <div class="time-slot">
-                    <span class="time">17:30-18:30</span>
+                <div class="time-slot conditional">
+                    <span class="time">19:00-19:30</span>
                     <div class="activity">
-                        <div class="activity-name">Vuelta adicional <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Repaso extra temas débiles</div>
+                        <div class="activity-name">Mini-test entrenamiento <span class="task-type type-conditional">CONDICIONAL</span></div>
+                        <div class="activity-detail">20-25 preguntas del tema más débil</div>
+                        <div class="conditional-note">*Solo si algún tema <80% en los tests del día</div>
                     </div>
-                    <span class="duration">1h</span>
+                    <span class="duration conditional">30 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">19:00-19:10</span>
+                    <span class="time">20:00-20:20</span>
                     <div class="activity">
                         <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
                         <div class="activity-detail">Cajas 4-5 (quincenal/mensual)</div>
                     </div>
-                    <span class="duration">10 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">20:00-20:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Mini-test dirigido <span class="task-type type-test">REFUERZO</span></div>
-                        <div class="activity-detail">Temas débiles detectados (<80%)</div>
-                    </div>
-                    <span class="duration">30 min</span>
+                    <span class="duration">20 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 7h 30min | 135-160 preguntas | 3 temas | Análisis completo
+                    Total día: 7h 20min | 105-130 preguntas + condicional | 4 temas
                 </div>
             </div>
             
             <!-- MARTES -->
             <div class="day-card">
-                <div class="day-header">MARTES</div>
+                <div class="day-header">MARTES - Triple sesión</div>
                 <div class="time-slot intensive">
                     <span class="time">06:00-06:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-name">Test de entrenamiento <span class="task-type type-test">TEST</span></div>
                         <div class="activity-detail">35-40 preguntas aleatorias</div>
                     </div>
                     <span class="duration">45 min</span>
@@ -563,7 +580,7 @@
                     <span class="time">06:45-08:15</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 4-6</div>
+                        <div class="activity-detail">Temas 5-8</div>
                     </div>
                     <span class="duration">1h 30min</span>
                 </div>
@@ -578,53 +595,45 @@
                 <div class="time-slot intensive">
                     <span class="time">11:00-12:00</span>
                     <div class="activity">
-                        <div class="activity-name">Test temático avanzado <span class="task-type type-test">TEST-A</span></div>
-                        <div class="activity-detail">50 preguntas nivel difícil</div>
+                        <div class="activity-name">Test entrenamiento temático <span class="task-type type-test">TEST-T</span></div>
+                        <div class="activity-detail">50 preguntas de temas seleccionados</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot intensive">
-                    <span class="time">14:00-14:45</span>
+                    <span class="time">15:00-15:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
-                        <div class="activity-detail">30-40 preguntas diferentes</div>
+                        <div class="activity-name">2º bloque test diario <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas post-comida</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">16:00-17:00</span>
+                    <span class="time">17:00-17:30</span>
                     <div class="activity">
-                        <div class="activity-name">Análisis comparativo <span class="task-type type-analysis">MÉTRICAS</span></div>
-                        <div class="activity-detail">Evolución diaria + ajustes estrategia</div>
+                        <div class="activity-name">Análisis estadístico <span class="task-type type-analysis">MÉTRICAS</span></div>
+                        <div class="activity-detail">Revisar evolución semanal por temas (%de error), detectar temas trampa</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
+                <div class="time-slot intensive">
+                    <span class="time">19:00-20:00</span>
+                    <div class="activity">
+                        <div class="activity-name">3er bloque test <span class="task-type type-test">TEST-3</span></div>
+                        <div class="activity-detail">30-40 preguntas nuevas</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
-                <div class="time-slot intensive">
-                    <span class="time">17:30-18:15</span>
-                    <div class="activity">
-                        <div class="activity-name">3er bloque - Nuevas <span class="task-type type-test">TEST-3</span></div>
-                        <div class="activity-detail">30-40 preguntas 100% inéditas</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
                 <div class="time-slot">
-                    <span class="time">19:00-19:45</span>
+                    <span class="time">20:30-20:50</span>
                     <div class="activity">
-                        <div class="activity-name">Laboratorio de fichas <span class="task-type type-lab">FICHAS</span></div>
-                        <div class="activity-detail">Crear mnemotecnias avanzadas</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5 + nuevas del día</div>
                     </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">20:00-20:10</span>
-                    <div class="activity">
-                        <div class="activity-name">Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión integral 5 cajas</div>
-                    </div>
-                    <span class="duration">10 min</span>
+                    <span class="duration">20 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 7h 50min | 155-190 preguntas | 3 temas | Triple sesión
+                    Total día: 7h 40min | 145-170 preguntas | 4 temas | Triple sesión
                 </div>
             </div>
             
@@ -644,11 +653,11 @@
             
             <!-- JUEVES -->
             <div class="day-card">
-                <div class="day-header">JUEVES</div>
+                <div class="day-header">JUEVES - Técnicas avanzadas</div>
                 <div class="time-slot intensive">
                     <span class="time">06:00-06:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario mixto AM <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-name">Test de entrenamiento <span class="task-type type-test">TEST</span></div>
                         <div class="activity-detail">35-40 preguntas aleatorias</div>
                     </div>
                     <span class="duration">45 min</span>
@@ -657,7 +666,7 @@
                     <span class="time">06:45-08:15</span>
                     <div class="activity">
                         <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 7-9</div>
+                        <div class="activity-detail">Temas 9-11</div>
                     </div>
                     <span class="duration">1h 30min</span>
                 </div>
@@ -673,20 +682,20 @@
                     <span class="time">11:00-12:00</span>
                     <div class="activity">
                         <div class="activity-name">Simulacro parcial <span class="task-type type-simulacro">SIMULACRO</span></div>
-                        <div class="activity-detail">50 preguntas cronometradas</div>
+                        <div class="activity-detail">50 preguntas cronometradas en 18 minutos</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot intensive">
-                    <span class="time">14:00-14:45</span>
+                    <span class="time">15:00-15:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
-                        <div class="activity-detail">30-40 preguntas</div>
+                        <div class="activity-name">2º bloque test diario <span class="task-type type-test">TEST-2</span></div>
+                        <div class="activity-detail">30-40 preguntas post-comida</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">16:00-16:30</span>
+                    <span class="time">17:00-17:30</span>
                     <div class="activity">
                         <div class="activity-name">Técnica Feynman <span class="task-type type-technique">FEYNMAN</span></div>
                         <div class="activity-detail">Explicar tema complejo grabando audio</div>
@@ -694,199 +703,183 @@
                     <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot intensive">
-                    <span class="time">17:00-18:00</span>
+                    <span class="time">19:00-20:00</span>
                     <div class="activity">
-                        <div class="activity-name">3er bloque - Nuevas <span class="task-type type-test">TEST-3</span></div>
-                        <div class="activity-detail">30-40 preguntas inéditas</div>
+                        <div class="activity-name">3er bloque test <span class="task-type type-test">TEST-3</span></div>
+                        <div class="activity-detail">30-40 preguntas nuevas</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">18:30-19:30</span>
+                    <span class="time">20:30-21:15</span>
                     <div class="activity">
-                        <div class="activity-name">Análisis profundo errores <span class="task-type type-analysis">ANÁLISIS</span></div>
-                        <div class="activity-detail">Por qué fallamos + estrategias correctivas</div>
+                        <div class="activity-name">Laboratorio de fichas <span class="task-type type-lab">LAB</span></div>
+                        <div class="activity-detail">45 min diseño mnemotecnias visuales</div>
                     </div>
-                    <span class="duration">1h</span>
+                    <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">20:00-20:15</span>
+                    <span class="time">21:15-21:35</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Nocturno <span class="task-type type-flashcard">FICHAS-A</span></div>
-                        <div class="activity-detail">Cajas 4-5 + urgentes</div>
+                        <div class="activity-name">Leitner Avanzado <span class="task-type type-flashcard">FICHAS-A</span></div>
+                        <div class="activity-detail">Cajas 4-5 + organización</div>
                     </div>
-                    <span class="duration">15 min</span>
+                    <span class="duration">20 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 8h 5min | 155-180 preguntas | 3 temas | Feynman
+                    Total día: 8h 30min | 145-170 preguntas | 3 temas | Feynman + Lab
                 </div>
             </div>
             
             <!-- VIERNES -->
             <div class="day-card">
-                <div class="day-header">VIERNES</div>
+                <div class="day-header light">VIERNES - Descanso activo (50%)</div>
                 <div class="time-slot intensive">
-                    <span class="time">06:00-06:45</span>
+                    <span class="time">08:00-08:45</span>
                     <div class="activity">
-                        <div class="activity-name">Test diario AM <span class="task-type type-test">TEST</span></div>
-                        <div class="activity-detail">35-40 preguntas</div>
+                        <div class="activity-name">Test de entrenamiento <span class="task-type type-test">TEST</span></div>
+                        <div class="activity-detail">35-40 preguntas a ritmo relajado</div>
                     </div>
                     <span class="duration">45 min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">06:45-08:15</span>
+                    <span class="time">09:00-10:00</span>
                     <div class="activity">
-                        <div class="activity-name">Vuelta distribuida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 10-12</div>
-                    </div>
-                    <span class="duration">1h 30min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">10:00-10:10</span>
-                    <div class="activity">
-                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Solo Caja 1</div>
-                    </div>
-                    <span class="duration">10 min</span>
-                </div>
-                <div class="time-slot intensive">
-                    <span class="time">11:00-12:10</span>
-                    <div class="activity">
-                        <div class="activity-name">Simulacro contrarreloj <span class="task-type type-speed">SPEED</span></div>
-                        <div class="activity-detail">100 preguntas en 70 minutos (quincenal)</div>
-                    </div>
-                    <span class="duration">1h 10min</span>
-                </div>
-                <div class="time-slot intensive">
-                    <span class="time">14:00-14:45</span>
-                    <div class="activity">
-                        <div class="activity-name">Test diario PM <span class="task-type type-test">TEST-2</span></div>
-                        <div class="activity-detail">30-40 preguntas</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">16:00-16:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Técnica Feynman II <span class="task-type type-technique">FEYNMAN</span></div>
-                        <div class="activity-detail">Segundo tema complejo de la semana</div>
-                    </div>
-                    <span class="duration">30 min</span>
-                </div>
-                <div class="time-slot intensive">
-                    <span class="time">17:00-18:00</span>
-                    <div class="activity">
-                        <div class="activity-name">Test de consolidación <span class="task-type type-test">CONSOLIDACIÓN</span></div>
-                        <div class="activity-detail">50 preguntas temas de la semana</div>
+                        <div class="activity-name">Vuelta ligera <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Temas 12-15 (lectura rápida)</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">19:00-19:30</span>
+                    <span class="time">11:00-11:15</span>
                     <div class="activity">
-                        <div class="activity-name">Preparación weekend <span class="task-type type-rest">PREPARACIÓN</span></div>
-                        <div class="activity-detail">Revisión de fichas clave + estrategia</div>
+                        <div class="activity-name">Leitner Express <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Solo Caja 1 (urgentes)</div>
+                    </div>
+                    <span class="duration">15 min</span>
+                </div>
+                <div class="time-slot>
+                    <span class="time">16:00-16:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Técnica Feynman II <span class="task-type type-technique">FEYNMAN</span></div>
+                        <div class="activity-detail">Segundo tema complejo de la semana (30 min)</div>
                     </div>
                     <span class="duration">30 min</span>
                 </div>
-                <div class="time-slot">
-                    <span class="time">20:00-20:20</span>
+                <div class="time-slot intensive">
+                    <span class="time">17:00-17:35</span>
                     <div class="activity">
-                        <div class="activity-name">Leitner Master <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión completa pre-simulacros</div>
+                        <div class="activity-name">Simulacro contrarreloj <span class="task-type type-speed">SPEED</span></div>
+                        <div class="activity-detail">100p en 35 min (quincenal)</div>
                     </div>
-                    <span class="duration">20 min</span>
+                    <span class="duration">35 min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">20:00-20:30</span>
+                    <div class="activity">
+                        <div class="activity-name">Preparación weekend <span class="task-type type-rest">PREPARACIÓN</span></div>
+                        <div class="activity-detail">Revisión fichas clave + estrategia simulacros</div>
+                    </div>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 7h 50min | 215-230 preguntas | 3 temas | Feynman + Speed
+                    Total día: 3h 35min | 135-140 preguntas | 4 temas | Carga reducida 50%
                 </div>
             </div>
             
             <!-- SÁBADO -->
             <div class="day-card">
-                <div class="day-header weekend">SÁBADO</div>
+                <div class="day-header weekend">SÁBADO - Simulacro oficial</div>
+                <div class="time-slot">
+                    <span class="time">08:30-09:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Calentamiento <span class="task-type type-test">WARM-UP</span></div>
+                        <div class="activity-detail">20 preguntas rápidas + repaso fichas críticas</div>
+                    </div>
+                    <span class="duration">30 min</span>
+                </div>
                 <div class="time-slot">
                     <span class="time">09:00-09:30</span>
                     <div class="activity">
                         <div class="activity-name">Preparación mental <span class="task-type type-rest">PREPARACIÓN</span></div>
-                        <div class="activity-detail">Técnicas concentración + repaso fichas clave</div>
+                        <div class="activity-detail">Técnicas concentración + visualización</div>
                     </div>
                     <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot intensive">
                     <span class="time">10:00-11:50</span>
                     <div class="activity">
-                        <div class="activity-name">Simulacro oficial <span class="task-type type-simulacro">EXAMEN</span></div>
-                        <div class="activity-detail">100 preguntas inéditas nivel oficial - En directo</div>
+                        <div class="activity-name">Simulacro oficial RF <span class="task-type type-simulacro">EXAMEN</span></div>
+                        <div class="activity-detail">100 preguntas nuevas- En directo</div>
                     </div>
                     <span class="duration">1h 50min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">12:00-13:00</span>
+                    <span class="time">12:00-14:00</span>
                     <div class="activity">
-                        <div class="activity-name">Corrección rápida <span class="task-type type-analysis">ANÁLISIS</span></div>
-                        <div class="activity-detail">Revisión inicial + identificar fallos clave</div>
+                        <div class="activity-name">Corrección exhaustiva <span class="task-type type-analysis">ANÁLISIS</span></div>
+                        <div class="activity-detail">Análisis profundo + creación de fichas nuevas</div>
                     </div>
-                    <span class="duration">1h</span>
+                    <span class="duration">2h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">17:00-17:20</span>
+                    <span class="time">17:00-17:30</span>
                     <div class="activity">
-                        <div class="activity-name">Revisión fichas <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Solo críticas del simulacro</div>
+                        <div class="activity-name">Leitner Post-simulacro <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Solo nuevas fichas del simulacro</div>
                     </div>
-                    <span class="duration">20 min</span>
+                    <span class="duration">30 min</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 3h 40min | 100 preguntas | Simulacro oficial
+                    Total día: 5h 20min | 120 preguntas | Simulacro oficial + análisis
                 </div>
             </div>
             
             <!-- DOMINGO -->
             <div class="day-card">
-                <div class="day-header weekend">DOMINGO</div>
+                <div class="day-header weekend">DOMINGO - Consolidación</div>
                 <div class="time-slot intensive">
                     <span class="time">09:00-10:50</span>
                     <div class="activity">
-                        <div class="activity-name">Simulacro de entrenamiento <span class="task-type type-simulacro">TEST</span></div>
-                        <div class="activity-detail">100 preguntas - Ritmo personal controlado</div>
+                        <div class="activity-name">Test de entrenamiento completo <span class="task-type type-simulacro">TEST</span></div>
+                        <div class="activity-detail">100 preguntas - Ritmo personal</div>
                     </div>
                     <span class="duration">1h 50min</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">11:00-12:00</span>
+                    <span class="time">11:00-12:30</span>
                     <div class="activity">
                         <div class="activity-name">Análisis comparativo <span class="task-type type-analysis">ANÁLISIS</span></div>
-                        <div class="activity-detail">Sábado vs domingo + tendencias</div>
+                        <div class="activity-detail">Sábado vs domingo + patrones de error</div>
+                    </div>
+                    <span class="duration">1h 30min</span>
+                </div>
+                <div class="time-slot">
+                    <span class="time">16:00-17:00</span>
+                    <div class="activity">
+                        <div class="activity-name">Repaso temas débiles <span class="task-type type-review">REPASO</span></div>
+                        <div class="activity-detail">Revisión dirigida según resultados semanales</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="time-slot">
-                    <span class="time">16:00-16:45</span>
+                    <span class="time">17:30-18:00</span>
                     <div class="activity">
-                        <div class="activity-name">Vuelta temática rápida <span class="task-type type-review">REPASO</span></div>
-                        <div class="activity-detail">Temas 13-15 (lectura final)</div>
-                    </div>
-                    <span class="duration">45 min</span>
-                </div>
-                <div class="time-slot">
-                    <span class="time">17:00-17:30</span>
-                    <div class="activity">
-                        <div class="activity-name">Sistema Leitner <span class="task-type type-flashcard">FICHAS</span></div>
-                        <div class="activity-detail">Revisión completa + reorganización</div>
+                        <div class="activity-name">Sistema Leitner Completo <span class="task-type type-flashcard">FICHAS</span></div>
+                        <div class="activity-detail">Revisión integral 5 cajas + reorganización</div>
                     </div>
                     <span class="duration">30 min</span>
                 </div>
                 <div class="time-slot">
                     <span class="time">20:00-21:00</span>
                     <div class="activity">
-                        <div class="activity-name">Planificación semanal <span class="task-type type-rest">PLANIFICACIÓN</span></div>
-                        <div class="activity-detail">Análisis semanal + ajustes + objetivos</div>
+                        <div class="activity-name">Planificación estratégica <span class="task-type type-rest">PLANIFICACIÓN</span></div>
+                        <div class="activity-detail">Plan de Revisión Semanal + ajustes</div>
                     </div>
                     <span class="duration">1h</span>
                 </div>
                 <div class="daily-summary">
-                    Total día: 5h 15min | 100 preguntas + planificación estratégica
+                    Total día: 5h 50min | 100 preguntas + planificación estratégica
                 </div>
             </div>
         </div>
@@ -894,15 +887,15 @@
         <!-- Achievement banner -->
         <div class="achievement-banner">
             <h3>LOGROS SEMANALES NIVEL ÉLITE</h3>
-            <p>✓ 745 preguntas resueltas | ✓ 15 temas semanales | ✓ 2 sesiones Feynman aplicadas</p>
-            <p>✓ Sistema Leitner dual optimizado | ✓ Control absoluto del temario</p>
+            <p>✓ 745+ preguntas resueltas | ✓ 15 temas completos | ✓ 2 sesiones Feynman</p>
+            <p>✓ Sistema Leitner dual optimizado | ✓ Laboratorio de fichas | ✓ Control absoluto del temario</p>
         </div>
         
         <!-- Leyenda -->
         <div class="legend">
             <div class="legend-title">Leyenda del Sistema:</div>
             <div class="legend-items">
-                <span class="task-type type-test">TEST</span> Práctica intensiva
+                <span class="task-type type-test">TEST</span> Test entrenamiento
                 <span class="task-type type-review">REPASO</span> Vuelta temario
                 <span class="task-type type-simulacro">EXAMEN</span> Simulacro oficial
                 <span class="task-type type-flashcard">FICHAS-E</span> Leitner Esencial
@@ -910,7 +903,8 @@
                 <span class="task-type type-analysis">ANÁLISIS</span> Estudio profundo
                 <span class="task-type type-technique">FEYNMAN</span> Técnica activa
                 <span class="task-type type-speed">SPEED</span> Contrarreloj
-                <span class="task-type type-lab">FICHAS</span> Laboratorio
+                <span class="task-type type-lab">LAB</span> Laboratorio
+                <span class="task-type type-conditional">CONDICIONAL</span> Solo si <80%
             </div>
         </div>
         
@@ -920,51 +914,51 @@
             <div class="tips-grid">
                 <div class="tip-card">
                     <div class="tip-title">
-                        Triple sesión inteligente
+                        Triple sesión Ma-Ju
                     </div>
-                    <p>AM: temas complejos (mente fresca), Mediodía: consolidación, PM: preguntas nuevas para mantener adaptabilidad. Cada sesión tiene objetivo específico.</p>
+                    <p>El tercer bloque de test (30-40 preguntas nuevas) solo es martes y jueves. Estas preguntas evitan la memorización mecánica y mantienen la adaptabilidad.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        Feynman bi-semanal
+                        12,400 preguntas totales
                     </div>
-                    <p>Dos sesiones Feynman atacan puntos ciegos desde ángulos diferentes. La grabación permite auto-evaluación objetiva del dominio real.</p>
+                    <p>Con ~745 preguntas semanales durante 20 semanas, cubrirás el banco completo de 12,000 preguntas con margen para repetir las más difíciles.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
-                        Speed training quincenal
+                        Mini-tests condicionales
                     </div>
-                    <p>Los simulacros contrarreloj no son para aprobar, son para crear resiliencia mental. Mantener 70% a máxima velocidad garantiza éxito en condiciones normales.</p>
+                    <p>Los mini-tests de entrenamiento solo se activan si detectas un tema por debajo del 80%. No pierdas tiempo en temas que ya dominas.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        Técnica Feynman 2x/semana
+                    </div>
+                    <p>Miércoles y viernes, 30 minutos cada sesión. Graba tu explicación de los temas más complejos. Si no puedes explicarlo simple, no lo entiendes.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        Viernes: descanso real al 50%
+                    </div>
+                    <p>Solo 3h 35min vs 7-8h otros días. Mantienes el ritmo con intensidad reducida para llegar fresco al fin de semana.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        Simulacro contrarreloj quincenal
+                    </div>
+                    <p>100 preguntas en 35 minutos. No es para aprobar, es para crear resiliencia mental. Si mantienes 70% a esta velocidad, el examen real será pan comido.</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">
+                        Sistema Leitner Avanzado
+                    </div>
+                    <p>5 cajas, 20 min/día. El sistema dual (Esencial 10min + Avanzado 20min) gestiona eficientemente 500+ tarjetas activas.</p>
                 </div>
                 <div class="tip-card">
                     <div class="tip-title">
                         Laboratorio de fichas
                     </div>
-                    <p>Crear mnemotecnias en grupo multiplica la retención. Las mejores creaciones se comparten y benefician a toda la cohorte.</p>
-                </div>
-                <div class="tip-card">
-                    <div class="tip-title">
-                        15 temas semanales
-                    </div>
-                    <p>Completar el temario cada 3 semanas es agresivo pero efectivo. Esta frecuencia ultra-alta garantiza dominio absoluto sin dar tiempo al olvido.</p>
-                </div>
-                <div class="tip-card">
-                    <div class="tip-title">
-                        Resiliencia profesional
-                    </div>
-                    <p>48h requiere disciplina absoluta. Nutrición óptima, sueño de calidad (7-8h) y ejercicio diario son elementos no negociables del programa.</p>
-                </div>
-                <div class="tip-card">
-                    <div class="tip-title">
-                        El 1% superior
-                    </div>
-                    <p>Este nivel te coloca en el 1% de preparación. No es solo aprobar, es dominar. Cada hora invertida te acerca a la excelencia absoluta.</p>
-                </div>
-                <div class="tip-card">
-                    <div class="tip-title">
-                        Control del fin de semana
-                    </div>
-                    <p>Sábado y domingo son para simulacros y análisis, no para cargar más horas. La calidad del análisis post-simulacro determina el progreso real.</p>
+                    <p>45 minutos semanales creando mnemotecnias visuales avanzadas. Una buena mnemotecnia convierte 10 minutos de memorización en 10 segundos de recuerdo.</p>
                 </div>
             </div>
         </div>
