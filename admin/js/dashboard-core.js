@@ -104,7 +104,8 @@ export class DashboardCore {
             'exports': './modules/exports.js',
             'medals': './modules/medals.js',
             'alerts': './modules/alerts.js',
-            'risk': './modules/risk-analysis.js'
+            'risk': './modules/risk-analysis.js',
+            'student-detail': './modules/student-detail.js'
         };
     }
 

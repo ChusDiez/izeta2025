@@ -157,7 +157,8 @@ window.dashboardAdmin = {
     exportData: async (type) => {
         const exportsModule = await dashboard?.loadModule('exports');
         return exportsModule?.exportData(type);
-    }
+    },
+    showStudentDetail: (studentId) => dashboard?.showStudentDetail(studentId)
 };
 
 // Esperar a que el DOM esté listo

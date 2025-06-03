@@ -412,7 +412,7 @@ Un saludo,
         }
     }
     
-    // Guardar referencia global
+// Guardar referencia global
     setupEventListeners() {
         window.studentDetail = this;
         
@@ -423,5 +423,421 @@ Un saludo,
         
         // Preview de email en tiempo real
         document.getElementById('emailBody')?.addEventListener('input', () => this.updateEmailPreview());
+    }
+
+    // Métodos faltantes que necesitas implementar:
+    
+    async loadStudentData(studentId) {
+        const { data, error } = await this.supabase
+            .from('users')
+            .select('*')
+            .eq('id', studentId)
+            .single();
+        
+        if (error) throw error;
+        return data;
+    }
+    
+    async loadStudentResults(studentId) {
+        const { data, error } = await this.supabase
+            .from('user_results')
+            .select(`
+                *,
+                weekly_simulations!inner(week_number, start_date, end_date)
+            `)
+            .eq('user_id', studentId)
+            .order('submitted_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+    }
+    
+    async loadEloHistory(studentId) {
+        const { data, error } = await this.supabase
+            .from('elo_history')
+            .select('*')
+            .eq('user_id', studentId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+    }
+    
+    async loadStudentMedals(studentId) {
+        const { data, error } = await this.supabase
+            .from('user_medals')
+            .select('*')
+            .eq('user_id', studentId)
+            .order('earned_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+    }
+    
+    async loadStudentAlerts(studentId) {
+        const { data, error } = await this.supabase
+            .from('user_alerts')
+            .select('*')
+            .eq('user_id', studentId)
+            .order('created_at', { ascending: false })
+            .limit(10);
+        
+        if (error) throw error;
+        return data || [];
+    }
+    
+    getLoadingTemplate() {
+        return `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p style="margin-top: 1rem;">Cargando información del estudiante...</p>
+            </div>
+        `;
+    }
+    
+    getErrorTemplate(error) {
+        return `
+            <div class="error-container">
+                <h3>❌ Error al cargar los datos del estudiante</h3>
+                <p>${error.message}</p>
+                <button class="btn btn-secondary" onclick="window.dashboardAdmin.showPage('students')">
+                    ← Volver a estudiantes
+                </button>
+            </div>
+        `;
+    }
+    
+    renderInsights(analytics) {
+        const insights = [];
+        
+        if (analytics.scoreTrend === 'up') {
+            insights.push(`📈 Tendencia positiva: mejorando constantemente`);
+        } else if (analytics.scoreTrend === 'down') {
+            insights.push(`📉 Tendencia negativa: necesita apoyo adicional`);
+        }
+        
+        if (analytics.consistency < 1) {
+            insights.push(`✅ Rendimiento muy consistente`);
+        } else if (analytics.consistency > 2) {
+            insights.push(`⚠️ Rendimiento variable: trabajar en estabilidad`);
+        }
+        
+        if (analytics.participationRate < 50) {
+            insights.push(`❌ Baja participación: solo ${analytics.participationRate}% de simulacros`);
+        }
+        
+        return insights.length > 0 ? 
+            `<ul>${insights.map(i => `<li>${i}</li>`).join('')}</ul>` :
+            '<p>No hay insights significativos en este momento.</p>';
+    }
+    
+    renderResultsTable(results) {
+        if (results.length === 0) {
+            return '<p style="text-align: center; padding: 2rem;">No hay resultados registrados aún.</p>';
+        }
+        
+        return `
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Simulacro</th>
+                        <th>Score</th>
+                        <th>Posición</th>
+                        <th>Detalles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${results.map(result => `
+                        <tr>
+                            <td>${new Date(result.submitted_at).toLocaleDateString('es-ES')}</td>
+                            <td>RF${result.weekly_simulations?.week_number || '?'}</td>
+                            <td><strong>${result.score.toFixed(2)}/10</strong></td>
+                            <td>${result.position || 'N/A'}</td>
+                            <td>
+                                <span style="color: #10B981">✓ ${result.correct_answers || 0}</span> / 
+                                <span style="color: #DC2626">✗ ${result.wrong_answers || 0}</span> / 
+                                <span style="color: #6B7280">○ ${result.blank_answers || 0}</span>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+    
+    renderDetailedAnalysis(student, analytics, results) {
+        return `
+            <div class="analysis-sections">
+                <h3>📊 Análisis Estadístico</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <label>Score Promedio</label>
+                        <value>${student.average_score?.toFixed(2) || 'N/A'}</value>
+                    </div>
+                    <div class="stat-box">
+                        <label>Mejor Score</label>
+                        <value>${analytics.bestScore?.toFixed(2) || 'N/A'}</value>
+                    </div>
+                    <div class="stat-box">
+                        <label>Consistencia</label>
+                        <value>${analytics.consistency?.toFixed(2) || 'N/A'}</value>
+                    </div>
+                    <div class="stat-box">
+                        <label>Mejora Proyectada</label>
+                        <value>${analytics.projectedScore?.toFixed(2) || 'N/A'}</value>
+                    </div>
+                </div>
+                
+                <h3>🎯 Áreas de Mejora</h3>
+                <ul>
+                    ${analytics.worstTopics?.map(topic => `<li>${topic}</li>`).join('') || '<li>No hay datos suficientes</li>'}
+                </ul>
+            </div>
+        `;
+    }
+    
+    renderCommunicationHistory(student) {
+        return `
+            <div class="communication-section">
+                <h3>📧 Historial de Comunicaciones</h3>
+                <p style="text-align: center; color: #6B7280;">
+                    Esta función estará disponible próximamente
+                </p>
+            </div>
+        `;
+    }
+    
+    async renderCharts(results, eloHistory, analytics) {
+        // Por ahora solo un placeholder
+        console.log('Renderizando gráficos para el estudiante');
+    }
+    
+    switchTab(tabName) {
+        // Ocultar todas las tabs
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-header').forEach(header => {
+            header.classList.remove('active');
+        });
+        
+        // Mostrar la tab seleccionada
+        document.getElementById(`${tabName}-tab`)?.classList.add('active');
+        document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    }
+    
+    openEmailModal() {
+        document.getElementById('emailModal').style.display = 'flex';
+    }
+    
+    closeEmailModal() {
+        document.getElementById('emailModal').style.display = 'none';
+    }
+    
+    updateEmailPreview() {
+        const body = document.getElementById('emailBody').value;
+        const preview = document.getElementById('emailPreview');
+        
+        if (preview) {
+            // Reemplazar variables con datos reales
+            let previewText = body
+                .replace(/\${this\.currentStudent\.username}/g, this.currentStudent?.username || '[Nombre]')
+                .replace(/\${this\.currentStudent\.average_score[^}]*}/g, this.currentStudent?.average_score?.toFixed(2) || '[Score]')
+                .replace(/\${this\.currentStudent\.current_elo}/g, this.currentStudent?.current_elo || '[ELO]')
+                .replace(/\${this\.currentStudent\.probability_pass}/g, this.currentStudent?.probability_pass || '[Prob]')
+                .replace(/\${this\.currentStudent\.current_streak}/g, this.currentStudent?.current_streak || '[Racha]');
+            
+            preview.innerHTML = `<div style="white-space: pre-wrap; padding: 1rem; background: #f9fafb; border-radius: 6px;">${previewText}</div>`;
+        }
+    }
+    
+    async exportStudentReport() {
+        try {
+            const exportsModule = await this.dashboard.loadModule('exports');
+            
+            // Preparar datos del estudiante para exportar
+            const reportData = {
+                student: this.currentStudent,
+                results: await this.loadStudentResults(this.currentStudent.id),
+                eloHistory: await this.loadEloHistory(this.currentStudent.id),
+                medals: await this.loadStudentMedals(this.currentStudent.id)
+            };
+            
+            // Generar CSV o PDF según preferencia
+            this.dashboard.showNotification('info', 'Generando reporte...');
+            
+            // Por ahora, solo un alert
+            alert('Función de exportación en desarrollo. Los datos del estudiante están listos para exportar.');
+            
+        } catch (error) {
+            this.dashboard.showNotification('error', 'Error al exportar: ' + error.message);
+        }
+    }
+    
+    async saveEmailToHistory(emailData) {
+        // Guardar en tabla de logs de email
+        const { error } = await this.supabase
+            .from('email_logs')
+            .insert({
+                user_id: emailData.metadata.student_id,
+                email_type: emailData.metadata.type || 'direct',
+                subject: emailData.subject,
+                content: emailData.body,
+                sent_at: new Date().toISOString(),
+                metadata: emailData.metadata
+            });
+        
+        if (error) {
+            console.error('Error guardando historial de email:', error);
+        }
+    }
+    
+    async refreshCommunicationHistory() {
+        // Recargar la sección de comunicación si está visible
+        if (document.getElementById('communication-tab')?.classList.contains('active')) {
+            await this.switchTab('communication');
+        }
+    }
+    
+    // Métodos de cálculo de analíticas
+    calculateRecentAverage(results, count = 5) {
+        const recent = results.slice(0, count);
+        if (recent.length === 0) return 0;
+        return recent.reduce((sum, r) => sum + r.score, 0) / recent.length;
+    }
+    
+    calculateMonthlyEloChange(eloHistory) {
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        
+        const recentHistory = eloHistory.filter(h => new Date(h.created_at) > monthAgo);
+        if (recentHistory.length === 0) return 0;
+        
+        const first = recentHistory[recentHistory.length - 1];
+        const last = recentHistory[0];
+        
+        return last.elo_after - first.elo_before;
+    }
+    
+    calculateParticipationRate(results) {
+        const totalSimulations = this.dashboard.data.simulations.filter(s => s.status !== 'future').length;
+        if (totalSimulations === 0) return 0;
+        
+        const uniqueSimulations = new Set(results.map(r => r.simulation_id)).size;
+        return Math.round((uniqueSimulations / totalSimulations) * 100);
+    }
+    
+    calculateTrend(values) {
+        if (values.length < 2) return 'neutral';
+        
+        const recent = values.slice(0, 3);
+        const older = values.slice(3, 6);
+        
+        if (recent.length === 0 || older.length === 0) return 'neutral';
+        
+        const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+        const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
+        
+        if (recentAvg > olderAvg + 0.5) return 'up';
+        if (recentAvg < olderAvg - 0.5) return 'down';
+        return 'stable';
+    }
+    
+    findBestPerformanceDay(results) {
+        // Análisis del mejor día de rendimiento
+        const dayPerformance = {};
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        
+        results.forEach(r => {
+            const day = new Date(r.submitted_at).getDay();
+            if (!dayPerformance[day]) {
+                dayPerformance[day] = { scores: [], count: 0 };
+            }
+            dayPerformance[day].scores.push(r.score);
+            dayPerformance[day].count++;
+        });
+        
+        let bestDay = 0;
+        let bestAvg = 0;
+        
+        Object.entries(dayPerformance).forEach(([day, data]) => {
+            const avg = data.scores.reduce((a, b) => a + b, 0) / data.count;
+            if (avg > bestAvg) {
+                bestAvg = avg;
+                bestDay = parseInt(day);
+            }
+        });
+        
+        return days[bestDay];
+    }
+    
+    analyzeWeakTopics(results) {
+        const topics = {};
+        
+        results.forEach(r => {
+            if (r.weakest_topics && Array.isArray(r.weakest_topics)) {
+                r.weakest_topics.forEach(topic => {
+                    topics[topic] = (topics[topic] || 0) + 1;
+                });
+            }
+        });
+        
+        return Object.entries(topics)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 3)
+            .map(([topic]) => topic);
+    }
+    
+    calculateConsistency(results) {
+        if (results.length < 3) return 0;
+        
+        const scores = results.slice(0, 10).map(r => r.score);
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const variance = scores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / scores.length;
+        
+        return Math.sqrt(variance);
+    }
+    
+    projectNextScore(results) {
+        if (results.length < 3) return this.currentStudent?.average_score || 5;
+        
+        // Proyección simple basada en tendencia
+        const recent = results.slice(0, 5).map(r => r.score);
+        const weights = [0.4, 0.3, 0.15, 0.1, 0.05];
+        
+        let projection = 0;
+        recent.forEach((score, i) => {
+            if (i < weights.length) {
+                projection += score * weights[i];
+            }
+        });
+        
+        return Math.max(0, Math.min(10, projection));
+    }
+    
+    calculateImprovementRate(results) {
+        if (results.length < 5) return 0;
+        
+        const first5 = results.slice(-5);
+        const last5 = results.slice(0, 5);
+        
+        const firstAvg = first5.reduce((sum, r) => sum + r.score, 0) / first5.length;
+        const lastAvg = last5.reduce((sum, r) => sum + r.score, 0) / last5.length;
+        
+        return ((lastAvg - firstAvg) / firstAvg * 100).toFixed(1);
+    }
+    
+    getRiskText(probability) {
+        if (probability >= 80) return 'Excelente';
+        if (probability >= 60) return 'Buena';
+        if (probability >= 40) return 'Preocupante';
+        return 'Crítica';
+    }
+    
+    getTrendIndicator(trend) {
+        if (trend === 'up') return '↗️';
+        if (trend === 'down') return '↘️';
+        return '→';
     }
 }
