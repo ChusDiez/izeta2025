@@ -3,6 +3,8 @@
 
 import { StatisticsUtils, CNPStatistics } from '../utils/statistics.js';
 import PatternDetector from './patterns.js';
+import TopicInsights from './insights.js';
+
 
 export default class AnalyticsModule {
     constructor(supabaseClient, dashboardCore) {
@@ -10,6 +12,7 @@ export default class AnalyticsModule {
         this.dashboard = dashboardCore;
         this.charts = new Map();
         this.patternDetector = new PatternDetector();
+        this.topicInsights = new TopicInsights(dashboardCore);
         
         // Usar configuración de CNPStatistics
         this.cnpConfig = CNPStatistics.config;
@@ -159,7 +162,7 @@ export default class AnalyticsModule {
     /**
      * Actualizar todo el análisis
      */
-    async updateAnalysis() {
+async updateAnalysis() {
         const period = document.getElementById('analyticsPeriod').value;
         const compareCohorts = document.getElementById('compareCohorts').checked;
         
@@ -169,86 +172,321 @@ export default class AnalyticsModule {
         // Realizar análisis completo
         const analysis = await this.performComprehensiveAnalysis(data);
         
+        // NUEVO: Análisis de temas problemáticos
+        const topicAnalysis = await this.topicInsights.analyzeProblematicTopicsBySimulation(
+            data.results, 
+            this.dashboard.data.simulations
+        );
+        analysis.topicAnalysis = topicAnalysis;
+        
         // Renderizar todas las secciones
         this.renderExecutiveSummary(analysis);
         this.renderMainPredictiveAnalysis(analysis);
         this.renderGlobalStats(analysis.globalStats);
         
-        // Renderizar gráficos (delegado a charts.js cuando se implemente)
+        // Renderizar gráficos
         await this.renderCharts(data, analysis, compareCohorts);
         
         // Renderizar análisis de patrones
         this.renderPatternsAnalysis(analysis.patterns);
         
-        // Generar insights
+        // NUEVO: Renderizar sección de temas problemáticos
+        const topicSection = this.renderTopicAnalysisSection(topicAnalysis);
+        document.querySelector('.charts-section').insertAdjacentElement('afterend', topicSection);
+        
+        // Generar insights (incluyendo los de temas)
         await this.generateInsights(analysis);
         
         // Actualizar tabla de tendencias
         await this.updateTrendsTable(analysis.studentTrends);
     }
 
+    renderTopicAnalysisSection(topicAnalysis) {
+        const container = document.createElement('div');
+        container.className = 'topic-analysis-section card';
+        container.innerHTML = `
+            <h3>🎯 Análisis de Temas Problemáticos por Simulacro</h3>
+            
+            <!-- Filtros interactivos -->
+            <div class="topic-filters">
+                <div class="filter-group">
+                    <label>Cohorte:</label>
+                    <select id="topicCohortFilter" onchange="window.analyticsModule.topicInsights.filterTopicAnalysis()">
+                        <option value="all">Todas</option>
+                        <option value="20h">20h</option>
+                        <option value="36h">36h</option>
+                        <option value="48h">48h</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Período:</label>
+                    <select id="topicPeriodFilter" onchange="window.analyticsModule.topicInsights.filterTopicAnalysis()">
+                        <option value="all">Todo</option>
+                        <option value="last5">Últimos 5 simulacros</option>
+                        <option value="last3">Últimos 3 simulacros</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Umbral crítico:</label>
+                    <select id="topicThresholdFilter" onchange="window.analyticsModule.topicInsights.filterTopicAnalysis()">
+                        <option value="20">≥20% estudiantes</option>
+                        <option value="30" selected>≥30% estudiantes</option>
+                        <option value="40">≥40% estudiantes</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Resumen global con correlaciones -->
+            <div class="topic-summary">
+                <div class="stat-box">
+                    <div class="stat-label">Total Temas Únicos</div>
+                    <div class="stat-value">${Object.keys(topicAnalysis.globalTrends).length}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Temas Críticos</div>
+                    <div class="stat-value">${
+                        Object.values(topicAnalysis.globalTrends)
+                            .filter(t => t.avgPercentage >= 30).length
+                    }</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Impacto Promedio</div>
+                    <div class="stat-value">${
+                        topicAnalysis.correlations?.averageImpact?.toFixed(2) || 'N/A'
+                    } pts</div>
+                </div>
+            </div>
+            
+            <!-- Panel de correlaciones tema-nota -->
+            ${topicAnalysis.correlations ? `
+                <div class="correlation-panel">
+                    <h4>📊 Correlación Tema-Nota Media</h4>
+                    <div class="correlation-chart">
+                        ${this.renderCorrelationChart(topicAnalysis.correlations.topImpactTopics)}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <!-- Visualización por simulacro -->
+            <div class="simulation-topics-grid" id="simulationTopicsGrid">
+                ${Object.values(topicAnalysis.bySimulation)
+                    .sort((a, b) => b.weekNumber - a.weekNumber)
+                    .slice(0, 5)
+                    .map(sim => this.renderSimulationTopicCard(sim))
+                    .join('')}
+            </div>
+            
+            <!-- Insights específicos -->
+            <div class="topic-insights">
+                <h4>💡 Insights Detectados</h4>
+                ${topicAnalysis.insights.map(insight => `
+                    <div class="insight-card ${insight.type}">
+                        <h5>${insight.title}</h5>
+                        <p>${insight.message}</p>
+                        <div class="insight-action">
+                            <strong>Acción recomendada:</strong> ${insight.action}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <!-- Modal para drill-down -->
+            ${this.renderTopicDrillDownModal()}
+        `;
+        
+        return container;
+    }
+
     /**
-     * Análisis individual de estudiante (usado por students.js)
+     * Renderizar gráfico de correlaciones (delegado desde TopicInsights)
      */
-    async analyzeIndividualStudent(student, studentResults) {
-        if (!studentResults || studentResults.length === 0) {
-            return this.getDefaultStudentMetrics();
+    renderCorrelationChart(topImpactTopics) {
+        if (!topImpactTopics || topImpactTopics.length === 0) {
+            return '<p>No hay datos suficientes para mostrar correlaciones</p>';
         }
         
-        // Análisis de tendencia usando utilidades compartidas
-        const trendAnalysis = this.analyzeTrend(studentResults);
-        
-        // Análisis de patrones usando el detector
-        const responsePatterns = await this.patternDetector.analyzeStudentPatterns(student, studentResults);
-        
-        // Cálculo de métricas avanzadas usando utilidades
-        const scores = studentResults.map(r => r.score);
-        const weighted_average = StatisticsUtils.calculateWeightedAverage(scores);
-        const consistency = StatisticsUtils.calculateConsistency(studentResults);
-        const stats = StatisticsUtils.calculateBasicStats(scores);
-        const z_score = CNPStatistics.calculateZScore(stats.mean);
-        const percentile = StatisticsUtils.calculatePercentileRank(stats.mean, this.getAllScores());
-        
-        // Análisis de riesgo personalizado
-        const riskAnalysis = this.analyzeIndividualRisk(student, studentResults, responsePatterns);
-        
-        // Calcular probabilidad usando CNPStatistics
-        const probability_pass = CNPStatistics.calculatePassProbability(
-            stats.mean,
-            consistency,
-            trendAnalysis.slope,
-            student.total_simulations
-        );
-        
-        // Generar recomendaciones personalizadas
-        const recommendations = this.generatePersonalizedRecommendations(
-            student, 
-            studentResults, 
-            responsePatterns,
-            riskAnalysis
-        );
-        
-        return {
-            weighted_average,
-            consistency_coefficient: consistency,
-            z_score,
-            percentile,
-            probability_pass,
-            trendAnalysis,
-            responsePatterns,
-            risk_level: riskAnalysis.level,
-            calculated_risk_level: riskAnalysis.level,
-            recommendations,
-            best_score: stats.max,
-            worst_score: stats.min,
-            average_score: stats.mean,
-            probability_details: {
-                confidence: {
-                    margin: Math.max(5, 20 - (studentResults.length * 2))
-                }
-            }
-        };
+        return `
+            <div class="correlation-bars">
+                ${topImpactTopics.map(topic => `
+                    <div class="correlation-item">
+                        <div class="topic-label">${topic.topic}</div>
+                        <div class="correlation-bar-container">
+                            <div class="score-comparison">
+                                <span class="with-topic">Con tema: ${topic.avgScoreWithTopic.toFixed(2)}</span>
+                                <span class="without-topic">Sin tema: ${topic.avgScoreWithoutTopic.toFixed(2)}</span>
+                            </div>
+                            <div class="impact-bar" style="width: ${Math.abs(topic.impactPercentage)}%">
+                                -${topic.scoreImpact.toFixed(2)} pts (${Math.abs(topic.impactPercentage).toFixed(0)}%)
+                            </div>
+                        </div>
+                        <div class="affected-count">${topic.studentsAffected} estudiantes</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
+
+    /**
+     * Renderizar card de simulacro con drill-down
+     */
+    renderSimulationTopicCard(simData) {
+        return `
+            <div class="simulation-topic-card" data-simulation-id="${simData.simulation.id}">
+                <div class="card-header">
+                    <h4>RF${simData.weekNumber}</h4>
+                    <span class="participant-count">${simData.totalParticipants} participantes</span>
+                </div>
+                <div class="card-body">
+                    ${simData.topProblematicTopics.length > 0 ? `
+                        <div class="topic-list">
+                            ${simData.topProblematicTopics.map((topic, index) => `
+                                <div class="topic-item ${topic.percentage >= 30 ? 'critical' : ''} clickable"
+                                     onclick="window.analyticsModule.topicInsights.showTopicDrillDown('${simData.simulation.id}', '${topic.topic}')">
+                                    <span class="topic-rank">#${index + 1}</span>
+                                    <span class="topic-name">${topic.topic}</span>
+                                    <div class="topic-stats">
+                                        <span class="topic-percentage">${topic.percentage.toFixed(0)}%</span>
+                                        <span class="topic-count">(${topic.count})</span>
+                                    </div>
+                                    <span class="drill-down-icon">👁️</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : '<p class="no-data">Sin datos de temas problemáticos</p>'}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Renderizar modal de drill-down
+     */
+    renderTopicDrillDownModal() {
+        return `
+            <div id="topicDrillDownModal" class="modal" style="display: none;">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h3 id="drillDownTitle">Estudiantes que marcaron este tema</h3>
+                        <button class="btn-icon" onclick="window.analyticsModule.topicInsights.closeDrillDown()">✖️</button>
+                    </div>
+                    <div class="modal-body" id="drillDownContent">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="window.analyticsModule.topicInsights.exportTopicStudents()">
+                            📊 Exportar lista
+                        </button>
+                        <button class="btn btn-primary" onclick="window.analyticsModule.topicInsights.createTopicIntervention()">
+                            📧 Crear intervención grupal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Generar insights (MODIFICADO para incluir temas)
+     */
+    async generateInsights(analysis) {
+        const container = document.getElementById('insightsList');
+        const allInsights = [];
+        
+        // Insights existentes (si los hay)
+        // ...
+        
+        // Añadir insights de temas problemáticos
+        if (analysis.topicAnalysis?.insights) {
+            allInsights.push(...analysis.topicAnalysis.insights);
+        }
+        
+        // Ordenar por prioridad
+        allInsights.sort((a, b) => {
+            const priority = { 'critical': 3, 'warning': 2, 'info': 1 };
+            return (priority[b.type] || 0) - (priority[a.type] || 0);
+        });
+        
+        container.innerHTML = allInsights.length > 0 ? 
+            allInsights.map(insight => this.renderInsight(insight)).join('') :
+            '<p class="text-muted">No hay insights significativos en este momento.</p>';
+    }
+
+/**
+ * Renderizar un insight individual
+ */
+renderInsight(insight) {
+    return `
+        <div class="insight-card ${insight.type}">
+            <h5>${insight.title}</h5>
+            <p>${insight.message}</p>
+            <div class="insight-action">
+                <strong>Acción recomendada:</strong> ${insight.action}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Análisis individual de estudiante (usado por students.js)
+ */
+async analyzeIndividualStudent(student, studentResults) {
+    if (!studentResults || studentResults.length === 0) {
+        return this.getDefaultStudentMetrics();
+    }
+    
+    // Análisis de tendencia usando utilidades compartidas
+    const trendAnalysis = this.analyzeTrend(studentResults);
+    
+    // Análisis de patrones usando el detector
+    const responsePatterns = await this.patternDetector.analyzeStudentPatterns(student, studentResults);
+    
+    // Cálculo de métricas avanzadas usando utilidades
+    const scores = studentResults.map(r => r.score);
+    const weighted_average = StatisticsUtils.calculateWeightedAverage(scores);
+    const consistency = StatisticsUtils.calculateConsistency(studentResults);
+    const stats = StatisticsUtils.calculateBasicStats(scores);
+    const z_score = CNPStatistics.calculateZScore(stats.mean);
+    const percentile = StatisticsUtils.calculatePercentileRank(stats.mean, this.getAllScores());
+    
+    // Análisis de riesgo personalizado
+    const riskAnalysis = this.analyzeIndividualRisk(student, studentResults, responsePatterns);
+    
+    // Calcular probabilidad usando CNPStatistics
+    const probability_pass = CNPStatistics.calculatePassProbability(
+        stats.mean,
+        consistency,
+        trendAnalysis.slope,
+        student.total_simulations
+    );
+    
+    // Generar recomendaciones personalizadas
+    const recommendations = this.generatePersonalizedRecommendations(
+        student, 
+        studentResults, 
+        responsePatterns,
+        riskAnalysis
+    );
+    
+    return {
+        weighted_average,
+        consistency_coefficient: consistency,
+        z_score,
+        percentile,
+        probability_pass,
+        trendAnalysis,
+        responsePatterns,
+        risk_level: riskAnalysis.level,
+        calculated_risk_level: riskAnalysis.level,
+        recommendations,
+        best_score: stats.max,
+        worst_score: stats.min,
+        average_score: stats.mean,
+        probability_details: {
+            confidence: {
+                margin: Math.max(5, 20 - (studentResults.length * 2))
+            }
+        }
+    };
+}
 
     /**
      * Cargar datos según período
