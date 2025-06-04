@@ -659,9 +659,19 @@ export default class AnalyticsModule {
         const period = document.getElementById('analyticsPeriod').value;
         const compareCohorts = document.getElementById('compareCohorts').checked;
         
+        try {
+        // Asegurar Chart.js antes de todo
+        await window.ensureChartJS();
+
         // Cargar datos según el período
         const data = await this.loadAnalyticsData(period);
         
+        if (!data.results || data.results.length === 0) {
+        document.getElementById('executiveSummarySection').innerHTML = 
+        '<div class="alert alert-warning">No hay datos disponibles para el período seleccionado</div>';
+        return;
+        }    
+
         // Realizar análisis completo
         const analysis = await this.performComprehensiveAnalysis(data);
         
@@ -673,12 +683,25 @@ export default class AnalyticsModule {
         
         // Renderizar estadísticas globales
         this.renderGlobalStats(analysis.globalStats);
-        
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Renderizar gráficos
-        await this.renderScoresEvolution(data, compareCohorts);
-        await this.renderRiskDistribution(analysis.riskDistribution);
-        await this.renderParticipationPattern(data);
-        await this.renderEloProgression(data, compareCohorts);
+        if (document.getElementById('scoresEvolutionChart')) {
+            await this.renderScoresEvolution(data, compareCohorts);
+        }
+        
+        if (document.getElementById('riskDistributionChart')) {
+            await this.renderRiskDistribution(analysis.riskDistribution);
+        }
+        
+        if (document.getElementById('participationPatternChart')) {
+            await this.renderParticipationPattern(data);
+        }
+        
+        if (document.getElementById('eloProgressionChart') && data.eloHistory && data.eloHistory.length > 0) {
+            await this.renderEloProgression(data, compareCohorts);
+        }
         
         // Renderizar análisis de patrones
         this.renderPatternsAnalysis(analysis.patterns);
@@ -691,6 +714,12 @@ export default class AnalyticsModule {
         
         // Actualizar tabla de tendencias
         await this.updateTrendsTable(analysis.studentTrends);
+
+
+        } catch (error) {
+            console.error('Error en updateAnalysis:', error);
+            this.dashboard.showNotification('error', 'Error al actualizar análisis: ' + error.message);
+        }
     }
 
     /**
@@ -832,6 +861,9 @@ export default class AnalyticsModule {
             `)
             .gte('submitted_at', startDate.toISOString())
             .order('submitted_at', { ascending: true });
+        if (resultsError) {
+            console.error('Error cargando resultados:', resultsError);
+        }
         
         // Cargar historial ELO
         const { data: eloHistory } = await this.supabase
@@ -839,6 +871,10 @@ export default class AnalyticsModule {
             .select('*')
             .gte('created_at', startDate.toISOString())
             .order('created_at', { ascending: true });
+        
+        if (eloError) {
+            console.error('Error cargando historial ELO:', eloError);
+        }
         
         return { 
             results: results || [], 

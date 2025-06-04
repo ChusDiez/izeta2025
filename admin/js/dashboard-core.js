@@ -161,7 +161,8 @@ export class DashboardCore {
                 studentsResponse,
                 simulationsResponse,
                 resultsResponse,
-                alertsResponse
+                alertsResponse,
+                eloHistoryResponse
             ] = await Promise.all([
                 // Estudiantes con verificación real de admin
                 this.supabase
@@ -183,14 +184,21 @@ export class DashboardCore {
                         users!inner(slug, username, email, cohort)
                     `)
                     .order('submitted_at', { ascending: false })
-                    .limit(100),
+                    .limit(1000),
                 
                 // Alertas no leídas
                 this.supabase
                     .from('user_alerts')
                     .select('*')
                     .eq('is_read', false)
-                    .order('created_at', { ascending: false })
+                    .order('created_at', { ascending: false }),
+
+                this.supabase
+                .from('elo_history')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(500)
+           
             ]);
 
             // Procesar respuestas
@@ -208,6 +216,12 @@ export class DashboardCore {
             
             if (!alertsResponse.error) {
                 this.data.alerts = alertsResponse.data || [];
+            }
+
+            if (!eloHistoryResponse.error) {
+            this.data.eloHistory = eloHistoryResponse.data || [];
+            } else {
+            this.data.eloHistory = [];
             }
 
             // Calcular estadísticas
@@ -551,6 +565,8 @@ export class DashboardCore {
         const contentWrapper = document.getElementById('contentWrapper');
         const data = this.getFilteredData();
         
+        await window.ensureChartJS();
+
         contentWrapper.innerHTML = `
             <div class="stats-grid">
                 ${this.renderStatsCards(data)}
@@ -601,16 +617,66 @@ export class DashboardCore {
                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     border-color: #1e3a8a !important;
                 }
+                .chart-card {
+                    background: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                    min-height: 400px;
+                }
+                .chart-body {
+                    position: relative;
+                    height: 300px;
+                }
             </style>
         `;
-        
-        // Cargar módulo de gráficos si es necesario
-        if (this.data.results.length > 0) {
-            const chartsModule = await this.loadModule('charts');
-            await chartsModule.renderWeeklyChart('weeklyChart', this.data);
-            await chartsModule.renderCohortDistribution('cohortChart', this.data.cohortStats);
-        }
+        setTimeout(async () => {
+            try {
+                // Verificar que tengamos datos antes de renderizar
+                if (data.results && data.results.length > 0) {
+                    const chartsModule = await this.loadModule('charts');
+                    
+                    // Renderizar cada gráfico con manejo de errores
+                    try {
+                        await chartsModule.renderWeeklyChart('weeklyChart', data);
+                    } catch (e) {
+                        console.error('Error en gráfico semanal:', e);
+                    }
+                    
+                    try {
+                        await chartsModule.renderCohortDistribution('cohortChart', this.data.cohortStats);
+                    } catch (e) {
+                        console.error('Error en gráfico de cohortes:', e);
+                    }
+                    
+                    try {
+                        // Pasar los estudiantes para el análisis de riesgo
+                        await chartsModule.renderRiskAnalysis('riskChart', data.students);
+                    } catch (e) {
+                        console.error('Error en gráfico de riesgo:', e);
+                    }
+                    
+                    try {
+                        // Renderizar tendencia ELO si hay datos
+                        if (this.data.eloHistory && this.data.eloHistory.length > 0) {
+                            await chartsModule.renderEloTrends('eloChart', this.data.eloHistory);
+                        } else {
+                            document.getElementById('eloChart').parentElement.innerHTML = 
+                                '<p style="text-align: center; color: #6b7280; margin-top: 50px;">No hay datos de ELO disponibles</p>';
+                        }
+                    } catch (e) {
+                        console.error('Error en gráfico ELO:', e);
+                    }
+                } else {
+                    contentWrapper.querySelector('.charts-section').innerHTML = 
+                        '<div style="text-align: center; padding: 3rem; color: #6b7280;">No hay datos suficientes para mostrar gráficos</div>';
+                }
+            } catch (error) {
+                console.error('Error general renderizando gráficos:', error);
+            }
+        }, 100);
     }
+
 
     /**
      * Renderizar cards de estadísticas
