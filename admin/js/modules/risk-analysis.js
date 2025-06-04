@@ -1,15 +1,14 @@
 // admin/js/modules/risk-analysis.js
+// Módulo de análisis de riesgo actualizado para usar utilidades compartidas
+
+import { StatisticsUtils, CNPStatistics } from './utils/statistics.js';
+import PatternDetector from './analytics/patterns.js';
+
 export default class RiskAnalysisModule {
     constructor(supabaseClient, dashboardCore) {
         this.supabase = supabaseClient;
         this.dashboard = dashboardCore;
-        this.riskFactors = {
-            score: { weight: 0.3, threshold: 6 },
-            participation: { weight: 0.2, threshold: 0.7 },
-            consistency: { weight: 0.2, threshold: 1.5 },
-            trend: { weight: 0.2, threshold: 0 },
-            engagement: { weight: 0.1, threshold: 0.5 }
-        };
+        this.patternDetector = new PatternDetector();
         this.allAtRiskStudents = [];
     }
 
@@ -19,7 +18,7 @@ export default class RiskAnalysisModule {
             container.innerHTML = `
                 <div class="loading">
                     <div class="loading-spinner"></div>
-                    <p style="margin-top: 1rem;">Analizando riesgos...</p>
+                    <p>Analizando riesgos...</p>
                 </div>
             `;
 
@@ -39,7 +38,7 @@ export default class RiskAnalysisModule {
             container.innerHTML = `
                 <div class="risk-analysis-page">
                     <h2>⚠️ Análisis de Riesgo</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                    <p class="text-muted">
                         Análisis completo de estudiantes en riesgo académico basado en múltiples factores
                     </p>
                     
@@ -47,7 +46,7 @@ export default class RiskAnalysisModule {
                     ${this.renderExecutiveSummary(studentsWithRisk)}
                     
                     <!-- Resumen de riesgo -->
-                    <div class="risk-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                    <div class="stats-grid">
                         <div class="stat-card danger">
                             <div class="stat-header">
                                 <div class="stat-icon danger">⚠️</div>
@@ -59,7 +58,7 @@ export default class RiskAnalysisModule {
                             </div>
                         </div>
                         
-                        <div class="stat-card danger" style="border-top: 4px solid #dc2626;">
+                        <div class="stat-card danger">
                             <div class="stat-header">
                                 <div class="stat-icon danger">🚨</div>
                                 <div class="stat-content">
@@ -94,19 +93,19 @@ export default class RiskAnalysisModule {
                     </div>
                     
                     <!-- Distribución por niveles de riesgo -->
-                    <div class="risk-distribution card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div class="card">
                         <h3>📊 Distribución por Niveles de Riesgo</h3>
                         ${this.renderRiskDistributionBars(studentsWithRisk)}
                     </div>
                     
                     <!-- Matriz de riesgo-impacto -->
-                    <div class="risk-matrix-container card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div class="card">
                         <h3>📈 Matriz de Riesgo-Impacto</h3>
-                        <div id="riskMatrix" style="height: 400px;"></div>
+                        <div id="riskMatrix" class="chart-body"></div>
                     </div>
                     
                     <!-- Lista de estudiantes en riesgo -->
-                    <div class="risk-list table-card">
+                    <div class="table-card">
                         <div class="table-header">
                             <h3>🚨 Estudiantes que requieren atención inmediata</h3>
                             <button class="btn btn-primary" onclick="window.riskAnalysisModule.exportRiskReport()">
@@ -133,7 +132,7 @@ export default class RiskAnalysisModule {
                             </table>
                         </div>
                         ${atRisk.length > 20 ? `
-                            <div style="padding: 1rem; text-align: center; background: #f9fafb;">
+                            <div class="table-footer">
                                 <p>Mostrando 20 de ${atRisk.length} estudiantes en riesgo</p>
                                 <button class="btn btn-secondary" onclick="window.riskAnalysisModule.showAllAtRisk()">
                                     Ver todos
@@ -143,20 +142,20 @@ export default class RiskAnalysisModule {
                     </div>
                     
                     <!-- Acciones recomendadas -->
-                    <div class="recommended-actions card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+                    <div class="card">
                         <h3>💡 Acciones Recomendadas por Tipo</h3>
                         ${this.renderRecommendedActions(atRisk)}
                     </div>
                     
                     <!-- Recomendaciones generales -->
-                    <div class="recommendations-section card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+                    <div class="card">
                         <h3>📌 Recomendaciones Generales</h3>
                         ${this.renderGeneralRecommendations(studentsWithRisk, atRisk, criticalRisk)}
                     </div>
                 </div>
             `;
             
-            // Guardar referencia global correcta
+            // Guardar referencia global
             window.riskAnalysisModule = this;
             
             // Renderizar gráficos después de que el DOM esté listo
@@ -178,336 +177,9 @@ export default class RiskAnalysisModule {
         }
     }
 
-    // Renderizar fila de la tabla de riesgo
-    renderRiskTableRow(student) {
-        const mainFactors = this.getMainRiskFactors(student);
-        const patterns = student.responsePatterns;
-        const hasPatternIssues = patterns?.hasEnoughData && 
-
-        Object.values(patterns.patterns).some(p => p.detected);
-        return `
-        <tr>
-            <td>
-                <strong>${student.username}</strong>
-                <div style="font-size: 0.875rem; color: var(--text-secondary);">${student.email}</div>
-            </td>
-            <td><span class="badge badge-info">${student.cohort}</span></td>
-            <td>
-                <span class="risk-indicator ${this.getRiskClass(student.probability_pass)}">
-                    ${(student.probability_pass || 50).toFixed(0)}%
-                </span>
-            </td>
-            <td>${(student.average_score || 0).toFixed(1)}/10</td>
-            <td>${this.getTrendIcon(student.trend_direction)}</td>
-            <td>
-                <div style="font-size: 0.875rem;">
-                    ${mainFactors.map(f => `<span class="risk-factor-tag">${f}</span>`).join(' ')}
-                    ${hasPatternIssues ? '<span class="risk-factor-tag pattern-alert">⚠️ Patrones</span>' : ''}
-                </div>
-            </td>
-            <td>
-                <span class="badge badge-${this.getRiskBadgeClass(student.probability_pass)}">
-                    ${this.getRiskLevelText(student.probability_pass)}
-                </span>
-            </td>
-            <td>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')" title="Ver detalles">
-                        👁️
-                    </button>
-                    ${hasPatternIssues ? `
-                        <button class="btn-icon" onclick="window.riskAnalysisModule.showPatternDetails('${student.id}')" title="Ver patrones">
-                            📊
-                        </button>
-                    ` : ''}
-                    <button class="btn-icon" onclick="window.riskAnalysisModule.createIntervention('${student.id}')" title="Crear intervención">
-                        💬
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `;
-}
-
-    // Obtener los principales factores de riesgo
-    getMainRiskFactors(student) {
-        const factors = [];
-        
-        if (student.average_score < 6) factors.push('📉 Score bajo');
-        if (student.total_simulations < 3) factors.push('📅 Poca participación');
-        if (student.current_streak === 0) factors.push('🔥 Sin racha');
-        if (student.trend_direction === 'down') factors.push('📊 Tendencia negativa');
-        if (student.riskFactors?.consistencyRisk > 40) factors.push('📈 Inconsistente');
-        
-        return factors.slice(0, 3); // Máximo 3 factores
-    }
-
-    // Renderizar distribución de riesgo con barras
-    renderRiskDistributionBars(students) {
-        const distribution = {
-            critical: students.filter(s => (s.probability_pass || 50) < 30).length,
-            high: students.filter(s => (s.probability_pass || 50) >= 30 && (s.probability_pass || 50) < 50).length,
-            medium: students.filter(s => (s.probability_pass || 50) >= 50 && (s.probability_pass || 50) < 70).length,
-            low: students.filter(s => (s.probability_pass || 50) >= 70).length
-        };
-        
-        const total = students.length;
-        
-        return `
-            <div style="margin-top: 1.5rem;">
-                ${Object.entries(distribution).map(([level, count]) => {
-                    const percentage = (count / total * 100).toFixed(1);
-                    const colors = {
-                        critical: '#dc2626',
-                        high: '#f59e0b',
-                        medium: '#3b82f6',
-                        low: '#10b981'
-                    };
-                    
-                    return `
-                        <div style="margin-bottom: 1rem;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 500;">
-                                    ${this.getRiskLevelText(level === 'critical' ? 20 : level === 'high' ? 40 : level === 'medium' ? 60 : 80)}
-                                </span>
-                                <span>${count} estudiantes (${percentage}%)</span>
-                            </div>
-                            <div style="background: #e5e7eb; height: 24px; border-radius: 12px; overflow: hidden;">
-                                <div style="background: ${colors[level]}; width: ${percentage}%; height: 100%; transition: width 0.5s ease;"></div>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-    }
-
-    // Renderizar recomendaciones generales
-    renderGeneralRecommendations(allStudents, atRisk, criticalRisk) {
-        const recommendations = [];
-        
-        const riskPercentage = (atRisk.length / allStudents.length * 100).toFixed(1);
-        const criticalPercentage = (criticalRisk.length / allStudents.length * 100).toFixed(1);
-        
-        if (criticalPercentage > 10) {
-            recommendations.push({
-                icon: '🚨',
-                title: 'Situación Crítica',
-                text: `${criticalPercentage}% de estudiantes en riesgo crítico. Se recomienda implementar un plan de intervención inmediata.`
-            });
-        }
-        
-        if (riskPercentage > 30) {
-            recommendations.push({
-                icon: '⚠️',
-                title: 'Alto Porcentaje en Riesgo',
-                text: `${riskPercentage}% de estudiantes necesitan apoyo. Considerar sesiones de refuerzo grupales.`
-            });
-        }
-        
-        const lowParticipation = allStudents.filter(s => s.total_simulations < 3).length;
-        if (lowParticipation > allStudents.length * 0.2) {
-            recommendations.push({
-                icon: '📅',
-                title: 'Baja Participación General',
-                text: `${lowParticipation} estudiantes han participado en menos de 3 simulacros. Implementar estrategias de motivación.`
-            });
-        }
-        
-        const noStreak = allStudents.filter(s => s.current_streak === 0).length;
-        if (noStreak > allStudents.length * 0.4) {
-            recommendations.push({
-                icon: '🔥',
-                title: 'Falta de Constancia',
-                text: `${noStreak} estudiantes sin racha activa. Incentivar la participación continua.`
-            });
-        }
-        
-        return recommendations.length > 0 ? `
-            <div style="display: grid; gap: 1rem; margin-top: 1rem;">
-                ${recommendations.map(rec => `
-                    <div style="display: flex; gap: 1rem; padding: 1rem; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                        <div style="font-size: 2rem;">${rec.icon}</div>
-                        <div>
-                            <h4 style="margin-bottom: 0.5rem; color: #92400e;">${rec.title}</h4>
-                            <p style="margin: 0; color: #78350f;">${rec.text}</p>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        ` : '<p style="color: var(--text-secondary);">No hay recomendaciones generales en este momento.</p>';
-    }
-
-    // Métodos auxiliares
-    getRiskClass(probability) {
-        if (!probability) probability = 50;
-        if (probability < 30) return 'risk-critical';
-        if (probability < 50) return 'risk-high';
-        if (probability < 70) return 'risk-medium';
-        return 'risk-low';
-    }
-
-    getRiskBadgeClass(probability) {
-        if (!probability) probability = 50;
-        if (probability < 30) return 'danger';
-        if (probability < 50) return 'warning';
-        if (probability < 70) return 'info';
-        return 'success';
-    }
-
-    getRiskLevelText(probability) {
-        if (!probability) probability = 50;
-        if (probability < 30) return 'Crítico';
-        if (probability < 50) return 'Alto';
-        if (probability < 70) return 'Medio';
-        return 'Bajo';
-    }
-
-    getTrendIcon(trend) {
-        const icons = {
-            'up': '📈',
-            'down': '📉',
-            'stable': '➡️',
-            'neutral': '⚪'
-        };
-        return icons[trend] || '⚪';
-    }
-
-    // Mostrar todos los estudiantes en riesgo
-    async showAllAtRisk() {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="modal-content modal-large" style="max-width: 90%; max-height: 90vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h3>Todos los estudiantes en riesgo (${this.allAtRiskStudents.length})</h3>
-                    <button class="btn-icon" onclick="this.closest('.modal').remove()">✖️</button>
-                </div>
-                <div class="modal-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Estudiante</th>
-                                    <th>Email</th>
-                                    <th>Cohorte</th>
-                                    <th>Probabilidad</th>
-                                    <th>Score</th>
-                                    <th>Nivel</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${this.allAtRiskStudents.map(student => this.renderRiskTableRow(student)).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    // Crear intervención
-    async createIntervention(studentId) {
-        const student = this.dashboard.data.students.find(s => s.id === studentId);
-        if (!student) return;
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Crear Plan de Intervención - ${student.username}</h3>
-                    <button class="btn-icon" onclick="this.closest('.modal').remove()">✖️</button>
-                </div>
-                <div class="modal-body">
-                    <p>Probabilidad de aprobar: <strong>${student.probability_pass}%</strong></p>
-                    
-                    <h4>Plan de acción recomendado:</h4>
-                    <ul>
-                        ${student.recommendations ? student.recommendations.map(r => `<li>${r.action}: ${r.details}</li>`).join('') : '<li>Sin recomendaciones específicas</li>'}
-                    </ul>
-                    
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label>Notas adicionales:</label>
-                        <textarea id="interventionNotes" rows="4" style="width: 100%;"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="window.riskAnalysisModule.saveIntervention('${studentId}')">
-                        Guardar Plan
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    // Crear alerta
-    async createAlert(studentId) {
-        const student = this.dashboard.data.students.find(s => s.id === studentId);
-        if (!student) return;
-        
-        try {
-            const alertData = {
-                user_id: studentId,
-                alert_type: 'high_risk',
-                message: `Estudiante en riesgo ${this.getRiskLevelText(student.probability_pass).toLowerCase()}: ${student.username}. Probabilidad de aprobar: ${student.probability_pass}%. Requiere seguimiento.`
-            };
-            
-            const { error } = await this.supabase
-                .from('user_alerts')
-                .insert(alertData);
-            
-            if (error) throw error;
-            
-            this.dashboard.showNotification('success', 'Alerta creada correctamente');
-            
-        } catch (error) {
-            this.dashboard.showNotification('error', 'Error al crear alerta: ' + error.message);
-        }
-    }
-
-    // Guardar intervención
-    async saveIntervention(studentId) {
-        const notes = document.getElementById('interventionNotes')?.value;
-        const student = this.dashboard.data.students.find(s => s.id === studentId);
-        
-        if (!student) return;
-        
-        try {
-            // Añadir nota al estudiante
-            const currentNotes = student.notes || [];
-            currentNotes.push({
-                type: 'intervention',
-                text: `Plan de intervención: ${notes || 'Ver recomendaciones automáticas'}`,
-                date: new Date().toISOString(),
-                author: this.dashboard.auth.currentUser?.email
-            });
-            
-            const { error } = await this.supabase
-                .from('users')
-                .update({ notes: currentNotes })
-                .eq('id', studentId);
-            
-            if (error) throw error;
-            
-            // Crear alerta también
-            await this.createAlert(studentId);
-            
-            this.dashboard.showNotification('success', 'Plan de intervención guardado');
-            document.querySelector('.modal')?.remove();
-            
-        } catch (error) {
-            this.dashboard.showNotification('error', 'Error al guardar: ' + error.message);
-        }
-    }
-
-    // Métodos del análisis completo (ya existentes en tu código)
+    /**
+     * Calcular riesgo comprehensivo usando las utilidades compartidas
+     */
     async calculateComprehensiveRisk() {
         const students = [...this.dashboard.data.students];
         const results = this.dashboard.data.results;
@@ -515,36 +187,61 @@ export default class RiskAnalysisModule {
         for (const student of students) {
             const studentResults = results.filter(r => r.user_id === student.id);
             
-            // Factores de riesgo
+            // === AQUÍ ESTÁ EL CAMBIO PRINCIPAL ===
+            // Usar StatisticsUtils en lugar de métodos locales
+            const consistency = StatisticsUtils.calculateConsistency(studentResults);
+            
+            // Calcular tendencia usando las utilidades
+            const scores = studentResults.map(r => r.score);
+            const trendSlope = scores.length >= 2 ? StatisticsUtils.calculateTrend(scores) : 0;
+            
+            // Calcular regresión completa si necesitas más detalles
+            const trend = scores.length >= 3 ? {
+                slope: trendSlope,
+                direction: trendSlope > 0.1 ? 'up' : trendSlope < -0.1 ? 'down' : 'stable',
+                ...StatisticsUtils.calculateLinearRegression(
+                    scores.map((_, i) => i),
+                    scores
+                )
+            } : { slope: 0, direction: 'neutral', r2: 0 };
+            
+            // Usar el PatternDetector para análisis de patrones
+            const responsePatterns = await this.patternDetector.analyzeStudentPatterns(student, studentResults);
+            
+            // Calcular factores de riesgo
             const factors = {
                 avgScore: student.average_score || 0,
                 scoreRisk: student.average_score ? (10 - student.average_score) * 10 : 100,
                 participationRate: studentResults.length / Math.max(1, this.dashboard.data.simulations.length),
                 participationRisk: (1 - (studentResults.length / Math.max(1, this.dashboard.data.simulations.length))) * 100,
-                consistency: this.calculateConsistency(studentResults),
-                consistencyRisk: this.calculateConsistency(studentResults) * 20,
-                trend: await this.calculateDetailedTrend(student.id, studentResults),
-                trendRisk: 0,
+                consistency: consistency,
+                consistencyRisk: consistency * 20,
+                trend: trend,
+                trendRisk: trend.slope < -0.1 ? Math.abs(trend.slope) * 100 : 0,
                 engagement: this.calculateEngagement(studentResults),
                 engagementRisk: (1 - this.calculateEngagement(studentResults)) * 100
             };
             
-            // Calcular riesgo de tendencia
-            if (factors.trend.slope < -0.1) {
-                factors.trendRisk = Math.abs(factors.trend.slope) * 100;
-            }
-            
             // Calcular score de riesgo ponderado
+            const riskWeights = {
+                score: 0.3,
+                participation: 0.2,
+                consistency: 0.2,
+                trend: 0.2,
+                engagement: 0.1
+            };
+            
             student.riskScore = (
-                factors.scoreRisk * this.riskFactors.score.weight +
-                factors.participationRisk * this.riskFactors.participation.weight +
-                factors.consistencyRisk * this.riskFactors.consistency.weight +
-                factors.trendRisk * this.riskFactors.trend.weight +
-                factors.engagementRisk * this.riskFactors.engagement.weight
+                factors.scoreRisk * riskWeights.score +
+                factors.participationRisk * riskWeights.participation +
+                factors.consistencyRisk * riskWeights.consistency +
+                factors.trendRisk * riskWeights.trend +
+                factors.engagementRisk * riskWeights.engagement
             );
             
             // Guardar factores detallados
             student.riskFactors = factors;
+            student.responsePatterns = responsePatterns;
             
             // Calcular impacto
             student.riskImpact = this.calculateImpact(student);
@@ -558,115 +255,10 @@ export default class RiskAnalysisModule {
         
         return students;
     }
+
     /**
-     * Analiza patrones de respuesta del estudiante para detectar problemas específicos
-     * @param {Object} student - Datos del estudiante
-     * @param {Array} results - Resultados históricos del estudiante
-     * @returns {Object} Patrones detectados con su análisis
+     * Calcular engagement del estudiante
      */
-
-    async analyzeResponsePatterns(student, results) {
-            if (!results || results.length < 2) {
-        return {
-            hasEnoughData: false,
-            patterns: {}
-        };
-    }
-    const patterns = {
-        // 1. Patrón de fatiga: ¿El rendimiento empeora hacia el final del examen?
-        fatiguePattern: this.detectFatiguePattern(results),
-        
-        // 2. Patrón de abandono: ¿Deja muchas preguntas sin contestar?
-        abandonmentPattern: this.detectAbandonmentPattern(results),
-        
-        // 3. Patrón de prisa: ¿Termina muy rápido comprometiendo calidad?
-        rushPattern: this.detectRushPattern(results),
-        
-        // 4. Patrón de temas débiles: ¿Falla consistentemente en ciertos temas?
-        topicWeaknessPattern: this.analyzeTopicFailures(results),
-        
-        // 5. Patrón de confianza: ¿Su confianza se alinea con su rendimiento?
-        confidenceAlignmentPattern: this.analyzeConfidenceAccuracy(results),
-        
-        // 6. Patrón de estrés: ¿Cómo afecta el estrés a su rendimiento?
-        stressImpactPattern: this.analyzeStressImpact(results)
-    };
-    return {
-
-        hasEnoughData: true,
-        patterns: patterns,
-        summary: this.generatePatternSummary(patterns),
-        recommendations: this.generatePatternRecommendations(patterns)
-    };
-}
-
-    analyzeTopicFailures(results) {
-    const topicFrequency = {};
-    let totalMentions = 0;
-    
-    results.forEach(result => {
-        if (result.weakest_topics && Array.isArray(result.weakest_topics)) {
-            result.weakest_topics.forEach(topic => {
-                topicFrequency[topic] = (topicFrequency[topic] || 0) + 1;
-                totalMentions++;
-            });
-        }
-    });
-    
-    // Identificar temas persistentemente problemáticos
-    const persistentWeaknesses = Object.entries(topicFrequency)
-        .filter(([topic, count]) => count >= results.length * 0.3) // Aparece en 30% o más
-        .sort(([,a], [,b]) => b - a);
-    
-    return {
-        detected: persistentWeaknesses.length > 0,
-        persistentTopics: persistentWeaknesses.map(([topic, count]) => ({
-            topic: topic,
-            frequency: count / results.length,
-            severity: 'high'
-        })),
-        totalUniqueWeaknesses: Object.keys(topicFrequency).length,
-        message: persistentWeaknesses.length > 0 ?
-            `Debilidades persistentes en: ${persistentWeaknesses.slice(0, 3).map(([t]) => t).join(', ')}` :
-            'No hay patrones claros de debilidad en temas específicos'
-    };
-}
-    calculateConsistency(results) {
-        if (results.length < 3) return 0;
-        
-        const scores = results.slice(0, 10).map(r => r.score);
-        const avg = scores.reduce((a, b) => a + b) / scores.length;
-        const variance = scores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / scores.length;
-        
-        return Math.sqrt(variance);
-    }
-
-    async calculateDetailedTrend(userId, results) {
-        if (results.length < 3) return { slope: 0, r2: 0 };
-        
-        const data = results.slice(0, 10).map((r, i) => ({ x: i, y: r.score }));
-        
-        const n = data.length;
-        const sumX = data.reduce((sum, d) => sum + d.x, 0);
-        const sumY = data.reduce((sum, d) => sum + d.y, 0);
-        const sumXY = data.reduce((sum, d) => sum + d.x * d.y, 0);
-        const sumX2 = data.reduce((sum, d) => sum + d.x * d.x, 0);
-        
-        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-        
-        const yMean = sumY / n;
-        const ssTotal = data.reduce((sum, d) => sum + Math.pow(d.y - yMean, 2), 0);
-        const ssResidual = data.reduce((sum, d) => {
-            const predicted = slope * d.x + intercept;
-            return sum + Math.pow(d.y - predicted, 2);
-        }, 0);
-        
-        const r2 = 1 - (ssResidual / ssTotal);
-        
-        return { slope, intercept, r2 };
-    }
-
     calculateEngagement(results) {
         if (results.length === 0) return 0;
         
@@ -681,6 +273,9 @@ export default class RiskAnalysisModule {
         );
     }
 
+    /**
+     * Calcular impacto del estudiante
+     */
     calculateImpact(student) {
         const cohortMultiplier = {
             '48h': 1.5,
@@ -696,6 +291,9 @@ export default class RiskAnalysisModule {
         return baseImpact * cohortImpact * potentialImpact;
     }
 
+    /**
+     * Generar recomendaciones basadas en el análisis
+     */
     generateRecommendations(student) {
         const recommendations = [];
         const factors = student.riskFactors;
@@ -736,8 +334,15 @@ export default class RiskAnalysisModule {
             });
         }
         
+        // Añadir recomendaciones basadas en patrones detectados
+        if (student.responsePatterns?.hasEnoughData && student.responsePatterns.recommendations) {
+            recommendations.push(...student.responsePatterns.recommendations);
+        }
+        
         return recommendations;
     }
+
+    // ==== MÉTODOS DE RENDERIZADO (sin cambios significativos) ====
 
     renderExecutiveSummary(students) {
         const critical = students.filter(s => s.riskScore > 80).length;
@@ -746,30 +351,117 @@ export default class RiskAnalysisModule {
         const low = students.filter(s => s.riskScore <= 40).length;
         
         return `
-            <div class="executive-summary" style="background: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: var(--shadow);">
-                <h3 style="margin-bottom: 1.5rem;">📊 Resumen Ejecutivo del Análisis</h3>
-                <div class="summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                    <div class="summary-card critical" style="background: #fee2e2; padding: 1.5rem; border-radius: 8px; text-align: center; border-left: 4px solid #dc2626;">
-                        <div class="summary-number" style="font-size: 2.5rem; font-weight: 700; color: #dc2626;">${critical}</div>
-                        <div class="summary-label" style="font-weight: 600; color: #991b1b;">Riesgo Crítico</div>
-                        <div class="summary-detail" style="font-size: 0.875rem; color: #7f1d1d;">Requieren intervención inmediata</div>
+            <div class="executive-summary card">
+                <h3>📊 Resumen Ejecutivo del Análisis</h3>
+                <div class="stats-grid">
+                    <div class="stat-card danger">
+                        <div class="stat-icon danger">${critical}</div>
+                        <div class="stat-label">Riesgo Crítico</div>
+                        <div class="stat-change">Requieren intervención inmediata</div>
                     </div>
-                    <div class="summary-card high" style="background: #fef3c7; padding: 1.5rem; border-radius: 8px; text-align: center; border-left: 4px solid #f59e0b;">
-                        <div class="summary-number" style="font-size: 2.5rem; font-weight: 700; color: #f59e0b;">${high}</div>
-                        <div class="summary-label" style="font-weight: 600; color: #92400e;">Riesgo Alto</div>
-                        <div class="summary-detail" style="font-size: 0.875rem; color: #78350f;">Necesitan seguimiento cercano</div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon warning">${high}</div>
+                        <div class="stat-label">Riesgo Alto</div>
+                        <div class="stat-change">Necesitan seguimiento cercano</div>
                     </div>
-                    <div class="summary-card medium" style="background: #dbeafe; padding: 1.5rem; border-radius: 8px; text-align: center; border-left: 4px solid #3b82f6;">
-                        <div class="summary-number" style="font-size: 2.5rem; font-weight: 700; color: #3b82f6;">${medium}</div>
-                        <div class="summary-label" style="font-weight: 600; color: #1e40af;">Riesgo Medio</div>
-                        <div class="summary-detail" style="font-size: 0.875rem; color: #1e3a8a;">Monitorear evolución</div>
+                    <div class="stat-card info">
+                        <div class="stat-icon info">${medium}</div>
+                        <div class="stat-label">Riesgo Medio</div>
+                        <div class="stat-change">Monitorear evolución</div>
                     </div>
-                    <div class="summary-card low" style="background: #d1fae5; padding: 1.5rem; border-radius: 8px; text-align: center; border-left: 4px solid #10b981;">
-                        <div class="summary-number" style="font-size: 2.5rem; font-weight: 700; color: #10b981;">${low}</div>
-                        <div class="summary-label" style="font-weight: 600; color: #047857;">Riesgo Bajo</div>
-                        <div class="summary-detail" style="font-size: 0.875rem; color: #065f46;">En buen camino</div>
+                    <div class="stat-card success">
+                        <div class="stat-icon success">${low}</div>
+                        <div class="stat-label">Riesgo Bajo</div>
+                        <div class="stat-change">En buen camino</div>
                     </div>
                 </div>
+            </div>
+        `;
+    }
+
+    renderRiskTableRow(student) {
+        const mainFactors = this.getMainRiskFactors(student);
+        const patterns = student.responsePatterns;
+        const hasPatternIssues = patterns?.hasEnoughData && 
+            patterns.riskFactors && patterns.riskFactors.length > 0;
+        
+        return `
+            <tr>
+                <td>
+                    <strong>${student.username}</strong>
+                    <div class="text-small text-muted">${student.email}</div>
+                </td>
+                <td><span class="badge badge-info">${student.cohort}</span></td>
+                <td>
+                    <span class="risk-indicator ${this.getRiskClass(student.probability_pass)}">
+                        ${(student.probability_pass || 50).toFixed(0)}%
+                    </span>
+                </td>
+                <td>${(student.average_score || 0).toFixed(1)}/10</td>
+                <td>${this.getTrendIcon(student.riskFactors?.trend?.direction || 'neutral')}</td>
+                <td>
+                    <div class="text-small">
+                        ${mainFactors.map(f => `<span class="risk-factor-tag">${f}</span>`).join(' ')}
+                        ${hasPatternIssues ? '<span class="risk-factor-tag pattern-alert">⚠️ Patrones</span>' : ''}
+                    </div>
+                </td>
+                <td>
+                    <span class="risk-badge ${this.getRiskBadgeClass(student.probability_pass)}">
+                        ${this.getRiskLevelText(student.probability_pass)}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')" title="Ver detalles">
+                            👁️
+                        </button>
+                        ${hasPatternIssues ? `
+                            <button class="btn-icon" onclick="window.riskAnalysisModule.showPatternDetails('${student.id}')" title="Ver patrones">
+                                📊
+                            </button>
+                        ` : ''}
+                        <button class="btn-icon" onclick="window.riskAnalysisModule.createIntervention('${student.id}')" title="Crear intervención">
+                            💬
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    renderRiskDistributionBars(students) {
+        const distribution = {
+            critical: students.filter(s => (s.probability_pass || 50) < 30).length,
+            high: students.filter(s => (s.probability_pass || 50) >= 30 && (s.probability_pass || 50) < 50).length,
+            medium: students.filter(s => (s.probability_pass || 50) >= 50 && (s.probability_pass || 50) < 70).length,
+            low: students.filter(s => (s.probability_pass || 50) >= 70).length
+        };
+        
+        const total = students.length;
+        
+        return `
+            <div class="risk-distribution-bars">
+                ${Object.entries(distribution).map(([level, count]) => {
+                    const percentage = (count / total * 100).toFixed(1);
+                    const colors = {
+                        critical: '#dc2626',
+                        high: '#f59e0b',
+                        medium: '#3b82f6',
+                        low: '#10b981'
+                    };
+                    
+                    return `
+                        <div class="distribution-bar">
+                            <div class="bar-header">
+                                <span>${this.getRiskLevelText(level === 'critical' ? 20 : level === 'high' ? 40 : level === 'medium' ? 60 : 80)}</span>
+                                <span>${count} estudiantes (${percentage}%)</span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${percentage}%; background-color: ${colors[level]};"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         `;
     }
@@ -795,25 +487,69 @@ export default class RiskAnalysisModule {
         }, {});
         
         return Object.entries(grouped).map(([type, recs]) => `
-            <div class="action-group" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 8px;">
-                <h4 style="margin-bottom: 0.5rem;">${this.formatActionType(type)} (${recs.length} estudiantes)</h4>
-                <ul style="margin: 0; padding-left: 1.5rem;">
+            <div class="action-group">
+                <h4>${this.formatActionType(type)} (${recs.length} estudiantes)</h4>
+                <ul>
                     ${recs.slice(0, 5).map(rec => `
-                        <li style="margin-bottom: 0.5rem;">
-                            <strong>${rec.studentName}:</strong> ${rec.action}
-                        </li>
+                        <li><strong>${rec.studentName}:</strong> ${rec.action}</li>
                     `).join('')}
                 </ul>
-                ${recs.length > 5 ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">... y ${recs.length - 5} más</p>` : ''}
+                ${recs.length > 5 ? `<p class="text-muted">... y ${recs.length - 5} más</p>` : ''}
             </div>
         `).join('');
+    }
+
+    renderGeneralRecommendations(allStudents, atRisk, criticalRisk) {
+        const recommendations = [];
+        
+        const riskPercentage = (atRisk.length / allStudents.length * 100).toFixed(1);
+        const criticalPercentage = (criticalRisk.length / allStudents.length * 100).toFixed(1);
+        
+        if (criticalPercentage > 10) {
+            recommendations.push({
+                icon: '🚨',
+                title: 'Situación Crítica',
+                text: `${criticalPercentage}% de estudiantes en riesgo crítico. Se recomienda implementar un plan de intervención inmediata.`
+            });
+        }
+        
+        if (riskPercentage > 30) {
+            recommendations.push({
+                icon: '⚠️',
+                title: 'Alto Porcentaje en Riesgo',
+                text: `${riskPercentage}% de estudiantes necesitan apoyo. Considerar sesiones de refuerzo grupales.`
+            });
+        }
+        
+        const lowParticipation = allStudents.filter(s => s.total_simulations < 3).length;
+        if (lowParticipation > allStudents.length * 0.2) {
+            recommendations.push({
+                icon: '📅',
+                title: 'Baja Participación General',
+                text: `${lowParticipation} estudiantes han participado en menos de 3 simulacros. Implementar estrategias de motivación.`
+            });
+        }
+        
+        return recommendations.length > 0 ? `
+            <div class="recommendations-list">
+                ${recommendations.map(rec => `
+                    <div class="recommendation-item">
+                        <div class="recommendation-icon">${rec.icon}</div>
+                        <div>
+                            <h4>${rec.title}</h4>
+                            <p>${rec.text}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        ` : '<p class="text-muted">No hay recomendaciones generales en este momento.</p>';
     }
 
     async renderRiskMatrix(students) {
         // Solo renderizar si Chart.js está disponible
         if (typeof Chart === 'undefined') {
             console.warn('Chart.js no está disponible para renderizar la matriz de riesgo');
-            document.getElementById('riskMatrix').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Gráfico no disponible</p>';
+            document.getElementById('riskMatrix').innerHTML = '<p class="text-muted">Gráfico no disponible</p>';
             return;
         }
         
@@ -881,13 +617,244 @@ export default class RiskAnalysisModule {
         });
     }
 
-    async exportRiskReport() {
+    // ==== MÉTODOS DE ACCIÓN ====
+
+    showPatternDetails(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student || !student.responsePatterns) return;
+        
+        const patterns = student.responsePatterns;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📊 Análisis de Patrones - ${student.username}</h3>
+                    <button class="btn-icon" onclick="this.closest('.modal').remove()">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <h4>Patrones Detectados:</h4>
+                    ${patterns.summary}
+                    
+                    <h4>Detalles:</h4>
+                    <ul>
+                        ${Object.entries(patterns.patterns)
+                            .filter(([_, pattern]) => pattern.detected)
+                            .map(([type, pattern]) => `
+                                <li><strong>${this.getPatternName(type)}:</strong> ${pattern.recommendation || 'Detectado'}</li>
+                            `).join('')}
+                    </ul>
+                    
+                    <h4>Recomendaciones:</h4>
+                    ${patterns.recommendations.map(rec => `
+                        <div class="recommendation-item ${rec.priority}">
+                            <strong>${rec.action}</strong>
+                            <p>${rec.details}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async createIntervention(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Crear Plan de Intervención - ${student.username}</h3>
+                    <button class="btn-icon" onclick="this.closest('.modal').remove()">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <p>Probabilidad de aprobar: <strong>${student.probability_pass}%</strong></p>
+                    
+                    <h4>Plan de acción recomendado:</h4>
+                    <ul>
+                        ${student.recommendations ? student.recommendations.map(r => `<li>${r.action}: ${r.details}</li>`).join('') : '<li>Sin recomendaciones específicas</li>'}
+                    </ul>
+                    
+                    <div class="form-group">
+                        <label>Notas adicionales:</label>
+                        <textarea id="interventionNotes" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="window.riskAnalysisModule.saveIntervention('${studentId}')">
+                        Guardar Plan
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async saveIntervention(studentId) {
+        const notes = document.getElementById('interventionNotes')?.value;
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        
+        if (!student) return;
+        
         try {
-            const exportsModule = await this.dashboard.loadModule('exports');
-            await exportsModule.exportRiskAnalysis();
+            // Añadir nota al estudiante
+            const currentNotes = student.notes || [];
+            currentNotes.push({
+                type: 'intervention',
+                text: `Plan de intervención: ${notes || 'Ver recomendaciones automáticas'}`,
+                date: new Date().toISOString(),
+                author: this.dashboard.auth.currentUser?.email
+            });
+            
+            const { error } = await this.supabase
+                .from('users')
+                .update({ notes: currentNotes })
+                .eq('id', studentId);
+            
+            if (error) throw error;
+            
+            // Crear alerta también
+            await this.createAlert(studentId);
+            
+            this.dashboard.showNotification('success', 'Plan de intervención guardado');
+            document.querySelector('.modal')?.remove();
+            
         } catch (error) {
-            this.dashboard.showNotification('error', 'Error al exportar: ' + error.message);
+            this.dashboard.showNotification('error', 'Error al guardar: ' + error.message);
         }
+    }
+
+    async createAlert(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        try {
+            const alertData = {
+                user_id: studentId,
+                alert_type: 'high_risk',
+                message: `Estudiante en riesgo ${this.getRiskLevelText(student.probability_pass).toLowerCase()}: ${student.username}. Probabilidad de aprobar: ${student.probability_pass}%. Requiere seguimiento.`
+            };
+            
+            const { error } = await this.supabase
+                .from('user_alerts')
+                .insert(alertData);
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 'Alerta creada correctamente');
+            
+        } catch (error) {
+            this.dashboard.showNotification('error', 'Error al crear alerta: ' + error.message);
+        }
+    }
+
+    async showAllAtRisk() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3>Todos los estudiantes en riesgo (${this.allAtRiskStudents.length})</h3>
+                    <button class="btn-icon" onclick="this.closest('.modal').remove()">✖️</button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Email</th>
+                                    <th>Cohorte</th>
+                                    <th>Probabilidad</th>
+                                    <th>Score</th>
+                                    <th>Nivel</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.allAtRiskStudents.map(student => this.renderRiskTableRow(student)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    async exportRiskReport() {
+        const exportsModule = await this.dashboard.loadModule('exports');
+        await exportsModule.exportRiskAnalysis();
+    }
+
+    // ==== MÉTODOS AUXILIARES ====
+
+    getMainRiskFactors(student) {
+        const factors = [];
+        
+        if (student.average_score < 6) factors.push('📉 Score bajo');
+        if (student.total_simulations < 3) factors.push('📅 Poca participación');
+        if (student.current_streak === 0) factors.push('🔥 Sin racha');
+        if (student.riskFactors?.trend?.direction === 'down') factors.push('📊 Tendencia negativa');
+        if (student.riskFactors?.consistencyRisk > 40) factors.push('📈 Inconsistente');
+        
+        return factors.slice(0, 3); // Máximo 3 factores
+    }
+
+    getRiskClass(probability) {
+        if (!probability) probability = 50;
+        if (probability < 30) return 'risk-critical';
+        if (probability < 50) return 'risk-high';
+        if (probability < 70) return 'risk-medium';
+        return 'risk-low';
+    }
+
+    getRiskBadgeClass(probability) {
+        if (!probability) probability = 50;
+        if (probability < 30) return 'danger';
+        if (probability < 50) return 'warning';
+        if (probability < 70) return 'info';
+        return 'success';
+    }
+
+    getRiskLevelText(probability) {
+        if (!probability) probability = 50;
+        if (probability < 30) return 'Crítico';
+        if (probability < 50) return 'Alto';
+        if (probability < 70) return 'Medio';
+        return 'Bajo';
+    }
+
+    getTrendIcon(trend) {
+        const icons = {
+            'up': '📈',
+            'down': '📉',
+            'stable': '➡️',
+            'neutral': '⚪'
+        };
+        return icons[trend] || '⚪';
+    }
+
+    getPatternName(pattern) {
+        const names = {
+            'fatigue': 'Fatiga mental',
+            'rushing': 'Precipitación',
+            'abandonment': 'Abandono excesivo',
+            'topicWeakness': 'Debilidad en temas',
+            'confidenceAlignment': 'Alineación de confianza',
+            'stressImpact': 'Impacto del estrés',
+            'timeManagement': 'Gestión del tiempo',
+            'consistencyPattern': 'Patrón de consistencia'
+        };
+        return names[pattern] || pattern;
     }
 
     formatActionType(type) {
@@ -895,7 +862,11 @@ export default class RiskAnalysisModule {
             'academica': '📚 Acciones Académicas',
             'motivacion': '💪 Acciones de Motivación',
             'metodologia': '📋 Mejora de Metodología',
-            'intervencion': '🚨 Intervenciones Urgentes'
+            'intervencion': '🚨 Intervenciones Urgentes',
+            'performance': '🎯 Mejora de Rendimiento',
+            'technique': '🛠️ Técnicas de Examen',
+            'strategy': '📝 Estrategia',
+            'mental': '🧠 Salud Mental'
         };
         return types[type] || type;
     }
