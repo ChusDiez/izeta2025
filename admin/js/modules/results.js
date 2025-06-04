@@ -11,94 +11,154 @@ export default class ResultsModule {
     }
 
     async render(container, data) {
-        const results = data.results || [];
-        const simulations = this.dashboard.data.simulations || [];
-        
-        container.innerHTML = `
-            <div class="results-page">
-                <!-- Filtros específicos de resultados -->
-                <div class="results-filters">
-                    <div class="filter-group">
-                        <label>Simulacro:</label>
-                        <select id="simulationFilter" onchange="window.resultsModule.applyFilter('simulation', this.value)">
-                            <option value="all">Todos los simulacros</option>
-                            ${simulations.map(sim => `
-                                <option value="${sim.id}">RF${sim.week_number} - ${this.formatDate(sim.start_date)}</option>
-                            `).join('')}
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <button class="btn btn-secondary" onclick="window.resultsModule.exportResults()">
-                            📊 Exportar Resultados
-                        </button>
-                    </div>
+    const results = data.results || [];
+    const simulations = this.dashboard.data.simulations || [];
+    
+    // Obtener simulacro activo
+    const activeSimulation = simulations.find(s => s.status === 'active');
+    
+    container.innerHTML = `
+        <div class="results-page">
+            <!-- Resumen del simulacro activo -->
+            ${activeSimulation ? this.renderActiveSimulationSummary(activeSimulation, results) : ''}
+            
+            <!-- Filtros específicos de resultados -->
+            <div class="results-filters">
+                <div class="filter-group">
+                    <label>Simulacro:</label>
+                    <select id="simulationFilter" onchange="window.resultsModule.applyFilter('simulation', this.value)">
+                        <option value="all">Todos los simulacros</option>
+                        ${simulations.map(sim => `
+                            <option value="${sim.id}" ${sim.status === 'active' ? 'selected' : ''}>
+                                RF${sim.week_number} - ${this.formatDate(sim.start_date)}
+                                ${sim.status === 'active' ? '(Activo)' : ''}
+                            </option>
+                        `).join('')}
+                    </select>
                 </div>
-                
-                <!-- Estadísticas rápidas -->
-                <div class="results-stats">
-                    <div class="stat-card">
-                        <div class="stat-icon info">📊</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Total Resultados</div>
-                            <div class="stat-value">${results.length}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon success">✅</div>
-                        <div class="stat-content">
-                            <div class="stat-label">Score Promedio</div>
-                            <div class="stat-value">${this.calculateAverageScore(results).toFixed(2)}/10</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon warning">🔴</div>
-                        <div class="stat-content">
-                            <div class="stat-label">En Directo</div>
-                            <div class="stat-value">${results.filter(r => r.is_saturday_live).length}</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Tabla de resultados -->
-                <div class="table-card">
-                    <div class="table-header">
-                        <h2 class="table-title">📈 Todos los Resultados</h2>
-                        <div class="table-controls">
-                            <div class="search-box">
-                                <span class="search-icon">🔍</span>
-                                <input type="text" class="search-input" 
-                                       placeholder="Buscar por estudiante..." 
-                                       onkeyup="window.resultsModule.filterResults(this.value)">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="table-wrapper">
-                        <table id="resultsTable">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Estudiante</th>
-                                    <th>Cohorte</th>
-                                    <th>Simulacro</th>
-                                    <th>Score</th>
-                                    <th>Aciertos/Fallos/Blancos</th>
-                                    <th>Tiempo</th>
-                                    <th>En Directo</th>
-                                    <th>Dispositivo</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${results.slice(0, 100).map(result => this.renderResultRow(result)).join('')}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="filter-group">
+                    <button class="btn btn-secondary" onclick="window.resultsModule.exportResults()">
+                        📊 Exportar Resultados
+                    </button>
                 </div>
             </div>
+            
+            <!-- Tabla de resultados -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">📈 Resultados Detallados</h2>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" class="search-input" 
+                                   placeholder="Buscar por estudiante..." 
+                                   onkeyup="window.resultsModule.filterResults(this.value)">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Estudiante</th>
+                                <th>Cohorte</th>
+                                <th>Simulacro</th>
+                                <th>Score</th>
+                                <th>Aciertos/Fallos/Blancos</th>
+                                <th>Tiempo</th>
+                                <th>En Directo</th>
+                                <th>Dispositivo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${results.slice(0, 100).map(result => this.renderResultRow(result)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    window.resultsModule = this;
+}
+
+renderActiveSimulationSummary(simulation, allResults) {
+    const simResults = allResults.filter(r => r.simulation_id === simulation.id);
+    
+    if (simResults.length === 0) {
+        return `
+            <div class="results-summary-card">
+                <div class="results-summary-header">
+                    <h3 class="results-summary-title">
+                        <span>🎯</span>
+                        Simulacro RF${simulation.week_number} - Activo
+                    </h3>
+                    <span class="badge badge-success">En curso</span>
+                </div>
+                <p style="text-align: center; color: #6b7280; padding: 2rem 0;">
+                    Aún no hay resultados registrados para este simulacro
+                </p>
+            </div>
         `;
-        
-        window.resultsModule = this;
     }
+    
+    // Calcular estadísticas
+    const avgScore = simResults.reduce((sum, r) => sum + r.score, 0) / simResults.length;
+    const saturdayLive = simResults.filter(r => r.is_saturday_live).length;
+    const maxScore = Math.max(...simResults.map(r => r.score));
+    const minScore = Math.min(...simResults.map(r => r.score));
+    
+    // Contar por cohortes
+    const cohortCounts = simResults.reduce((acc, r) => {
+        const cohort = r.users?.cohort || 'sin_asignar';
+        acc[cohort] = (acc[cohort] || 0) + 1;
+        return acc;
+    }, {});
+    
+    return `
+        <div class="results-summary-card">
+            <div class="results-summary-header">
+                <h3 class="results-summary-title">
+                    <span>🎯</span>
+                    Simulacro RF${simulation.week_number} - Resumen en Tiempo Real
+                </h3>
+                <span class="badge badge-success">En curso</span>
+            </div>
+            
+            <div class="results-summary-grid">
+                <div class="results-summary-item">
+                    <span class="results-summary-value">${simResults.length}</span>
+                    <span class="results-summary-label">Participantes</span>
+                </div>
+                <div class="results-summary-item">
+                    <span class="results-summary-value">${avgScore.toFixed(2)}</span>
+                    <span class="results-summary-label">Media actual</span>
+                </div>
+                <div class="results-summary-item">
+                    <span class="results-summary-value">${maxScore.toFixed(1)}</span>
+                    <span class="results-summary-label">Mejor score</span>
+                </div>
+                <div class="results-summary-item">
+                    <span class="results-summary-value">${minScore.toFixed(1)}</span>
+                    <span class="results-summary-label">Peor score</span>
+                </div>
+                <div class="results-summary-item">
+                    <span class="results-summary-value">${saturdayLive}</span>
+                    <span class="results-summary-label">En directo</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <small style="color: #6b7280;">
+                    Participación por cohorte: 
+                    ${Object.entries(cohortCounts).map(([c, n]) => `${c}: ${n}`).join(' | ')}
+                </small>
+            </div>
+        </div>
+    `;
+}
 
     renderResultRow(result) {
         const simulation = this.dashboard.data.simulations.find(s => s.id === result.simulation_id);
