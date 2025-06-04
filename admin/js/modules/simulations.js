@@ -22,7 +22,7 @@ export default class SimulationsModule {
                         <button class="btn btn-primary" onclick="window.simulationsModule.createNewSimulation()">
                             ➕ Crear Nuevo Simulacro
                         </button>
-                        <button class="btn btn-warning" onclick="window.location.href='elo_manual.html'">
+                        <button class="btn btn-warning" onclick="window.dashboardAdmin.showPage('elo-manual')">
                             ⚡ Actualizar ELO Manual
                         </button>
                         <button class="btn btn-secondary" onclick="window.simulationsModule.processWeeklyResults()">
@@ -68,40 +68,90 @@ export default class SimulationsModule {
     renderActiveSimulation(simulation) {
         if (!simulation) {
             return `
-                <div class="alert alert-warning">
+                <div class="active-simulation-card" style="background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);">
                     <h3>⚠️ No hay simulacro activo</h3>
                     <p>Crea un nuevo simulacro para que los estudiantes puedan enviar resultados.</p>
+                    <button class="btn btn-secondary" style="background: white; color: #1e3a8a; margin-top: 1rem;" 
+                            onclick="window.simulationsModule.createNewSimulation()">
+                        ➕ Crear nuevo simulacro
+                    </button>
                 </div>
             `;
         }
 
-        // Calcular estadísticas en tiempo real si no están disponibles
+        // Calcular estadísticas en tiempo real
         const results = this.dashboard.data.results.filter(r => r.simulation_id === simulation.id);
         const actualParticipants = results.length;
         const actualAverage = results.length > 0 
             ? (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(2)
             : 'N/A';
+        
+        // Calcular tiempo restante
+        const endDate = new Date(simulation.end_date);
+        const now = new Date();
+        const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+        
+        // Determinar participación por cohorte
+        const cohortStats = results.reduce((acc, r) => {
+            const cohort = r.users?.cohort || 'sin_asignar';
+            if (!acc[cohort]) acc[cohort] = { count: 0, sum: 0 };
+            acc[cohort].count++;
+            acc[cohort].sum += r.score;
+            return acc;
+        }, {});
 
         return `
             <div class="active-simulation-card">
                 <h3>🟢 Simulacro Activo: RF${simulation.week_number}</h3>
+                
                 <div class="simulation-stats">
                     <div class="stat">
-                        <span class="stat-label">Período:</span>
+                        <span class="stat-label">📅 Período</span>
                         <span class="stat-value">${this.formatDate(simulation.start_date)} - ${this.formatDate(simulation.end_date)}</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-label">Participantes:</span>
+                        <span class="stat-label">👥 Participantes</span>
                         <span class="stat-value">${actualParticipants}</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-label">Score Promedio:</span>
+                        <span class="stat-label">📊 Score Promedio</span>
                         <span class="stat-value">${actualAverage}/10</span>
                     </div>
+                    <div class="stat">
+                        <span class="stat-label">⏱️ Tiempo Restante</span>
+                        <span class="stat-value">${daysLeft > 0 ? `${daysLeft} días` : 'Finalizado'}</span>
+                    </div>
                 </div>
-                <button class="btn btn-secondary" onclick="window.simulationsModule.viewDetails('${simulation.id}')">
-                    Ver Detalles
-                </button>
+                
+                ${Object.keys(cohortStats).length > 0 ? `
+                    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; opacity: 0.9;">
+                            Participación por cohorte:
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                            ${Object.entries(cohortStats).map(([cohort, stats]) => `
+                                <div style="text-align: center;">
+                                    <strong>${cohort}</strong><br>
+                                    <span style="font-size: 0.875rem;">
+                                        ${stats.count} alumnos<br>
+                                        Media: ${(stats.sum / stats.count).toFixed(2)}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" style="background: rgba(255,255,255,0.2); border: 1px solid white;"
+                            onclick="window.simulationsModule.viewDetails('${simulation.id}')">
+                        📊 Ver Detalles Completos
+                    </button>
+                    <button class="btn btn-secondary" style="background: rgba(255,255,255,0.2); border: 1px solid white;"
+                            onclick="window.dashboardAdmin.showPage('results')">
+                        📈 Ver Resultados
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -320,8 +370,9 @@ export default class SimulationsModule {
     }
 
     async viewDetails(simulationId) {
-        // Por ahora, abrir la página de ELO manual con el simulacro seleccionado
-        window.location.href = `elo_manual.html?simulation=${simulationId}`;
+        // Navegar a ELO manual con el simulacro seleccionado
+        window.dashboardAdmin.showPage('elo-manual');
+        // TODO: Pasar el simulationId al módulo elo-manual
     }
 
     closeModal() {

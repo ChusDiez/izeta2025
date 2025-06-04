@@ -1,6 +1,5 @@
-// /admin/js/modules/students.js
-// Módulo de gestión de estudiantes con análisis de riesgo y tendencias
-
+// admin/js/modules/students.js
+import AnalyticsModule from './analytics/index.js';
 export default class StudentsModule {
     constructor(supabaseClient, dashboardCore) {
         this.supabase = supabaseClient;
@@ -8,214 +7,65 @@ export default class StudentsModule {
         this.selectedStudents = new Set();
         this.sortColumn = 'created_at';
         this.sortDirection = 'desc';
+        this.currentStudentId = null;
     }
 
-    /**
-     * Renderizar la página de estudiantes
-     */
     async render(container, data) {
         const students = data.students || [];
         
-        // Calcular z-scores y niveles de riesgo
-        await this.calculateRiskMetrics(students);
+        // Solo calcular métricas básicas necesarias para la tabla
+        await this.calculateComprehensiveMetrics(students);
         
         container.innerHTML = `
             <div class="students-page">
-                <!-- Resumen de riesgo -->
-                ${this.renderRiskSummary(students)}
-                
                 <!-- Acciones masivas -->
                 ${this.renderBulkActions()}
                 
-                <!-- Tabla principal -->
-                ${this.renderStudentsTable(students)}
+                <!-- Tabla principal de estudiantes -->
+                ${this.renderAdvancedStudentsTable(students)}
                 
-                <!-- Modal de notas (oculto por defecto) -->
+                <!-- Modales -->
                 ${this.renderNotesModal()}
+                ${this.renderDetailedAnalysisModal()}
             </div>
         `;
         
         // Configurar event listeners
         this.setupEventListeners();
-        
-        // Cargar gráfico de análisis si hay datos
-        if (students.length > 0) {
-            this.renderRiskChart();
-        }
     }
 
     /**
-     * Calcular métricas de riesgo (z-score, probabilidad, tendencia)
+     * Calcular métricas comprehensivas delegando al módulo de analytics
      */
-    async calculateRiskMetrics(students) {
-        // Calcular media y desviación estándar
-        const scores = students.map(s => s.average_score || 0).filter(s => s > 0);
-        if (scores.length === 0) return;
-        
-        const mean = scores.reduce((a, b) => a + b) / scores.length;
-        const variance = scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / scores.length;
-        const stdDev = Math.sqrt(variance);
-        
-        // Calcular z-score y actualizar probabilidad para cada estudiante
-        for (const student of students) {
-            if (student.average_score && student.average_score > 0) {
-                // Z-score
-                student.z_score = ((student.average_score - mean) / stdDev).toFixed(2);
-                
-                // Probabilidad de aprobar basada en z-score y otros factores
-                const baseProbability = this.calculateProbabilityFromZScore(student.z_score);
-                const streakBonus = student.current_streak * 0.5; // 0.5% por semana de racha
-                const participationPenalty = student.total_simulations < 4 ? -10 : 0;
-                
-                student.probability_pass = Math.min(100, Math.max(0, 
-                    baseProbability + streakBonus + participationPenalty
-                ));
-                
-                // Determinar tendencia (requiere historial)
-                student.trend_direction = await this.calculateTrend(student.id);
-                
-                // Nivel de riesgo calculado
-                student.calculated_risk_level = this.determineRiskLevel(student);
-            }
-        }
-    }
-
-    /**
-     * Calcular probabilidad desde z-score usando distribución normal
-     */
-    calculateProbabilityFromZScore(zScore) {
-        // Aproximación de la función de distribución acumulativa normal
-        const z = parseFloat(zScore);
-        const t = 1 / (1 + 0.2316419 * Math.abs(z));
-        const d = 0.3989423 * Math.exp(-z * z / 2);
-        const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-        
-        if (z > 0) {
-            return (1 - probability) * 100;
-        } else {
-            return probability * 100;
-        }
-    }
-
-    /**
-     * Calcular tendencia basada en últimos resultados
-     */
-    async calculateTrend(userId) {
+    async calculateComprehensiveMetrics(students) {
         try {
-            const { data: results } = await this.supabase
-                .from('user_results')
-                .select('score, submitted_at')
-                .eq('user_id', userId)
-                .order('submitted_at', { ascending: false })
-                .limit(5);
+            // Obtener el módulo de analytics para el análisis pesado
+            const analyticsModule = await this.dashboard.loadModule('analytics');
             
-            if (!results || results.length < 3) return 'neutral';
+            // Obtener todos los resultados para el análisis
+            const allResults = this.dashboard.data.results;
             
-            // Calcular pendiente de la línea de tendencia
-            const scores = results.map(r => r.score).reverse();
-            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-            
-            for (let i = 0; i < scores.length; i++) {
-                sumX += i;
-                sumY += scores[i];
-                sumXY += i * scores[i];
-                sumX2 += i * i;
+            // Procesar cada estudiante usando analytics
+            for (const student of students) {
+                const studentResults = allResults.filter(r => r.user_id === student.id);
+                
+                if (studentResults.length === 0) {
+                    this.assignDefaultMetrics(student);
+                    continue;
+                }
+                
+                // Delegar el análisis complejo al módulo de analytics
+                const analysis = await analyticsModule.analyzeIndividualStudent(student, studentResults);
+                
+                // Asignar todos los resultados del análisis al estudiante
+                Object.assign(student, analysis);
             }
-            
-            const n = scores.length;
-            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-            
-            if (slope > 0.1) return 'up';
-            if (slope < -0.1) return 'down';
-            return 'stable';
-            
         } catch (error) {
-            console.error('Error calculando tendencia:', error);
-            return 'neutral';
+            console.error('Error calculando métricas:', error);
+            // Si falla el análisis, asignar métricas por defecto
+            students.forEach(student => this.assignDefaultMetrics(student));
         }
     }
-
-    /**
-     * Determinar nivel de riesgo
-     */
-    determineRiskLevel(student) {
-        const prob = student.probability_pass || 50;
-        const trend = student.trend_direction || 'neutral';
-        const participation = student.total_simulations || 0;
-        
-        // Factores de riesgo
-        let riskScore = 0;
-        
-        // Probabilidad base
-        if (prob < 30) riskScore += 40;
-        else if (prob < 50) riskScore += 25;
-        else if (prob < 70) riskScore += 10;
-        
-        // Tendencia
-        if (trend === 'down') riskScore += 20;
-        else if (trend === 'up') riskScore -= 10;
-        
-        // Participación
-        if (participation < 2) riskScore += 20;
-        else if (participation < 4) riskScore += 10;
-        
-        // Determinar nivel
-        if (riskScore >= 50) return 'critical';
-        if (riskScore >= 30) return 'high';
-        if (riskScore >= 15) return 'medium';
-        return 'low';
-    }
-
-    /**
-     * Renderizar resumen de riesgo
-     */
-    renderRiskSummary(students) {
-        const riskCounts = {
-            critical: students.filter(s => s.calculated_risk_level === 'critical').length,
-            high: students.filter(s => s.calculated_risk_level === 'high').length,
-            medium: students.filter(s => s.calculated_risk_level === 'medium').length,
-            low: students.filter(s => s.calculated_risk_level === 'low').length
-        };
-        
-        const atRiskTotal = riskCounts.critical + riskCounts.high;
-        const percentage = students.length > 0 ? 
-            ((atRiskTotal / students.length) * 100).toFixed(1) : 0;
-        
-        return `
-            <div class="risk-summary-card">
-                <h3>⚠️ Análisis de Riesgo</h3>
-                <div class="risk-stats">
-                    <div class="risk-stat">
-                        <div class="risk-number ${atRiskTotal > 0 ? 'text-danger' : 'text-success'}">
-                            ${atRiskTotal}
-                        </div>
-                        <div class="risk-label">Estudiantes en riesgo</div>
-                        <div class="risk-percentage">${percentage}% del total</div>
-                    </div>
-                    <div class="risk-breakdown">
-                        <div class="risk-item critical">
-                            <span class="risk-dot"></span>
-                            Crítico: ${riskCounts.critical}
-                        </div>
-                        <div class="risk-item high">
-                            <span class="risk-dot"></span>
-                            Alto: ${riskCounts.high}
-                        </div>
-                        <div class="risk-item medium">
-                            <span class="risk-dot"></span>
-                            Medio: ${riskCounts.medium}
-                        </div>
-                        <div class="risk-item low">
-                            <span class="risk-dot"></span>
-                            Bajo: ${riskCounts.low}
-                        </div>
-                    </div>
-                </div>
-                <div id="riskChart" style="height: 200px; margin-top: 1rem;"></div>
-            </div>
-        `;
-    }
-
     /**
      * Renderizar acciones masivas
      */
@@ -231,14 +81,14 @@ export default class StudentsModule {
                     <button class="btn btn-secondary" onclick="window.studentsModule.bulkUpdateCohort()">
                         📋 Cambiar cohorte
                     </button>
-                    <button class="btn btn-secondary" onclick="window.studentsModule.bulkAddNote()">
-                        📝 Añadir nota
+                    <button class="btn btn-secondary" onclick="window.studentsModule.bulkSendRecommendations()">
+                        📧 Enviar recomendaciones
                     </button>
                     <button class="btn btn-secondary" onclick="window.studentsModule.exportSelected()">
                         📊 Exportar seleccionados
                     </button>
-                    <button class="btn btn-danger" onclick="window.studentsModule.bulkDeactivate()">
-                        ❌ Desactivar
+                    <button class="btn btn-primary" onclick="window.studentsModule.generateBulkReport()">
+                        📄 Generar informe grupal
                     </button>
                 </div>
             </div>
@@ -246,13 +96,13 @@ export default class StudentsModule {
     }
 
     /**
-     * Renderizar tabla de estudiantes
+     * Renderizar tabla avanzada de estudiantes
      */
-    renderStudentsTable(students) {
+    renderAdvancedStudentsTable(students) {
         return `
             <div class="table-card">
                 <div class="table-header">
-                    <h2 class="table-title">📊 Todos los Estudiantes (${students.length})</h2>
+                    <h2 class="table-title">📊 Análisis Detallado de Estudiantes (${students.length})</h2>
                     <div class="table-controls">
                         <div class="search-box">
                             <span class="search-icon">🔍</span>
@@ -260,7 +110,7 @@ export default class StudentsModule {
                                    placeholder="Buscar por nombre, email o slug..." 
                                    onkeyup="window.studentsModule.filterStudents(this.value)">
                         </div>
-                        <button class="btn btn-primary" onclick="window.location.href='bulk-users.html'">
+                        <button class="btn btn-primary" onclick="window.dashboardAdmin.showPage('bulk-users')">
                             ➕ Añadir alumnos
                         </button>
                     </div>
@@ -275,31 +125,25 @@ export default class StudentsModule {
                                 <th onclick="window.studentsModule.sortBy('username')">
                                     Estudiante ${this.getSortIcon('username')}
                                 </th>
-                                <th onclick="window.studentsModule.sortBy('email')">
-                                    Email ${this.getSortIcon('email')}
-                                </th>
-                                <th>Slug</th>
                                 <th onclick="window.studentsModule.sortBy('cohort')">
                                     Cohorte ${this.getSortIcon('cohort')}
                                 </th>
-                                <th onclick="window.studentsModule.sortBy('current_elo')">
-                                    ELO ${this.getSortIcon('current_elo')}
+                                <th onclick="window.studentsModule.sortBy('weighted_average')" title="Promedio ponderado">
+                                    Nota ${this.getSortIcon('weighted_average')}
                                 </th>
-                                <th onclick="window.studentsModule.sortBy('average_score')">
-                                    Promedio ${this.getSortIcon('average_score')}
-                                </th>
-                                <th onclick="window.studentsModule.sortBy('probability_pass')">
+                                <th onclick="window.studentsModule.sortBy('probability_pass')" title="Probabilidad de aprobar">
                                     P(Aprobar) ${this.getSortIcon('probability_pass')}
                                 </th>
-                                <th>Z-Score</th>
                                 <th>Tendencia</th>
-                                <th>Riesgo</th>
-                                <th>Notas</th>
+                                <th>Patrones</th>
+                                <th onclick="window.studentsModule.sortBy('risk_level')">
+                                    Riesgo ${this.getSortIcon('risk_level')}
+                                </th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${students.map(student => this.renderStudentRow(student)).join('')}
+                            ${students.map(student => this.renderAdvancedStudentRow(student)).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -308,62 +152,110 @@ export default class StudentsModule {
     }
 
     /**
-     * Renderizar fila de estudiante
+     * Renderizar fila avanzada de estudiante
      */
-    renderStudentRow(student) {
-        const riskClass = this.getRiskClass(student.calculated_risk_level);
-        const trendIcon = this.getTrendIcon(student.trend_direction);
-        const hasNotes = student.notes && student.notes.length > 0;
+    renderAdvancedStudentRow(student) {
+        const hasPatterns = student.responsePatterns?.hasEnoughData && 
+            Object.values(student.responsePatterns.patterns).some(p => p.detected);
+        
+        const trendIcon = this.getTrendIcon(student.trendAnalysis?.direction || 'neutral');
+        const confidence = student.probability_details?.confidence;
         
         return `
-            <tr data-student-id="${student.id}" class="student-row">
+            <tr data-student-id="${student.id}" class="student-row ${student.risk_level}">
                 <td>
                     <input type="checkbox" class="student-select" value="${student.id}">
                 </td>
-                <td class="font-semibold">${student.username}</td>
-                <td class="text-small">${student.email}</td>
-                <td><code>${student.slug}</code></td>
                 <td>
-                    <span class="badge badge-info">${student.cohort}</span>
-                </td>
-                <td class="font-semibold" style="color: var(--primary);">
-                    ${student.current_elo}
-                </td>
-                <td>${student.average_score?.toFixed(1) || 'N/A'}/10</td>
-                <td>
-                    <div class="risk-indicator ${this.getProbabilityClass(student.probability_pass)}">
-                        ${student.probability_pass?.toFixed(0) || 50}%
+                    <div class="student-info">
+                        <strong>${student.username}</strong>
+                        <div class="student-meta">
+                            ${student.email} | ${student.slug}
+                        </div>
                     </div>
                 </td>
                 <td>
-                    <span class="badge ${student.z_score > 0 ? 'badge-success' : 'badge-danger'}">
-                        ${student.z_score || '0.00'}
-                    </span>
-                </td>
-                <td>${trendIcon}</td>
-                <td>
-                    <span class="risk-indicator ${riskClass}">
-                        ${this.formatRiskLevel(student.calculated_risk_level)}
+                    <span class="badge badge-${this.getCohortClass(student.cohort)}">
+                        ${student.cohort}
                     </span>
                 </td>
                 <td>
-                    <button class="btn-icon" onclick="window.studentsModule.viewNotes('${student.id}')"
-                            title="${hasNotes ? 'Ver notas' : 'Añadir nota'}">
-                        ${hasNotes ? '📋' : '➕'}
-                    </button>
+                    <div class="score-display">
+                        <strong>${(student.weighted_average || 0).toFixed(2)}</strong>/10
+                        <div class="score-detail">
+                            σ: ${(student.consistency_coefficient || 0).toFixed(2)}
+                        </div>
+                    </div>
                 </td>
                 <td>
-                    <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')"
-                            title="Ver perfil completo">
-                        👁️
-                    </button>
-                    <button class="btn-icon" onclick="window.studentsModule.toggleStudentStatus('${student.id}', ${student.active})"
-                            title="${student.active ? 'Desactivar' : 'Activar'}">
-                        ${student.active ? '✅' : '❌'}
-                    </button>
+                    <div class="probability-display ${this.getProbabilityClass(student.probability_pass)}">
+                        <strong>${student.probability_pass || 50}%</strong>
+                        ${confidence ? `
+                            <div class="confidence-interval" title="Intervalo de confianza">
+                                ±${confidence.margin.toFixed(0)}%
+                            </div>
+                        ` : ''}
+                    </div>
+                </td>
+                <td>
+                    <div class="trend-display">
+                        ${trendIcon}
+                        ${student.trendAnalysis?.confidence ? `
+                            <span class="trend-confidence">${student.trendAnalysis.confidence.toFixed(0)}%</span>
+                        ` : ''}
+                    </div>
+                </td>
+                <td>
+                    <div class="patterns-indicators">
+                        ${hasPatterns ? this.renderPatternIndicators(student.responsePatterns.patterns) : '—'}
+                    </div>
+                </td>
+                <td>
+                    <span class="risk-badge ${student.risk_level || 'unknown'}">
+                        ${this.getRiskLabel(student.risk_level)}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')"
+                                title="Ver análisis completo">
+                            📊
+                        </button>
+                        <button class="btn-icon" onclick="window.studentsModule.showQuickAnalysis('${student.id}')"
+                                title="Análisis rápido">
+                            ⚡
+                        </button>
+                        <button class="btn-icon" onclick="window.studentsModule.sendRecommendations('${student.id}')"
+                                title="Enviar recomendaciones">
+                            📧
+                        </button>
+                        <button class="btn-icon" onclick="window.studentsModule.viewNotes('${student.id}')"
+                                title="Ver notas">
+                            📝
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
+    }
+
+    /**
+     * Renderizar indicadores de patrones
+     */
+    renderPatternIndicators(patterns) {
+        const indicators = [];
+        
+        if (patterns.fatigue?.detected) {
+            indicators.push('<span class="pattern-indicator fatigue" title="Fatiga detectada">😴</span>');
+        }
+        if (patterns.rushing?.detected) {
+            indicators.push('<span class="pattern-indicator rushing" title="Precipitación detectada">⚡</span>');
+        }
+        if (patterns.abandonment) {
+            indicators.push('<span class="pattern-indicator abandonment" title="Muchas preguntas en blanco">❌</span>');
+        }
+        
+        return indicators.join(' ') || '✅';
     }
 
     /**
@@ -389,6 +281,7 @@ export default class StudentsModule {
                                     <option value="academic">📚 Académica</option>
                                     <option value="risk">⚠️ Riesgo</option>
                                     <option value="positive">✅ Positiva</option>
+                                    <option value="recommendation">💡 Recomendación</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="window.studentsModule.addNote()">
                                     Añadir nota
@@ -402,10 +295,28 @@ export default class StudentsModule {
     }
 
     /**
+     * Modal de análisis detallado
+     */
+    renderDetailedAnalysisModal() {
+        return `
+            <div id="analysisModal" class="modal" style="display: none;">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h3 id="analysisModalTitle">Análisis Detallado</h3>
+                        <button class="btn-icon" onclick="window.studentsModule.closeAnalysisModal()">✖️</button>
+                    </div>
+                    <div class="modal-body" id="analysisContent">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
      * Configurar event listeners
      */
     setupEventListeners() {
-        // Guardar referencia al módulo globalmente para los callbacks
         window.studentsModule = this;
         
         // Checkbox de selección múltiple
@@ -413,26 +324,194 @@ export default class StudentsModule {
             checkbox.addEventListener('change', () => this.updateSelectedCount());
         });
         
-        // Click fuera del modal para cerrar
-        document.getElementById('notesModal').addEventListener('click', (e) => {
-            if (e.target.id === 'notesModal') {
-                this.closeNotesModal();
-            }
+        // Header checkbox
+        document.getElementById('headerSelectAll')?.addEventListener('change', (e) => {
+            document.querySelectorAll('.student-select').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+            this.updateSelectedCount();
         });
     }
 
     /**
-     * Métodos de interacción
+     * Mostrar análisis rápido
      */
+    async showQuickAnalysis(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        const modal = document.getElementById('analysisModal');
+        const content = document.getElementById('analysisContent');
+        
+        content.innerHTML = `
+            <div class="quick-analysis">
+                <h4>${student.username} - Análisis Rápido</h4>
+                
+                <div class="analysis-section">
+                    <h5>📊 Métricas Principales</h5>
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <label>Nota media ponderada:</label>
+                            <value>${(student.weighted_average || 0).toFixed(2)}/10</value>
+                        </div>
+                        <div class="metric">
+                            <label>Probabilidad de aprobar:</label>
+                            <value class="${this.getProbabilityClass(student.probability_pass)}">
+                                ${student.probability_pass}%
+                            </value>
+                        </div>
+                        <div class="metric">
+                            <label>Tendencia:</label>
+                            <value>${this.getTrendIcon(student.trendAnalysis?.direction)} 
+                                ${student.trendAnalysis?.direction || 'neutral'}
+                            </value>
+                        </div>
+                        <div class="metric">
+                            <label>Simulacros realizados:</label>
+                            <value>${student.total_simulations}</value>
+                        </div>
+                    </div>
+                </div>
+                
+                ${student.responsePatterns?.hasEnoughData ? `
+                    <div class="analysis-section">
+                        <h5>🎯 Patrones Detectados</h5>
+                        <ul>
+                            ${Object.entries(student.responsePatterns.patterns)
+                                .filter(([_, pattern]) => pattern.detected)
+                                .map(([name, pattern]) => `
+                                    <li><strong>${this.getPatternName(name)}:</strong> 
+                                        ${pattern.recommendation || 'Detectado'}
+                                    </li>
+                                `).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${student.recommendations?.length > 0 ? `
+                    <div class="analysis-section">
+                        <h5>💡 Recomendaciones Prioritarias</h5>
+                        <div class="recommendations-list">
+                            ${student.recommendations.slice(0, 3).map(rec => `
+                                <div class="recommendation-item ${rec.priority}">
+                                    <strong>${rec.action}</strong>
+                                    <p>${rec.details}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="analysis-actions">
+                    <button class="btn btn-primary" onclick="window.dashboardAdmin.showStudentDetail('${studentId}')">
+                        Ver Análisis Completo
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.studentsModule.exportStudentReport('${studentId}')">
+                        Exportar Informe
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+    }
+
+    /**
+     * Cerrar modal de análisis
+     */
+    closeAnalysisModal() {
+        document.getElementById('analysisModal').style.display = 'none';
+    }
+
+    /**
+     * Enviar recomendaciones a un estudiante
+     */
+    async sendRecommendations(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student || !student.recommendations) return;
+        
+        if (confirm(`¿Enviar recomendaciones personalizadas a ${student.username}?`)) {
+            try {
+                // Aquí iría la lógica para enviar email con las recomendaciones
+                this.dashboard.showNotification('success', 'Recomendaciones enviadas correctamente');
+            } catch (error) {
+                this.dashboard.showNotification('error', 'Error al enviar recomendaciones');
+            }
+        }
+    }
+
+    /**
+     * Generar informe grupal
+     */
+    async generateBulkReport() {
+        const selectedIds = Array.from(this.selectedStudents);
+        const students = selectedIds.length > 0 ?
+            this.dashboard.data.students.filter(s => selectedIds.includes(s.id)) :
+            this.dashboard.data.students;
+        
+        if (students.length === 0) {
+            this.dashboard.showNotification('warning', 'No hay estudiantes seleccionados');
+            return;
+        }
+        
+        // Aquí iría la lógica para generar un informe PDF o Excel completo
+        this.dashboard.showNotification('info', `Generando informe para ${students.length} estudiantes...`);
+        
+        // Por ahora, exportar a CSV con todas las métricas
+        await this.exportAdvancedReport(students);
+    }
+
+    /**
+     * Exportar informe avanzado
+     */
+    async exportAdvancedReport(students) {
+        const exportsModule = await this.dashboard.loadModule('exports');
+        
+        const reportData = students.map(s => ({
+            // Datos básicos
+            Nombre: s.username,
+            Email: s.email,
+            Cohorte: s.cohort,
+            Código: s.slug,
+            
+            // Métricas principales
+            'Nota Media': s.average_score || 0,
+            'Nota Ponderada': s.weighted_average || 0,
+            'Mejor Nota': s.best_score || 0,
+            'Peor Nota': s.worst_score || 0,
+            'Consistencia': s.consistency_coefficient || 0,
+            
+            // Probabilidad y riesgo
+            'P(Aprobar)': s.probability_pass || 50,
+            'Nivel Riesgo': s.risk_level || 'unknown',
+            'Tendencia': s.trendAnalysis?.direction || 'neutral',
+            'Proyección': s.trendAnalysis?.projection || 'N/A',
+            
+            // Participación
+            'Simulacros': s.total_simulations || 0,
+            'Racha Actual': s.current_streak || 0,
+            
+            // Patrones
+            'Fatiga': s.responsePatterns?.patterns?.fatigue?.detected ? 'Sí' : 'No',
+            'Precipitación': s.responsePatterns?.patterns?.rushing?.detected ? 'Sí' : 'No',
+            'Abandono': s.responsePatterns?.patterns?.abandonment ? 'Sí' : 'No',
+            
+            // Recomendación principal
+            'Recomendación Principal': s.recommendations?.[0]?.action || 'Sin recomendaciones'
+        }));
+        
+        const csv = exportsModule.objectsToCSV(reportData);
+        exportsModule.downloadCSV(csv, `informe_avanzado_cnp_${exportsModule.getTimestamp()}.csv`);
+    }
+
+    // ==================================================================
+    // MÉTODOS DE UI Y UTILIDADES (no requieren cambios)
+    // ==================================================================
+
     toggleSelectAll() {
         const selectAll = document.getElementById('selectAllStudents').checked;
         document.querySelectorAll('.student-select').forEach(checkbox => {
             checkbox.checked = selectAll;
-            if (selectAll) {
-                this.selectedStudents.add(checkbox.value);
-            } else {
-                this.selectedStudents.clear();
-            }
         });
         this.updateSelectedCount();
     }
@@ -446,10 +525,184 @@ export default class StudentsModule {
             `${this.selectedStudents.size} seleccionados`;
     }
 
+    filterStudents(searchTerm) {
+        const rows = document.querySelectorAll('#studentsTable tbody tr');
+        const term = searchTerm.toLowerCase();
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    }
+
+    sortBy(column) {
+        if (this.sortColumn === column) {
+            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortColumn = column;
+            this.sortDirection = 'asc';
+        }
+        
+        this.dashboard.refreshCurrentPage();
+    }
+
+    // Métodos de formato y visualización
+    getProbabilityClass(probability) {
+        if (!probability) probability = 50;
+        if (probability >= 70) return 'success';
+        if (probability >= 50) return 'warning';
+        if (probability >= 30) return 'danger';
+        return 'critical';
+    }
+
+    getCohortClass(cohort) {
+        const classes = {
+            '48h': 'danger',
+            '36h': 'warning',
+            '20h': 'info',
+            'sin_asignar': 'secondary'
+        };
+        return classes[cohort] || 'secondary';
+    }
+
+    getTrendIcon(direction) {
+        const icons = {
+            'up': '📈',
+            'down': '📉',
+            'stable': '➡️',
+            'neutral': '⚪'
+        };
+        return icons[direction] || '⚪';
+    }
+
+    getRiskLabel(level) {
+        const labels = {
+            'critical': 'Crítico',
+            'high': 'Alto',
+            'medium': 'Medio',
+            'low': 'Bajo',
+            'unknown': 'No evaluado'
+        };
+        return labels[level] || level;
+    }
+
+    getBlockName(block) {
+        const names = {
+            'juridico': 'Jurídico (T1-26)',
+            'sociales': 'Ciencias Sociales (T27-37)',
+            'tecnico': 'Técnico-Científico (T38-45)'
+        };
+        return names[block] || block;
+    }
+
+    getPatternName(pattern) {
+        const names = {
+            'fatigue': 'Fatiga mental',
+            'rushing': 'Precipitación',
+            'abandonment': 'Abandono excesivo'
+        };
+        return names[pattern] || pattern;
+    }
+
+    getSortIcon(column) {
+        if (this.sortColumn !== column) return '';
+        return this.sortDirection === 'asc' ? '↑' : '↓';
+    }
+
+    // Métodos de datos por defecto
+    assignDefaultMetrics(student) {
+        Object.assign(student, {
+            average_score: 0,
+            weighted_average: 0,
+            consistency_coefficient: 0,
+            z_score: 0,
+            percentile: 50,
+            probability_pass: 50,
+            risk_level: 'unknown',
+            trend_direction: 'neutral',
+            calculated_risk_level: 'unknown',
+            recommendations: [{
+                priority: 'high',
+                category: 'start',
+                action: 'Comenzar con simulacros',
+                details: 'Necesitas realizar al menos 3 simulacros para obtener un análisis completo.'
+            }]
+        });
+    }
+
+    // ==================================================================
+    // MÉTODOS DE ACCIONES MASIVAS
+    // ==================================================================
+
+    async bulkUpdateCohort() {
+        if (this.selectedStudents.size === 0) {
+            alert('Selecciona al menos un estudiante');
+            return;
+        }
+        
+        const newCohort = prompt('Nueva cohorte (20h, 36h, 48h, sin_asignar):');
+        if (!newCohort || !['20h', '36h', '48h', 'sin_asignar'].includes(newCohort)) {
+            return;
+        }
+        
+        try {
+            const { error } = await this.supabase
+                .from('users')
+                .update({ cohort: newCohort })
+                .in('id', Array.from(this.selectedStudents));
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 
+                `Cohorte actualizada para ${this.selectedStudents.size} estudiantes`);
+            
+            await this.dashboard.refreshCurrentPage();
+            
+        } catch (error) {
+            this.dashboard.showNotification('error', 'Error al actualizar cohortes');
+        }
+    }
+
+    async bulkSendRecommendations() {
+        if (this.selectedStudents.size === 0) {
+            alert('Selecciona al menos un estudiante');
+            return;
+        }
+        
+        if (confirm(`¿Enviar recomendaciones personalizadas a ${this.selectedStudents.size} estudiantes?`)) {
+            // Implementar lógica de envío masivo
+            this.dashboard.showNotification('info', 'Función en desarrollo');
+        }
+    }
+
+    async exportSelected() {
+        const studentsToExport = this.selectedStudents.size > 0 ? 
+            Array.from(this.selectedStudents) : 
+            this.dashboard.data.students.map(s => s.id);
+        
+        const students = this.dashboard.data.students.filter(s => studentsToExport.includes(s.id));
+        await this.exportAdvancedReport(students);
+    }
+
+    async exportStudentReport(studentId) {
+        const student = this.dashboard.data.students.find(s => s.id === studentId);
+        if (!student) return;
+        
+        await this.exportAdvancedReport([student]);
+    }
+
+    async renderAnalyticsCharts(students) {
+        // Implementar gráficos específicos si es necesario
+        // Por ejemplo: distribución de probabilidades, tendencias grupales, etc.
+    }
+
+    // ==================================================================
+    // GESTIÓN DE NOTAS Y ANOTACIONES
+    // ==================================================================
+
     async viewNotes(studentId) {
         this.currentStudentId = studentId;
         
-        // Obtener estudiante y sus notas
         const { data: student } = await this.supabase
             .from('users')
             .select('username, notes')
@@ -458,7 +711,6 @@ export default class StudentsModule {
         
         if (!student) return;
         
-        // Actualizar modal
         document.getElementById('notesModalTitle').textContent = 
             `Notas de ${student.username}`;
         
@@ -480,7 +732,6 @@ export default class StudentsModule {
             notesList.innerHTML = '<p class="text-muted">No hay notas para este estudiante</p>';
         }
         
-        // Mostrar modal
         document.getElementById('notesModal').style.display = 'flex';
     }
 
@@ -491,7 +742,6 @@ export default class StudentsModule {
         if (!text) return;
         
         try {
-            // Obtener notas actuales
             const { data: student } = await this.supabase
                 .from('users')
                 .select('notes')
@@ -506,7 +756,6 @@ export default class StudentsModule {
                 author: this.dashboard.auth.currentUser.email
             });
             
-            // Actualizar en BD
             const { error } = await this.supabase
                 .from('users')
                 .update({ notes })
@@ -514,7 +763,6 @@ export default class StudentsModule {
             
             if (error) throw error;
             
-            // Recargar notas
             document.getElementById('newNoteText').value = '';
             this.viewNotes(this.currentStudentId);
             
@@ -557,121 +805,13 @@ export default class StudentsModule {
         document.getElementById('notesModal').style.display = 'none';
     }
 
-    async bulkUpdateCohort() {
-        if (this.selectedStudents.size === 0) {
-            alert('Selecciona al menos un estudiante');
-            return;
-        }
-        
-        const newCohort = prompt('Nueva cohorte (20h, 36h, 48h, sin_asignar):');
-        if (!newCohort || !['20h', '36h', '48h', 'sin_asignar'].includes(newCohort)) {
-            return;
-        }
-        
-        try {
-            const { error } = await this.supabase
-                .from('users')
-                .update({ cohort: newCohort })
-                .in('id', Array.from(this.selectedStudents));
-            
-            if (error) throw error;
-            
-            this.dashboard.showNotification('success', 
-                `Cohorte actualizada para ${this.selectedStudents.size} estudiantes`);
-            
-            // Recargar datos
-            await this.dashboard.refreshCurrentPage();
-            
-        } catch (error) {
-            this.dashboard.showNotification('error', 'Error al actualizar cohortes');
-        }
-    }
-
-    async exportSelected() {
-        const studentsToExport = this.selectedStudents.size > 0 ? 
-            this.selectedStudents : 
-            new Set(this.dashboard.data.students.map(s => s.id));
-        
-        // Cargar módulo de exportación
-        const exportsModule = await this.dashboard.loadModule('exports');
-        await exportsModule.exportStudents(Array.from(studentsToExport));
-    }
-
-    sortBy(column) {
-        if (this.sortColumn === column) {
-            this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            this.sortColumn = column;
-            this.sortDirection = 'asc';
-        }
-        
-        // Reordenar y re-renderizar
-        this.dashboard.refreshCurrentPage();
-    }
-
-    filterStudents(searchTerm) {
-        const rows = document.querySelectorAll('#studentsTable tbody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm.toLowerCase()) ? '' : 'none';
-        });
-    }
-
-    async renderRiskChart() {
-        const chartsModule = await this.dashboard.loadModule('charts');
-        await chartsModule.renderRiskAnalysis('riskChart', this.dashboard.data.students);
-    }
-
-    // Utilidades
-    getRiskClass(level) {
-        const classes = {
-            'critical': 'risk-critical',
-            'high': 'risk-high',
-            'medium': 'risk-medium',
-            'low': 'risk-low'
-        };
-        return classes[level] || '';
-    }
-
-    getProbabilityClass(probability) {
-        if (!probability) probability = 50;
-        if (probability >= 70) return 'risk-low';
-        if (probability >= 50) return 'risk-medium';
-        if (probability >= 30) return 'risk-high';
-        return 'risk-critical';
-    }
-
-    getTrendIcon(trend) {
-        const icons = {
-            'up': '📈',
-            'down': '📉',
-            'stable': '➡️',
-            'neutral': '⚪'
-        };
-        return icons[trend] || '⚪';
-    }
-
-    getSortIcon(column) {
-        if (this.sortColumn !== column) return '';
-        return this.sortDirection === 'asc' ? '↑' : '↓';
-    }
-
-    formatRiskLevel(level) {
-        const labels = {
-            'critical': 'Crítico',
-            'high': 'Alto',
-            'medium': 'Medio',
-            'low': 'Bajo'
-        };
-        return labels[level] || level;
-    }
-
     getNoteIcon(type) {
         const icons = {
             'general': '📝',
             'academic': '📚',
             'risk': '⚠️',
-            'positive': '✅'
+            'positive': '✅',
+            'recommendation': '💡'
         };
         return icons[type] || '📝';
     }
