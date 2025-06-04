@@ -901,14 +901,6 @@ async createTopicIntervention() {
 }
 
     /**
-     * Configurar event listeners para análisis de temas
-     */
-    setupTopicEventListeners() {
-        // Implementar event listeners específicos para la sección de temas
-        // De forma similar a setupEventListeners()
-    }
-
-    /**
      * Renderizar insights
      */
     async renderInsights(analysis) {
