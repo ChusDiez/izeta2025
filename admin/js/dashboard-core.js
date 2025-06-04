@@ -100,7 +100,7 @@ export class DashboardCore {
             'students': './modules/students.js',
             'results': './modules/results.js',
             'simulations': './modules/simulations.js',
-            'analytics': './modules/analytics.js',
+            'analytics': './modules/analytics/index.js', 
             'exports': './modules/exports.js',
             'medals': './modules/medals.js',
             'alerts': './modules/alerts.js',

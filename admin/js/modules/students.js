@@ -1,7 +1,5 @@
 // admin/js/modules/students.js
-// Módulo enfocado en la gestión de UI y acciones sobre estudiantes
-// Todo el análisis estadístico se ha movido a analytics.js
-
+import AnalyticsModule from './analytics/index.js';
 export default class StudentsModule {
     constructor(supabaseClient, dashboardCore) {
         this.supabase = supabaseClient;
