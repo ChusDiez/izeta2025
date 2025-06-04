@@ -100,13 +100,11 @@ export class DashboardCore {
             'students': './modules/students.js',
             'results': './modules/results.js',
             'simulations': './modules/simulations.js',
-            'analytics': './modules/analytics/index.js', 
+            'analytics': './modules/analytics.js',
             'exports': './modules/exports.js',
             'medals': './modules/medals.js',
             'alerts': './modules/alerts.js',
             'risk': './modules/risk-analysis.js',
-            'bulk-users': './modules/bulk-users.js',
-            'elo-manual': './modules/elo-manual.js',
             'student-detail': './modules/student-detail.js'
         };
     }
@@ -161,8 +159,7 @@ export class DashboardCore {
                 studentsResponse,
                 simulationsResponse,
                 resultsResponse,
-                alertsResponse,
-                eloHistoryResponse
+                alertsResponse
             ] = await Promise.all([
                 // Estudiantes con verificación real de admin
                 this.supabase
@@ -184,21 +181,14 @@ export class DashboardCore {
                         users!inner(slug, username, email, cohort)
                     `)
                     .order('submitted_at', { ascending: false })
-                    .limit(1000),
+                    .limit(100),
                 
                 // Alertas no leídas
                 this.supabase
                     .from('user_alerts')
                     .select('*')
                     .eq('is_read', false)
-                    .order('created_at', { ascending: false }),
-
-                this.supabase
-                .from('elo_history')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(500)
-           
+                    .order('created_at', { ascending: false })
             ]);
 
             // Procesar respuestas
@@ -216,12 +206,6 @@ export class DashboardCore {
             
             if (!alertsResponse.error) {
                 this.data.alerts = alertsResponse.data || [];
-            }
-
-            if (!eloHistoryResponse.error) {
-            this.data.eloHistory = eloHistoryResponse.data || [];
-            } else {
-            this.data.eloHistory = [];
             }
 
             // Calcular estadísticas
@@ -331,6 +315,7 @@ export class DashboardCore {
                     await studentsModule.render(contentWrapper, this.getFilteredData());
                     break;
                 case 'results':
+                    // CAMBIO: Usar el módulo de resultados
                     const resultsModule = await this.loadModule('results');
                     await resultsModule.render(contentWrapper, this.getFilteredData());
                     break;
@@ -351,16 +336,8 @@ export class DashboardCore {
                     await medalsModule.render(contentWrapper);
                     break;
                 case 'risk':
-                    const riskModule = await this.loadModule('risk');
+                    const riskModule = await this.loadModule('risk-analysis');
                     await riskModule.render(contentWrapper);
-                    break;
-                case 'bulk-users':
-                    const bulkUsersModule = await this.loadModule('bulk-users');
-                    await bulkUsersModule.render(contentWrapper);
-                    break;
-                case 'elo-manual':
-                    const eloManualModule = await this.loadModule('elo-manual');
-                    await eloManualModule.render(contentWrapper);
                     break;
                 default:
                     this.showError('Página no encontrada');
@@ -374,7 +351,6 @@ export class DashboardCore {
             this.showError(`Error al cargar la página: ${error.message}`);
         }
     }
-
     async showStudentDetail(studentId) {
         const contentWrapper = document.getElementById('contentWrapper');
         
@@ -388,7 +364,6 @@ export class DashboardCore {
         document.getElementById('pageTitle').textContent = 'Perfil del Estudiante';
         document.getElementById('breadcrumbCurrent').textContent = 'Perfil del Estudiante';
     }
-
     /**
      * Actualizar header de la página
      */
@@ -398,12 +373,7 @@ export class DashboardCore {
             'students': 'Gestión de Alumnos',
             'results': 'Resultados',
             'simulations': 'Gestión de Simulacros',
-            'alerts': 'Alertas y Notificaciones',
-            'analytics': 'Análisis y Tendencias',
-            'medals': 'Medallas y Logros',
-            'risk': 'Análisis de Riesgo',
-            'bulk-users': 'Carga Masiva de Alumnos',
-            'elo-manual': 'Actualización Manual ELO'
+            'alerts': 'Alertas y Notificaciones'
         };
         
         document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -565,8 +535,8 @@ export class DashboardCore {
         const contentWrapper = document.getElementById('contentWrapper');
         const data = this.getFilteredData();
         
-        await window.ensureChartJS();
-
+        // Aquí iría el HTML de la vista general
+        // Por ahora uso una versión simplificada
         contentWrapper.innerHTML = `
             <div class="stats-grid">
                 ${this.renderStatsCards(data)}
@@ -580,103 +550,15 @@ export class DashboardCore {
                         <!-- Chart.js canvas aquí -->
                     </div>
                 </div>
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">📈 Distribución por Cohortes</h3>
-                    </div>
-                    <div class="chart-body" id="cohortChart">
-                        <!-- Chart.js canvas aquí -->
-                    </div>
-                </div>
             </div>
-            
-            <!-- Acciones rápidas -->
-            <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
-                <button class="action-card" onclick="window.dashboardAdmin.showPage('bulk-users')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
-                    <h3 style="margin-bottom: 0.5rem;">Carga Masiva</h3>
-                    <p style="color: #6b7280; font-size: 0.875rem;">Añadir múltiples alumnos</p>
-                </button>
-                
-                <button class="action-card" onclick="window.dashboardAdmin.showPage('elo-manual')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
-                    <h3 style="margin-bottom: 0.5rem;">Actualizar ELO</h3>
-                    <p style="color: #6b7280; font-size: 0.875rem;">Procesar resultados manualmente</p>
-                </button>
-                
-                <button class="action-card" onclick="window.dashboardAdmin.showPage('risk')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
-                    <h3 style="margin-bottom: 0.5rem;">Análisis de Riesgo</h3>
-                    <p style="color: #6b7280; font-size: 0.875rem;">Ver estudiantes en riesgo</p>
-                </button>
-            </div>
-            
-            <style>
-                .action-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                    border-color: #1e3a8a !important;
-                }
-                .chart-card {
-                    background: white;
-                    padding: 1.5rem;
-                    border-radius: 12px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-                    min-height: 400px;
-                }
-                .chart-body {
-                    position: relative;
-                    height: 300px;
-                }
-            </style>
         `;
-        setTimeout(async () => {
-            try {
-                // Verificar que tengamos datos antes de renderizar
-                if (data.results && data.results.length > 0) {
-                    const chartsModule = await this.loadModule('charts');
-                    
-                    // Renderizar cada gráfico con manejo de errores
-                    try {
-                        await chartsModule.renderWeeklyChart('weeklyChart', data);
-                    } catch (e) {
-                        console.error('Error en gráfico semanal:', e);
-                    }
-                    
-                    try {
-                        await chartsModule.renderCohortDistribution('cohortChart', this.data.cohortStats);
-                    } catch (e) {
-                        console.error('Error en gráfico de cohortes:', e);
-                    }
-                    
-                    try {
-                        // Pasar los estudiantes para el análisis de riesgo
-                        await chartsModule.renderRiskAnalysis('riskChart', data.students);
-                    } catch (e) {
-                        console.error('Error en gráfico de riesgo:', e);
-                    }
-                    
-                    try {
-                        // Renderizar tendencia ELO si hay datos
-                        if (this.data.eloHistory && this.data.eloHistory.length > 0) {
-                            await chartsModule.renderEloTrends('eloChart', this.data.eloHistory);
-                        } else {
-                            document.getElementById('eloChart').parentElement.innerHTML = 
-                                '<p style="text-align: center; color: #6b7280; margin-top: 50px;">No hay datos de ELO disponibles</p>';
-                        }
-                    } catch (e) {
-                        console.error('Error en gráfico ELO:', e);
-                    }
-                } else {
-                    contentWrapper.querySelector('.charts-section').innerHTML = 
-                        '<div style="text-align: center; padding: 3rem; color: #6b7280;">No hay datos suficientes para mostrar gráficos</div>';
-                }
-            } catch (error) {
-                console.error('Error general renderizando gráficos:', error);
-            }
-        }, 100);
+        
+        // Cargar módulo de gráficos si es necesario
+        if (this.data.results.length > 0) {
+            const chartsModule = await this.loadModule('charts');
+            await chartsModule.renderWeeklyChart('weeklyChart', this.data);
+        }
     }
-
 
     /**
      * Renderizar cards de estadísticas
@@ -725,6 +607,29 @@ export class DashboardCore {
                 </div>
             </div>
         `).join('');
+    }
+
+    /**
+     * Renderizar página de resultados
+     */
+    async renderResultsPage() {
+        // Por ahora mantenemos la implementación existente
+        // Luego la moveríamos a un módulo separado
+        const contentWrapper = document.getElementById('contentWrapper');
+        const data = this.getFilteredData();
+        
+        contentWrapper.innerHTML = `
+            <div class="table-card">
+                <div class="table-header">
+                    <h2 class="table-title">📈 Todos los Resultados (${data.results.length})</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table id="resultsTable">
+                        <!-- Contenido de la tabla -->
+                    </table>
+                </div>
+            </div>
+        `;
     }
 
     /**

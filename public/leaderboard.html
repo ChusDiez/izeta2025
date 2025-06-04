@@ -732,13 +732,13 @@ async function loadAllData() {
         }
 
         // Cargar ranking semanal
-        await loadWeeklyRanking();
-
+        loadWeeklyRanking();
+        
         // Cargar ranking ELO
-        await loadEloRanking();
-
+        loadEloRanking();
+        
         // Cargar logros
-        await loadAchievements();
+        loadAchievements();
 
     } catch (error) {
         console.error('Error general:', error);
