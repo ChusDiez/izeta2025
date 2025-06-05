@@ -158,7 +158,8 @@ window.dashboardAdmin = {
         const exportsModule = await dashboard?.loadModule('exports');
         return exportsModule?.exportData(type);
     },
-    showStudentDetail: (studentId) => dashboard?.showStudentDetail(studentId)
+    showStudentDetail: (studentId) => dashboard?.showStudentDetail(studentId),
+    showNotification: (type, message) => dashboard?.showNotification(type, message)
 };
 
 // Esperar a que el DOM esté listo
