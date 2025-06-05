@@ -24,3 +24,39 @@ build/
 # IDEs
 .vscode/
 .idea/
+
+# Build files
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Environment variables
+.env.production
+.env.development
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# MacOS
+.DS_Store
+
+# Node modules
+node_modules/
+
+# Package lock
+package-lock.json
+
+# Archivos problemáticos para GitHub Pages
+cursor_integraci_n_de_datos_de_evolcamp.md
+Documentacion_API_evolCampus.pdf
+expediente-lucia-hita-lopez-03062025-224222.xlsx
