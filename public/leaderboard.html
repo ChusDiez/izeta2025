@@ -514,6 +514,43 @@
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
+
+        /* Selector de simulacros */
+    .simulation-selector {
+        margin: 0.5rem 0;
+    }
+
+    .simulation-selector select {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .simulation-selector select:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .simulation-selector select option {
+        background: #1E3A8A;
+        color: white;
+    }
+
+    /* Indicador de simulacro histórico */
+    .historical-indicator {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
     /* ============================================ */
     /* NUEVOS ESTILOS PARA TIEMPO REAL - FIN */
     /* ============================================ */
@@ -652,10 +689,17 @@
     <div class="main-container">
         <!-- Grid de dos columnas -->
         <div class="leaderboard-grid">
+            
             <!-- Ranking Semanal Activo -->
             <div class="ranking-container">
                 <div class="ranking-header">
-                    <h2>📊 Simulacro Activo</h2>
+                    <h2>📊 Simulacro</h2>
+                    <!-- NUEVO: Selector de simulacros -->
+                    <div class="simulation-selector">
+                        <select id="simulationSelect" onchange="onSimulationChange()">
+                            <option value="">Cargando simulacros...</option>
+                        </select>
+                    </div>
                     <p id="weeklyInfo">Cargando...</p>
                 </div>
                 <div class="ranking-list" id="weeklyRanking">
@@ -700,6 +744,8 @@ let weeklyData = [];
 let eloData = [];
 let achievements = [];
 let activeSimulation = null;
+let allSimulations = [];
+let selectedSimulationId = null;
 
 // ============================================
 // NUEVAS VARIABLES PARA TIEMPO REAL - INICIO
@@ -712,71 +758,185 @@ let realtimeSubscriptions = {
 // NUEVAS VARIABLES PARA TIEMPO REAL - FIN
 // ============================================
 
-// Cargar datos iniciales
 async function loadAllData() {
     try {
-        // Obtener simulacro activo
+        // Obtener TODOS los simulacros
         const { data: simData, error: simError } = await supabaseClient
             .from('weekly_simulations')
             .select('*')
-            .eq('status', 'active')
-            .single();
+            .order('week_number', { ascending: false });
 
-        if (simError || !simData) {
-            console.error('Error obteniendo simulacro activo:', simError);
-            document.getElementById('weeklyInfo').textContent = 'No hay simulacro activo';
-        } else {
-            activeSimulation = simData;
-            document.getElementById('weeklyInfo').textContent = `RF${simData.week_number} - Semana del ${formatDate(simData.start_date)}`;
-            document.getElementById('headerSubtitle').textContent = `Semana ${simData.week_number} - Sistema ELO + Ranking Semanal`;
+        if (!simError && simData) {
+            allSimulations = simData;
+            
+            // Encontrar el simulacro activo
+            activeSimulation = simData.find(s => s.status === 'active');
+            
+            // Poblar el selector
+            populateSimulationSelector();
+            
+            // Seleccionar el simulacro activo por defecto
+            if (activeSimulation) {
+                selectedSimulationId = activeSimulation.id;
+                document.getElementById('simulationSelect').value = activeSimulation.id;
+            }
         }
 
-        // Cargar ranking semanal
+        // Cargar rankings
         await loadWeeklyRanking();
-
-        // Cargar ranking ELO
         await loadEloRanking();
-
-        // Cargar logros
         await loadAchievements();
 
     } catch (error) {
         console.error('Error general:', error);
     }
 }
+function populateSimulationSelector() {
+    const select = document.getElementById('simulationSelect');
+    
+    select.innerHTML = allSimulations.map(sim => {
+        const isActive = sim.status === 'active';
+        const isCompleted = sim.status === 'completed' || (sim.processed_at !== null);
+        const statusText = isActive ? ' (ACTIVO)' : isCompleted ? '' : ' (Futuro)';
+        
+        return `<option value="${sim.id}" ${isActive ? 'selected' : ''}>
+            RF${sim.week_number} - ${formatDate(sim.start_date)}${statusText}
+        </option>`;
+    }).join('');
+}
 
+// Nueva función para manejar el cambio de simulacro
+async function onSimulationChange() {
+    const select = document.getElementById('simulationSelect');
+    selectedSimulationId = select.value;
+    
+    // Encontrar el simulacro seleccionado
+    const selectedSim = allSimulations.find(s => s.id === selectedSimulationId);
+    
+    if (selectedSim) {
+        // Actualizar la información del header
+        const isHistorical = selectedSim.status !== 'active';
+        const infoText = `RF${selectedSim.week_number} - Semana del ${formatDate(selectedSim.start_date)}`;
+        
+        document.getElementById('weeklyInfo').innerHTML = isHistorical ? 
+            `${infoText} <span class="historical-indicator">📚 Histórico</span>` : 
+            infoText;
+        
+        // Actualizar el título del header principal solo si es el activo
+        if (selectedSim.status === 'active') {
+            document.getElementById('headerSubtitle').textContent = 
+                `Semana ${selectedSim.week_number} - Sistema ELO + Ranking Semanal`;
+        }
+        
+        // Recargar el ranking
+        await loadWeeklyRanking();
+    }
+}
 // Cargar ranking semanal
+// Modificar loadWeeklyRanking para usar el simulacro seleccionado
 async function loadWeeklyRanking() {
     try {
-        if (!activeSimulation) {
-            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay simulacro activo esta semana</p>';
+        // Usar el simulacro seleccionado o el activo
+        const simulationToLoad = selectedSimulationId ? 
+            allSimulations.find(s => s.id === selectedSimulationId) : 
+            activeSimulation;
+            
+        if (!simulationToLoad) {
+            document.getElementById('weeklyRanking').innerHTML = 
+                '<p style="text-align: center; padding: 2rem;">Selecciona un simulacro</p>';
             return;
         }
 
-        // Obtener resultados del simulacro activo con información del usuario
+        // Obtener resultados del simulacro seleccionado
         const { data, error } = await supabaseClient
             .from('user_results')
             .select(`
                 *,
                 users!inner(slug, current_elo, current_streak, cohort)
             `)
-            .eq('simulation_id', activeSimulation.id)
+            .eq('simulation_id', simulationToLoad.id)
             .order('score', { ascending: false });
 
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; padding: 2rem;">No hay resultados aún para este simulacro</p>';
+            const message = simulationToLoad.status === 'future' ? 
+                'Este simulacro aún no ha comenzado' : 
+                'No hay resultados para este simulacro';
+            document.getElementById('weeklyRanking').innerHTML = 
+                `<p style="text-align: center; padding: 2rem;">${message}</p>`;
             return;
         }
 
         weeklyData = data;
-        renderWeeklyRanking(data);
+        
+        // IMPORTANTE: Pasar el simulacro correcto a renderWeeklyRanking
+        renderWeeklyRanking(data, simulationToLoad);
 
     } catch (error) {
         console.error('Error cargando ranking semanal:', error);
-        document.getElementById('weeklyRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking semanal</p>';
+        document.getElementById('weeklyRanking').innerHTML = 
+            '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking</p>';
     }
+}
+
+// Modificar renderWeeklyRanking para recibir el simulacro
+function renderWeeklyRanking(data, simulation = activeSimulation) {
+    const container = document.getElementById('weeklyRanking');
+    
+    container.innerHTML = data.map((result, index) => {
+        const position = index + 1;
+        const isTop3 = position <= 3;
+        let rowClass = 'ranking-row';
+        if (position === 1) rowClass += ' top-1';
+        else if (position === 2) rowClass += ' top-2';
+        else if (position === 3) rowClass += ' top-3';
+
+        // Medallas solo para el simulacro que se está mostrando
+        let medals = [];
+        if (simulation && simulation.status === 'active') {
+            if (isTop3 && result.is_saturday_live) {
+                medals.push({ icon: '🥇', tooltip: 'Top 3 en directo' });
+            }
+            if (result.score === 100) {
+                medals.push({ icon: '💯', tooltip: 'Puntuación perfecta' });
+            }
+            if (result.blank_answers === 0) {
+                medals.push({ icon: '✅', tooltip: 'Sin blancos' });
+            }
+            if (result.review_time >= 60) {
+                medals.push({ icon: '📚', tooltip: 'Análisis profundo' });
+            }
+        }
+
+        const medalHTML = medals.length > 0 ? `
+            <div class="medals">
+                ${medals.map(m => `<span class="medal" data-tooltip="${m.tooltip}">${m.icon}</span>`).join('')}
+            </div>
+        ` : '';
+
+        return `
+            <div class="${rowClass}" data-user-id="${result.user_id}" data-score="${result.score}">
+                <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
+                <div class="user-info">
+                    <div class="user-name">${result.users.slug}</div>
+                    <div class="user-stats">
+                        <span>📋 ${result.users.cohort}</span>
+                        ${result.is_saturday_live ? '<span>🔴 En directo</span>' : ''}
+                        ${result.time_taken ? `<span>⏱️ ${Math.round(result.time_taken/60)} min</span>` : ''}
+                        ${result.error_percentage ? `<span>❌ Errores: ${result.error_percentage}%</span>` : ''}
+                    </div>
+                </div>
+                ${medalHTML}
+                <div class="score-display">
+                    <div class="score-number">${result.score.toFixed(2).replace('.', ',')}/10</div>
+                    <div class="score-label">
+                        ${result.blank_answers > 0 ? `${result.blank_answers} blancos` : 'Completo'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // Cargar ranking ELO global
@@ -991,9 +1151,9 @@ async function handleNewResult(newResult) {
     // Mostrar notificación temporal
     showRealtimeNotification('Nuevo resultado registrado', 'info');
     
-    // Si el resultado es del simulacro activo, actualizar ranking semanal
-    if (activeSimulation && newResult.simulation_id === activeSimulation.id) {
-        // Actualizar solo la fila afectada en lugar de recargar todo
+    // Si el resultado es del simulacro que se está viendo, actualizar
+    if (selectedSimulationId === newResult.simulation_id || 
+        (activeSimulation && newResult.simulation_id === activeSimulation.id && !selectedSimulationId)) {
         await updateWeeklyRankingRow(newResult.user_id);
     }
     
