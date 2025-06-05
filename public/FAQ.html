@@ -44,6 +44,37 @@
             padding: 2rem 1rem;
             text-align: center;
             box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .logo-container {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .logo-container img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+        }
+        
+        .header-text {
+            flex: 1;
+            min-width: 300px;
         }
         
         .header h1 {
@@ -248,10 +279,11 @@
             border-radius: 8px;
             padding: 1rem;
             margin: 1rem 0;
+            color: #92400E;
         }
         
         .warning-box strong {
-            color: #D97706;
+            color: #92400E;
         }
         
         .info-box {
@@ -260,6 +292,11 @@
             border-radius: 8px;
             padding: 1rem;
             margin: 1rem 0;
+            color: #1E40AF;
+        }
+        
+        .info-box strong {
+            color: #1E3A8A;
         }
         
         .success-box {
@@ -268,16 +305,36 @@
             border-radius: 8px;
             padding: 1rem;
             margin: 1rem 0;
+            color: #065F46;
+        }
+        
+        .success-box strong {
+            color: #047857;
         }
         
         .code-example {
-            background: #1F2937;
-            color: white;
+            background: #F8FAFC;
+            color: #1F2937;
+            border: 1px solid #E2E8F0;
             padding: 1rem;
             border-radius: 8px;
             margin: 1rem 0;
             font-family: 'Consolas', 'Monaco', monospace;
             overflow-x: auto;
+        }
+        
+        .code-example .correct-answer {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .code-example .wrong-answer {
+            color: #DC2626;
+        }
+        
+        .code-example .theme-ref {
+            color: #7C3AED;
+            font-weight: 500;
         }
         
         /* Listas */
@@ -346,6 +403,25 @@
                 font-size: 1.8rem;
             }
             
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .logo-container {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .logo-container img {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .header-text {
+                min-width: auto;
+            }
+            
             .container {
                 padding: 1rem;
             }
@@ -406,8 +482,15 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>📚 FAQ - Fase Avanzada IZETA 2025</h1>
-        <p>Todo lo que necesitas saber para dominar la recta final</p>
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="https://iz.academy/logo.png" alt="Logo IZETA" onerror="this.style.display='none'">
+            </div>
+            <div class="header-text">
+                <h1>📚 FAQ - Fase Avanzada IZETA 2025</h1>
+                <p>Todo lo que necesitas saber para dominar la recta final</p>
+            </div>
+        </div>
     </div>
     
     <!-- Container principal -->
@@ -570,17 +653,26 @@
                 <div class="faq-answer">
                     <p>Reglas de movimiento:</p>
                     <ul>
-                        <li><strong>Acierto:</strong> La tarjeta sube una caja (1→2→3→Eliminada)</li>
+                        <li><strong>Acierto:</strong> La tarjeta sube una caja (1→2→3→Licenciada)</li>
                         <li><strong>Fallo:</strong> La tarjeta vuelve a Caja 1 (sin importar dónde estaba)</li>
+                        <li><strong>Licenciamiento:</strong> Al acertar 3 veces seguidas en Caja 3 (Básico) o 5 veces en Caja 5 (Avanzado)</li>
                     </ul>
+                    
+                    <div class="success-box">
+                        <strong>🎓 SISTEMA DE LICENCIAMIENTO:</strong><br>
+                        • <strong>Nivel Básico:</strong> 3 aciertos consecutivos en Caja 3 → Tarjeta licenciada<br>
+                        • <strong>Nivel Avanzado:</strong> 3 aciertos consecutivos en Caja 5 → Tarjeta licenciada<br>
+                        • <strong>Tarjetas licenciadas:</strong> Se guardan en "archivo" y solo vuelven al repaso si las fallas en un futuro test
+                    </div>
                     
                     <div class="code-example">
                         <strong>Ejemplo práctico:</strong><br>
-                        Día 1: Fallas pregunta sobre "Artículo 15 CE" → Caja 1<br>
-                        Día 2: La aciertas → Caja 2<br>
-                        Día 5: La aciertas → Caja 3<br>
-                        Día 12: La fallas → Vuelve a Caja 1<br>
-                        (El ciclo continúa hasta dominarla completamente)
+                        Día 1: Fallas "Artículo 15 CE" → <span class="wrong-answer">Caja 1</span><br>
+                        Día 2: La aciertas → <span class="theme-ref">Caja 2</span><br>
+                        Día 5: La aciertas → <span class="theme-ref">Caja 3</span><br>
+                        Día 12: La aciertas (1º acierto en Caja 3)<br>
+                        Día 19: La aciertas (2º acierto en Caja 3)<br>
+                        Día 26: La aciertas (3º acierto) → <span class="correct-answer">¡LICENCIADA!</span>
                     </div>
                     
                     <p>Tiempo diario estimado:</p>
@@ -588,6 +680,7 @@
                         <li>Caja 1: 15-20 minutos</li>
                         <li>Caja 2: 10 minutos (cada 3 días)</li>
                         <li>Caja 3: 10 minutos (semanal)</li>
+                        <li>Archivo de licenciadas: Solo revisar si fallas en tests</li>
                     </ul>
                 </div>
             </div>
@@ -915,22 +1008,23 @@
                     </ol>
                     
                     <div class="info-box">
-                        <strong>PLANTILLA DE TARJETA IZETA:</strong><br>
-                        <strong>ANVERSO:</strong> Pregunta exacta del simulacro + Tema<br>
-                        <strong>REVERSO:</strong> Respuesta + Por qué las otras opciones son incorrectas + RF donde falló
+                        <strong>PLANTILLA DE TARJETA IZETA (FORMATO CORTO):</strong><br>
+                        <strong>ANVERSO:</strong> Pregunta clave + Tema<br>
+                        <strong>REVERSO:</strong> Respuesta correcta + Una pista de memoria
                     </div>
                     
-                    <p>Ejemplo práctico:</p>
+                    <p>Ejemplo práctico (versión optimizada para 15 segundos):</p>
                     <div class="code-example">
                         <strong>ANVERSO:</strong><br>
-                        "Según la CE, el recurso de amparo se interpone ante... (T2 - RF15)"<br><br>
+                        "¿Dónde se interpone recurso de amparo? <span class="theme-ref">(T2)</span>"<br><br>
                         
                         <strong>REVERSO:</strong><br>
-                        "✅ Tribunal Constitucional (Art. 161.1.b CE)<br>
-                        ❌ TS: Solo casación y revisión<br>
-                        ❌ TSJ: Competencias autonómicas<br>
-                        ❌ AN: Delitos graves<br>
-                        Fallé en RF15 - Repasar Art. 161 CE"
+                        "<span class="correct-answer">✅ Tribunal Constitucional</span><br>
+                        <span class="theme-ref">🧠 Art. 161.1.b CE - TC protege derechos fundamentales</span>"
+                    </div>
+                    
+                    <div class="warning-box">
+                        <strong>⚠️ REGLA DE 15 SEGUNDOS:</strong> Si tardas más de 15 segundos en leer y procesar una tarjeta, es demasiado larga. Divide conceptos complejos en varias tarjetas simples.
                     </div>
                 </div>
             </div>
@@ -984,7 +1078,7 @@
                     <h4>📝 Enviar Resultados</h4>
                     <p>Sube tu simulacro semanal</p>
                 </a>
-                <a href="index.html" class="nav-button" style="text-decoration: none;">
+                <a href="https://studio.iz.academy" class="nav-button" style="text-decoration: none;">
                     <h4>🏠 Portal Principal</h4>
                     <p>Acceso a toda la plataforma</p>
                 </a>
@@ -998,7 +1092,7 @@
         <!-- Footer -->
         <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--gray-600);">
             <p>FAQ Fase Avanzada - IZETA 2025</p>
-            <p>Actualizado: diciembre 2025 | <a href="index.html" style="color: var(--primary-blue);">← Volver al inicio</a></p>
+            <p>Actualizado: diciembre 2025 | <a href="https://iz.academy" style="color: var(--primary-blue);">← Volver al inicio</a></p>
         </div>
     </div>
 </body>
