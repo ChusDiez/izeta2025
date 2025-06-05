@@ -1124,6 +1124,18 @@ function setupRealtimeSubscriptions() {
                 handleUpdatedResult(payload.new);
             }
         )
+            .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'weekly_simulations'
+            },
+            (payload) => {
+                console.log('Simulacro actualizado:', payload);
+                handleSimulationUpdate(payload.new);
+            }
+        )
         .subscribe((status) => {
             console.log('Estado de suscripción a resultados:', status);
         });
@@ -1145,7 +1157,15 @@ function setupRealtimeSubscriptions() {
         )
         .subscribe();
 }
-
+async function handleSimulationUpdate(updatedSimulation) {
+    // Si un simulacro pasó a ser activo
+    if (updatedSimulation.status === 'active') {
+        showRealtimeNotification('Nuevo simulacro activo: RF' + updatedSimulation.week_number, 'info');
+        
+        // Recargar la lista de simulacros
+        await loadAllData();
+    }
+}
 // 2. MANEJADORES DE EVENTOS EN TIEMPO REAL
 async function handleNewResult(newResult) {
     // Mostrar notificación temporal
