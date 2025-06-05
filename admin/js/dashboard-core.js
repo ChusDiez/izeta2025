@@ -107,7 +107,8 @@ export class DashboardCore {
             'risk': './modules/risk-analysis.js',
             'bulk-users': './modules/bulk-users.js',
             'elo-manual': './modules/elo-manual.js',
-            'student-detail': './modules/student-detail.js'
+            'student-detail': './modules/student-detail.js',
+            'evolcampus': './modules/evolcampus-sync.js'
         };
     }
 
@@ -362,6 +363,10 @@ export class DashboardCore {
                     const eloManualModule = await this.loadModule('elo-manual');
                     await eloManualModule.render(contentWrapper);
                     break;
+                case 'evolcampus':
+                    const evolModule = await this.loadModule('evolcampus');
+                    await evolModule.render(contentWrapper);
+                    break;
                 default:
                     this.showError('Página no encontrada');
             }
@@ -403,7 +408,8 @@ export class DashboardCore {
             'medals': 'Medallas y Logros',
             'risk': 'Análisis de Riesgo',
             'bulk-users': 'Carga Masiva de Alumnos',
-            'elo-manual': 'Sistema de Índice de Progreso'
+            'elo-manual': 'Sistema de Índice de Progreso',
+            'evolcampus': 'Sincronización Evolcampus'
         };
         
         document.getElementById('pageTitle').textContent = titles[page] || page;
