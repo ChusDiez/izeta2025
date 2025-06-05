@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Fase Avanzada IZETA 2025</title>
+    <style>
+        :root {
+            --primary-blue: #1E3A8A;
+            --secondary-blue: #3B82F6;
+            --accent-gold: #FBBF24;
+            --success-green: #10B981;
+            --danger-red: #DC2626;
+            --bg-light: #F9FAFB;
+            --text-dark: #212121;
+            --gray-600: #6B7280;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1E3A8A 0%, #0E2A6A 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Container principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        /* Alerta importante */
+        .critical-alert {
+            background: linear-gradient(135deg, #FEE2E2, #FECACA);
+            border: 2px solid var(--danger-red);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .critical-alert h2 {
+            color: var(--danger-red);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Navegación rápida */
+        .nav-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .nav-button {
+            padding: 1rem;
+            background: var(--bg-light);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .nav-button:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .nav-button h3 {
+            color: var(--primary-blue);
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+        
+        .nav-button p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        /* Secciones FAQ */
+        .faq-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .faq-section h2 {
+            color: var(--primary-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-light);
+            font-size: 1.75rem;
+        }
+        
+        .faq-item {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--bg-light);
+        }
+        
+        .faq-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: start;
+            gap: 0.5rem;
+        }
+        
+        .faq-answer {
+            color: #4B5563;
+            line-height: 1.8;
+        }
+        
+        .faq-answer p {
+            margin-bottom: 1rem;
+        }
+        
+        .faq-answer p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Elementos especiales */
+        .warning-box {
+            background: #FEF3C7;
+            border: 1px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning-box strong {
+            color: #D97706;
+        }
+        
+        .info-box {
+            background: #EFF6FF;
+            border: 1px solid var(--secondary-blue);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success-box {
+            background: #D1FAE5;
+            border: 1px solid var(--success-green);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .code-example {
+            background: #1F2937;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            overflow-x: auto;
+        }
+        
+        /* Listas */
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-light);
+        }
+        
+        th {
+            background: var(--bg-light);
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .badge-new {
+            background: var(--danger-red);
+            color: white;
+        }
+        
+        .badge-important {
+            background: var(--accent-gold);
+            color: #92400E;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .faq-section {
+                padding: 1.5rem;
+            }
+            
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .faq-section {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Enlaces internos suaves */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Destacados */
+        .highlight {
+            background: #FEF3C7;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+        }
+        
+        strong {
+            color: var(--primary-blue);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📚 FAQ - Fase Avanzada IZETA 2025</h1>
+        <p>Todo lo que necesitas saber para dominar la recta final</p>
+    </div>
+    
+    <!-- Container principal -->
+    <div class="container">
+        <!-- Alerta crítica -->
+        <div class="critical-alert">
+            <h2>🚨 LECTURA OBLIGATORIA ANTES DE CONTINUAR</h2>
+            <p><strong>¿Por qué esta fase es diferente?</strong> Has completado o estás terminando el estudio inicial de los 45 temas. Ahora el objetivo NO es estudiar más contenido nuevo, sino <strong>consolidar, mantener y perfeccionar</strong> lo que ya sabes.</p>
+            <p>Si no implementas correctamente esta fase, perderás progresivamente lo aprendido. El cerebro olvida sin repaso sistemático.</p>
+        </div>
+        
+        <!-- Navegación rápida -->
+        <nav class="nav-section">
+            <h2>🧭 Navegación Rápida</h2>
+            <div class="nav-grid">
+                <a href="#transicion" class="nav-button">
+                    <h3>🔄 Transición a Fase Avanzada</h3>
+                    <p>Cuándo y cómo hacer el cambio</p>
+                </a>
+                <a href="#leitner" class="nav-button">
+                    <h3>🗂️ Sistema Leitner</h3>
+                    <p>Cómo implementar las tarjetas</p>
+                </a>
+                <a href="#horarios" class="nav-button">
+                    <h3>⏰ Planificación Horaria</h3>
+                    <p>Distribuir estudio, psico y físicas</p>
+                </a>
+                <a href="#mientras" class="nav-button">
+                    <h3>🏃 Mientras Terminas</h3>
+                    <p>Qué hacer antes de completar</p>
+                </a>
+                <a href="#errores" class="nav-button">
+                    <h3>⚠️ Errores Comunes</h3>
+                    <p>Lo que NO debes hacer</p>
+                </a>
+                <a href="#ejemplos" class="nav-button">
+                    <h3>📋 Ejemplos Prácticos</h3>
+                    <p>Casos reales y horarios tipo</p>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- SECCIÓN 1: Transición -->
+        <section id="transicion" class="faq-section">
+            <h2>🔄 Transición a la Fase Avanzada</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Cuándo exactamente debo pasar a la fase avanzada?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Debes hacer la transición cuando:</p>
+                    <ul>
+                        <li>Has completado el estudio inicial de los 45 temas (primera vuelta completa)</li>
+                        <li>Tu puntuación media en simulacros supera consistentemente el 7/10</li>
+                        <li>Ya no necesitas consultar constantemente tus apuntes para recordar conceptos básicos</li>
+                    </ul>
+                    <div class="warning-box">
+                        <strong>⚠️ IMPORTANTE:</strong> No pases a fase avanzada si aún tienes temas sin estudiar. Es mejor completar todo el temario primero, aunque sea de forma más superficial.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Qué cambia exactamente en esta fase?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Los cambios fundamentales son:</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fase Inicial</th>
+                                <th>Fase Avanzada</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Estudiar temas nuevos</td>
+                                <td>Mantener y perfeccionar lo aprendido</td>
+                            </tr>
+                            <tr>
+                                <td>3-4 horas por tema</td>
+                                <td>30-45 min por tema (repaso)</td>
+                            </tr>
+                            <tr>
+                                <td>Sistema de arrastre simple</td>
+                                <td>Leitner + Arrastre optimizado</td>
+                            </tr>
+                            <tr>
+                                <td>Foco en comprensión</td>
+                                <td>Foco en velocidad y precisión</td>
+                            </tr>
+                            <tr>
+                                <td>Tests de tema individual</td>
+                                <td>Tests mixtos + simulacros</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN 2: Sistema Leitner -->
+        <section id="leitner" class="faq-section">
+            <h2>🗂️ Sistema Leitner para Fallos</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Qué es exactamente el sistema Leitner y por qué lo necesito?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>El sistema Leitner es un método de repaso espaciado basado en cajas. En tu caso, lo usarás específicamente para <strong>gestionar tus fallos recurrentes</strong>.</p>
+                    <p>Funcionamiento básico:</p>
+                    <ul>
+                        <li><strong>Caja 1 (Roja):</strong> Fallos nuevos - Revisar DIARIAMENTE</li>
+                        <li><strong>Caja 2 (Amarilla):</strong> Fallos que ya acertaste una vez - Revisar cada 3 días</li>
+                        <li><strong>Caja 3 (Verde):</strong> Fallos que acertaste 2+ veces - Revisar semanalmente</li>
+                    </ul>
+                    <div class="info-box">
+                        <strong>💡 Por qué funciona:</strong> Los fallos que más te cuestan los verás más frecuentemente. Los que ya dominas, menos. Optimizas tu tiempo de estudio.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Cómo creo físicamente las tarjetas Leitner?</span>
+                </div>
+                <div class="faq-answer">
+                    <p><strong>Opción A - Física (Recomendada):</strong></p>
+                    <ol>
+                        <li>Compra tarjetas pequeñas (tipo ficha) y 3 cajas o sobres de colores</li>
+                        <li>En cada tarjeta escribe:
+                            <ul>
+                                <li>ANVERSO: La pregunta exacta del test</li>
+                                <li>REVERSO: La respuesta correcta + mini-explicación</li>
+                            </ul>
+                        </li>
+                        <li>Añade en la esquina: Tema (T1-T45) y fecha del fallo</li>
+                    </ol>
+                    
+                    <p><strong>Opción B - Digital:</strong></p>
+                    <ul>
+                        <li>Usa Anki (gratis) configurando 3 mazos</li>
+                        <li>O crea 3 documentos/hojas de cálculo</li>
+                    </ul>
+                    
+                    <div class="warning-box">
+                        <strong>⚠️ ERROR COMÚN:</strong> NO hagas tarjetas de TODO el temario. SOLO de tus fallos recurrentes (máximo 200-300 tarjetas en total).
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Cuándo y cómo muevo las tarjetas entre cajas?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Reglas de movimiento:</p>
+                    <ul>
+                        <li><strong>Acierto:</strong> La tarjeta sube una caja (1→2→3→Eliminada)</li>
+                        <li><strong>Fallo:</strong> La tarjeta vuelve a Caja 1 (sin importar dónde estaba)</li>
+                    </ul>
+                    
+                    <div class="code-example">
+                        <strong>Ejemplo práctico:</strong><br>
+                        Día 1: Fallas pregunta sobre "Artículo 15 CE" → Caja 1<br>
+                        Día 2: La aciertas → Caja 2<br>
+                        Día 5: La aciertas → Caja 3<br>
+                        Día 12: La fallas → Vuelve a Caja 1<br>
+                        (El ciclo continúa hasta dominarla completamente)
+                    </div>
+                    
+                    <p>Tiempo diario estimado:</p>
+                    <ul>
+                        <li>Caja 1: 15-20 minutos</li>
+                        <li>Caja 2: 10 minutos (cada 3 días)</li>
+                        <li>Caja 3: 10 minutos (semanal)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN 3: Planificación Horaria -->
+        <section id="horarios" class="faq-section">
+            <h2>⏰ Planificación Horaria Integral</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Cómo distribuyo mi tiempo entre temario, psicotécnicos y físicas?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>La distribución recomendada para la fase avanzada es:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Actividad</th>
+                                <th>Tiempo Diario</th>
+                                <th>Prioridad</th>
+                                <th>Mejor Momento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Temario (repasos)</td>
+                                <td>2-3 horas</td>
+                                <td>Alta</td>
+                                <td>Mañana (mente fresca)</td>
+                            </tr>
+                            <tr>
+                                <td>Psicotécnicos</td>
+                                <td>1-1.5 horas</td>
+                                <td>Media-Alta</td>
+                                <td>Media mañana</td>
+                            </tr>
+                            <tr>
+                                <td>Físicas</td>
+                                <td>45-60 min</td>
+                                <td>Media</td>
+                                <td>Tarde (separado del estudio)</td>
+                            </tr>
+                            <tr>
+                                <td>Leitner (fallos)</td>
+                                <td>20-30 min</td>
+                                <td>Alta</td>
+                                <td>Antes de dormir</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="success-box">
+                        <strong>✅ CONSEJO PRO:</strong> Los psicotécnicos mejoran con práctica diaria corta. Mejor 30 minutos cada día que 3 horas un solo día.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Qué criterios uso para elegir mi horario personal?</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Evalúa estos factores en orden de importancia:</p>
+                    
+                    <ol>
+                        <li><strong>Tu cronotipo:</strong> ¿Eres más productivo por la mañana o por la tarde?</li>
+                        <li><strong>Tus puntos débiles:</strong> Si fallas más en psicos, dales más tiempo</li>
+                        <li><strong>Tu condición física:</strong> Si las físicas te cuestan, entrena 6 días/semana</li>
+                        <li><strong>Tus obligaciones:</strong> Trabajo, familia, etc.</li>
+                    </ol>
+                    
+                    <div class="warning-box">
+                        <strong>⚠️ REALIDAD:</strong> No existe el horario perfecto. El mejor horario es el que puedes cumplir consistentemente durante meses.
+                    </div>
+                    
+                    <p>Preguntas para diseñar TU horario:</p>
+                    <ul>
+                        <li>¿A qué hora mi mente está más clara? → Ahí va el temario</li>
+                        <li>¿Cuándo tengo energía física? → Ahí van las físicas</li>
+                        <li>¿Qué me cuesta más? → Dale el mejor horario</li>
+                        <li>¿Puedo mantener esto 6 meses? → Si no, redúcelo</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN 4: Mientras Terminas -->
+        <section id="mientras" class="faq-section">
+            <h2>🏃 Adaptación Mientras Terminas la Primera Vuelta</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>Aún me quedan 10 temas por estudiar. ¿Empiezo ya con Leitner?</span>
+                </div>
+                <div class="faq-answer">
+                    <p><strong>SÍ, pero de forma gradual:</strong></p>
+                    
+                    <div class="info-box">
+                        <strong>Semana tipo mientras terminas:</strong><br>
+                        - Lunes-Viernes: Estudiar temas nuevos (3h) + Arrastre normal (1h)<br>
+                        - Solo tarjetas Leitner de los test que hagas (10-15 min)<br>
+                        - Sábado: Simulacro<br>
+                        - Domingo: Analizar fallos del simulacro y crear tarjetas
+                    </div>
+                    
+                    <p>Proceso recomendado:</p>
+                    <ol>
+                        <li>Continúa con tu sistema actual de estudio</li>
+                        <li>Cada vez que hagas un test, apunta los fallos</li>
+                        <li>El domingo, crea tarjetas SOLO de fallos repetidos (los que fallas 2+ veces)</li>
+                        <li>Dedica 10-15 minutos diarios a repasar estas tarjetas</li>
+                    </ol>
+                    
+                    <p>Así cuando termines el temario, ya tendrás:</p>
+                    <ul>
+                        <li>✅ 100-150 tarjetas de tus fallos más problemáticos</li>
+                        <li>✅ El hábito de revisión diaria establecido</li>
+                        <li>✅ Identificados tus puntos débiles reales</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>❓</span>
+                    <span>¿Debería acelerar para terminar el temario antes?</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="critical-alert">
+                        <h3>🚫 NO. Error grave.</h3>
+                    </div>
+                    
+                    <p>Razones para NO acelerar:</p>
+                    <ul>
+                        <li>Un tema mal estudiado = 20-30 preguntas potenciales mal contestadas</li>
+                        <li>Es mejor tardar 2 semanas más y tener base sólida</li>
+                        <li>La fase avanzada NO compensa un mal estudio inicial</li>
+                    </ul>
+                    
+                    <p>Lo que SÍ puedes hacer:</p>
+                    <ul>
+                        <li>✅ Reducir tiempo en temas que ya dominas (2h en vez de 3h)</li>
+                        <li>✅ Aprovechar tiempos muertos para repasos rápidos</li>
+                        <li>✅ Hacer el arrastre más eficiente (no releer todo)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN 5: Errores Comunes -->
+        <section id="errores" class="faq-section">
+            <h2>⚠️ Errores Comunes (y Cómo Evitarlos)</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>🚫</span>
+                    <span>ERROR #1: Abandonar el sistema de arrastre</span>
+                </div>
+                <div class="faq-answer">
+                    <p>"Ya domino los temas, no necesito arrastre"</p>
+                    <div class="warning-box">
+                        <strong>Consecuencia:</strong> En 2 meses habrás olvidado el 40% del contenido.
+                    </div>
+                    <p><strong>Solución:</strong> El arrastre evoluciona, no desaparece. En fase avanzada:</p>
+                    <ul>
+                        <li>Reduce tiempo por tema (30-45 min vs 1 hora)</li>
+                        <li>Usa esquemas/mapas mentales en vez de releer</li>
+                        <li>Pero NUNCA dejes de repasar sistemáticamente</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>🚫</span>
+                    <span>ERROR #2: Hacer tarjetas de TODO</span>
+                </div>
+                <div class="faq-answer">
+                    <p>"Voy a hacer 2000 tarjetas de todo el temario"</p>
+                    <div class="warning-box">
+                        <strong>Consecuencia:</strong> Sistema inmanejable que abandonarás en 2 semanas.
+                    </div>
+                    <p><strong>Solución:</strong> Tarjetas SOLO para:</p>
+                    <ul>
+                        <li>Preguntas que fallas 2+ veces</li>
+                        <li>Conceptos que siempre confundes</li>
+                        <li>Datos numéricos importantes</li>
+                    </ul>
+                    <p>Objetivo: Máximo 200-300 tarjetas TOTALES.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>🚫</span>
+                    <span>ERROR #3: Descuidar psicotécnicos y físicas</span>
+                </div>
+                <div class="faq-answer">
+                    <p>"Me centro solo en el temario porque es lo que más pesa"</p>
+                    <div class="warning-box">
+                        <strong>Consecuencia:</strong> Suspender por no llegar a mínimos en psicos/físicas.
+                    </div>
+                    <p><strong>Solución mínima diaria:</strong></p>
+                    <ul>
+                        <li>Psicotécnicos: 30 minutos mínimo (series, cálculo, verbal)</li>
+                        <li>Físicas: 3-4 días/semana mínimo</li>
+                        <li>Regla: NUNCA pasen 48h sin tocar psicos</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>🚫</span>
+                    <span>ERROR #4: No medir el progreso</span>
+                </div>
+                <div class="faq-answer">
+                    <p>"Estudio mucho pero no sé si mejoro"</p>
+                    <div class="warning-box">
+                        <strong>Consecuencia:</strong> No detectar problemas hasta que es tarde.
+                    </div>
+                    <p><strong>Métricas obligatorias:</strong></p>
+                    <ul>
+                        <li>📊 Score semanal en simulacros (debe subir o mantenerse >8)</li>
+                        <li>📉 Número de fallos recurrentes (debe bajar)</li>
+                        <li>⏱️ Tiempo por pregunta en psicos (debe bajar)</li>
+                        <li>💪 Marcas en físicas (deben subir)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SECCIÓN 6: Ejemplos Prácticos -->
+        <section id="ejemplos" class="faq-section">
+            <h2>📋 Ejemplos Prácticos y Horarios Tipo</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>📅</span>
+                    <span>Horario Tipo: Estudiante con trabajo de tardes</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="code-example">
+                        <strong>MAÑANA</strong><br>
+                        06:00 - Despertar + Café<br>
+                        06:30 - Leitner Caja 1 (20 min)<br>
+                        07:00 - Temario: 2 temas repaso profundo (90 min)<br>
+                        08:30 - Psicotécnicos (45 min)<br>
+                        09:15 - Desayuno + Prepararse<br>
+                        <br>
+                        <strong>MEDIODÍA</strong><br>
+                        13:30 - Comida rápida<br>
+                        14:00 - Test mixto 50 preguntas (30 min)<br>
+                        14:30 - Salir al trabajo<br>
+                        <br>
+                        <strong>NOCHE</strong><br>
+                        21:00 - Vuelta del trabajo<br>
+                        21:30 - Físicas (45 min) - Lunes/Miércoles/Viernes<br>
+                        22:15 - Ducha + Cena<br>
+                        23:00 - Revisar fallos del día + actualizar tarjetas<br>
+                        23:30 - Descanso
+                    </div>
+                    
+                    <p><strong>Claves del éxito en este horario:</strong></p>
+                    <ul>
+                        <li>Aprovechar la energía de la mañana para lo más denso</li>
+                        <li>Psicos cuando el cerebro está activo pero no agotado</li>
+                        <li>Físicas alternas para recuperación muscular</li>
+                        <li>Revisión nocturna corta pero consistente</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>📅</span>
+                    <span>Horario Tipo: Estudiante a tiempo completo</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="code-example">
+                        <strong>MAÑANA</strong><br>
+                        08:00 - Despertar + Rutina<br>
+                        09:00 - Temario: 3 temas repaso (2 horas)<br>
+                        11:00 - Descanso activo (15 min)<br>
+                        11:15 - Psicotécnicos intensivos (90 min)<br>
+                        12:45 - Test de 100 preguntas (1 hora)<br>
+                        <br>
+                        <strong>TARDE</strong><br>
+                        14:00 - Comida + Descanso<br>
+                        16:00 - Leitner todas las cajas (30 min)<br>
+                        16:30 - Temas débiles: estudio dirigido (90 min)<br>
+                        18:00 - Físicas (1 hora)<br>
+                        <br>
+                        <strong>NOCHE</strong><br>
+                        19:30 - Ducha + Merienda<br>
+                        20:00 - Análisis de errores + nuevas tarjetas (45 min)<br>
+                        20:45 - Tiempo libre consciente<br>
+                        22:30 - Preparar material del día siguiente<br>
+                        23:00 - Descanso
+                    </div>
+                    
+                    <p><strong>Ventajas de dedicación completa:</strong></p>
+                    <ul>
+                        <li>Puedes separar mejor las actividades</li>
+                        <li>Más tiempo para análisis profundo de errores</li>
+                        <li>Flexibilidad para ajustar según energía</li>
+                        <li>PERO: Riesgo de saturación - respeta descansos</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>💡</span>
+                    <span>Ejemplo real: Gestión de fallos recurrentes</span>
+                </div>
+                <div class="faq-answer">
+                    <p><strong>Caso: María falla constantemente preguntas del Tema 23 (Violencia de Género)</strong></p>
+                    
+                    <p>Su proceso:</p>
+                    <ol>
+                        <li><strong>Detección:</strong> Tras 3 simulacros, ve que falla 80% de preguntas del T23</li>
+                        <li><strong>Análisis:</strong> Son siempre fechas y artículos de la Ley Integral</li>
+                        <li><strong>Acción inmediata:</strong>
+                            <ul>
+                                <li>Crea 15 tarjetas con los artículos problemáticos</li>
+                                <li>Dedica 1 hora a reestudiar SOLO esas partes</li>
+                                <li>Hace un esquema visual con timeline de la ley</li>
+                            </ul>
+                        </li>
+                        <li><strong>Seguimiento:</strong>
+                            <ul>
+                                <li>Día 1-7: Repasa tarjetas diariamente (Caja 1)</li>
+                                <li>Día 8: Acierta 12/15 → pasan a Caja 2</li>
+                                <li>Día 15: En simulacro acierta 3/4 preguntas del T23</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    
+                    <div class="success-box">
+                        <strong>Resultado:</strong> De fallar 80% a acertar 75% en 2 semanas. Sin reestudiar TODO el tema.
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Cierre motivacional -->
+        <div class="critical-alert" style="background: linear-gradient(135deg, #D1FAE5, #A7F3D0); border-color: var(--success-green);">
+            <h2 style="color: var(--success-green);">✅ Recuerda: Ya Has Hecho lo Más Difícil</h2>
+            <p>Si has llegado hasta aquí, ya has estudiado la mayoría del temario. Eso es un logro enorme.</p>
+            <p>La fase avanzada no es más difícil, es <strong>más inteligente</strong>. Se trata de mantener lo que ya sabes mientras perfeccionas tus puntos débiles.</p>
+            <p><strong>Confía en el proceso. Miles lo han logrado antes que tú. Tú también puedes.</strong></p>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; color: var(--gray-600);">
+            <p>FAQ Fase Avanzada - IZETA 2025</p>
+            <p>Actualizado: Febrero 2025</p>
+        </div>
+    </div>
+</body>
+</html>
