@@ -766,15 +766,19 @@ async function loadAllData() {
             .select('*')
             .order('week_number', { ascending: false });
 
+
+        console.log('1. Respuesta de Supabase - simData:', simData);
+        console.log('2. Error de Supabase - simError:', simError);
+
         if (!simError && simData) {
             allSimulations = simData;
-            
+            console.log('3. allSimulations asignado:', allSimulations);
             // Encontrar el simulacro activo
             activeSimulation = simData.find(s => s.status === 'active');
-            
+            console.log('4. Simulacro activo encontrado:', activeSimulation);
             // Poblar el selector
             populateSimulationSelector();
-            
+            console.log('5. Selector poblado, valor seleccionado:', document.getElementById('simulationSelect').value);
             // Seleccionar el simulacro activo por defecto
             if (activeSimulation) {
                 selectedSimulationId = activeSimulation.id;
@@ -791,9 +795,16 @@ async function loadAllData() {
         console.error('Error general:', error);
     }
 }
+
+
+
+
 function populateSimulationSelector() {
     const select = document.getElementById('simulationSelect');
     
+    console.log('populateSimulationSelector - allSimulations:', allSimulations);
+    console.log('populateSimulationSelector - select element:', select);
+
     select.innerHTML = allSimulations.map(sim => {
         const isActive = sim.status === 'active';
         const isCompleted = sim.status === 'completed' || (sim.processed_at !== null);
@@ -803,6 +814,7 @@ function populateSimulationSelector() {
             RF${sim.week_number} - ${formatDate(sim.start_date)}${statusText}
         </option>`;
     }).join('');
+    console.log('Selector poblado con opciones:', select.innerHTML);
 }
 
 // Nueva función para manejar el cambio de simulacro
