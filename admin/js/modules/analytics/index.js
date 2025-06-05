@@ -670,88 +670,112 @@ renderTopicAnalysisSection(topicAnalysis) {
     return `
         <h3>🎯 Análisis de Temas Problemáticos por Simulacro</h3>
         
-        <!-- Filtros interactivos -->
-        <div class="topic-filters">
-            <div class="filter-group">
-                <label>Cohorte:</label>
-                <select id="topicCohortFilter">
-                    <option value="all">Todas</option>
-                    <option value="20h">20h</option>
-                    <option value="36h">36h</option>
-                    <option value="48h">48h</option>
-                </select>
+        <!-- Panel superior con métricas y filtros -->
+        <div class="topic-analysis-header">
+            <!-- Métricas principales en cards visuales -->
+            <div class="topic-metrics-row">
+                <div class="topic-metric-card">
+                    <div class="metric-icon-large">📚</div>
+                    <div class="metric-content">
+                        <div class="metric-value">${Object.keys(topicAnalysis.globalTrends || {}).length}</div>
+                        <div class="metric-label">Temas Únicos Detectados</div>
+                        <div class="metric-trend">En todos los simulacros</div>
+                    </div>
+                </div>
+                
+                <div class="topic-metric-card critical">
+                    <div class="metric-icon-large">⚠️</div>
+                    <div class="metric-content">
+                        <div class="metric-value">${
+                            Object.values(topicAnalysis.globalTrends || {})
+                                .filter(t => t.avgPercentage >= 30).length
+                        }</div>
+                        <div class="metric-label">Temas Críticos</div>
+                        <div class="metric-trend">≥30% estudiantes afectados</div>
+                    </div>
+                </div>
+                
+                <div class="topic-metric-card impact">
+                    <div class="metric-icon-large">📉</div>
+                    <div class="metric-content">
+                        <div class="metric-value">${
+                            topicAnalysis.correlations?.averageImpact?.toFixed(2) || 'N/A'
+                        }<span class="metric-unit">pts</span></div>
+                        <div class="metric-label">Impacto Promedio</div>
+                        <div class="metric-trend">Reducción en nota media</div>
+                    </div>
+                </div>
             </div>
-            <div class="filter-group">
-                <label>Período:</label>
-                <select id="topicPeriodFilter">
-                    <option value="all">Todo</option>
-                    <option value="last5">Últimos 5 simulacros</option>
-                    <option value="last3">Últimos 3 simulacros</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Umbral crítico:</label>
-                <select id="topicThresholdFilter">
-                    <option value="20">≥20% estudiantes</option>
-                    <option value="30" selected>≥30% estudiantes</option>
-                    <option value="40">≥40% estudiantes</option>
-                </select>
+            
+            <!-- Filtros mejorados -->
+            <div class="topic-filters-enhanced">
+                <div class="filter-card">
+                    <label>🎓 Cohorte</label>
+                    <select id="topicCohortFilter" class="filter-select">
+                        <option value="all">Todas las cohortes</option>
+                        <option value="20h">20h - Base</option>
+                        <option value="36h">36h - Intensivo</option>
+                        <option value="48h">48h - Élite</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label>📅 Período</label>
+                    <select id="topicPeriodFilter" class="filter-select">
+                        <option value="all">Histórico completo</option>
+                        <option value="last5">Últimos 5 simulacros</option>
+                        <option value="last3">Últimos 3 simulacros</option>
+                        <option value="current">Simulacro actual</option>
+                    </select>
+                </div>
+                <div class="filter-card">
+                    <label>🎯 Umbral</label>
+                    <select id="topicThresholdFilter" class="filter-select">
+                        <option value="20">≥20% estudiantes</option>
+                        <option value="30" selected>≥30% estudiantes</option>
+                        <option value="40">≥40% estudiantes</option>
+                        <option value="50">≥50% estudiantes</option>
+                    </select>
+                </div>
             </div>
         </div>
         
-        <!-- Resumen global con correlaciones -->
-        <div class="topic-summary stats-grid">
-            <div class="stat-box">
-                <div class="stat-label">Total Temas Únicos</div>
-                <div class="stat-value">${Object.keys(topicAnalysis.globalTrends || {}).length}</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Temas Críticos</div>
-                <div class="stat-value">${
-                    Object.values(topicAnalysis.globalTrends || {})
-                        .filter(t => t.avgPercentage >= 30).length
-                }</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Impacto Promedio</div>
-                <div class="stat-value">${
-                    topicAnalysis.correlations?.averageImpact?.toFixed(2) || 'N/A'
-                } pts</div>
-            </div>
-        </div>
-        
-        <!-- Panel de correlaciones tema-nota -->
-        ${topicAnalysis.correlations ? `
-            <div class="correlation-panel">
-                <h4>📊 Correlación Tema-Nota Media</h4>
-                <div class="correlation-chart">
+        <!-- Panel de correlaciones mejorado -->
+        ${topicAnalysis.correlations && topicAnalysis.correlations.topImpactTopics?.length > 0 ? `
+            <div class="correlation-analysis-panel">
+                <div class="panel-header">
+                    <h4>📊 Análisis de Impacto: Temas vs. Rendimiento</h4>
+                    <span class="panel-subtitle">Cómo afecta cada tema a las notas medias</span>
+                </div>
+                <div class="correlation-visual-chart">
                     ${this.renderCorrelationChart(topicAnalysis.correlations.topImpactTopics)}
                 </div>
             </div>
         ` : ''}
         
-        <!-- Visualización por simulacro -->
-        <div class="simulation-topics-grid" id="simulationTopicsGrid">
-            ${Object.values(topicAnalysis.bySimulation || {})
-                .sort((a, b) => b.weekNumber - a.weekNumber)
-                .slice(0, 5)
-                .map(sim => this.renderSimulationTopicCard(sim))
-                .join('')}
+        <!-- Grid de simulacros en diseño horizontal -->
+        <div class="simulations-timeline">
+            <h4>📅 Evolución Temporal de Temas Problemáticos</h4>
+            <div class="timeline-container">
+                ${Object.values(topicAnalysis.bySimulation || {})
+                    .sort((a, b) => b.weekNumber - a.weekNumber)
+                    .slice(0, 6)
+                    .map(sim => this.renderSimulationTopicCard(sim))
+                    .join('')}
+            </div>
         </div>
         
-        <!-- Insights específicos -->
-        <div class="topic-insights">
-            <h4>💡 Insights Detectados</h4>
-            ${(topicAnalysis.insights || []).map(insight => `
-                <div class="insight-card ${insight.type}">
-                    <h5>${insight.title}</h5>
-                    <p>${insight.message}</p>
-                    <div class="insight-action">
-                        <strong>Acción recomendada:</strong> ${insight.action}
-                    </div>
+        <!-- Insights mejorados con iconos y diseño -->
+        ${(topicAnalysis.insights || []).length > 0 ? `
+            <div class="insights-panel">
+                <h4>💡 Insights y Recomendaciones Clave</h4>
+                <div class="insights-grid">
+                    ${topicAnalysis.insights.slice(0, 4).map(insight => this.renderTopicInsight(insight)).join('')}
                 </div>
-            `).join('')}
-        </div>
+            </div>
+        ` : ''}
+        
+        <!-- Top temas problemáticos global -->
+        ${this.renderGlobalTopicsRanking(topicAnalysis.globalTrends)}
         
         <!-- Modal para drill-down -->
         ${this.renderTopicDrillDownModal()}
@@ -763,26 +787,58 @@ renderTopicAnalysisSection(topicAnalysis) {
  */
 renderCorrelationChart(topImpactTopics) {
     if (!topImpactTopics || topImpactTopics.length === 0) {
-        return '<p class="text-muted">No hay datos suficientes para mostrar correlaciones</p>';
+        return '<p class="no-data-message">No hay datos suficientes para mostrar correlaciones</p>';
     }
     
+    const maxImpact = Math.max(...topImpactTopics.map(t => Math.abs(t.scoreImpact)));
+    
     return `
-        <div class="correlation-bars">
-            ${topImpactTopics.map(topic => `
-                <div class="correlation-item">
-                    <div class="topic-label">${topic.topic}</div>
-                    <div class="correlation-bar-container">
-                        <div class="score-comparison">
-                            <span class="with-topic">Con tema: ${topic.avgScoreWithTopic.toFixed(2)}</span>
-                            <span class="without-topic">Sin tema: ${topic.avgScoreWithoutTopic.toFixed(2)}</span>
+        <div class="correlation-chart-enhanced">
+            ${topImpactTopics.slice(0, 8).map((topic, index) => `
+                <div class="correlation-row">
+                    <div class="topic-info">
+                        <span class="topic-rank">#${index + 1}</span>
+                        <span class="topic-name">${topic.topic}</span>
+                    </div>
+                    
+                    <div class="impact-visualization">
+                        <div class="score-bars">
+                            <div class="score-bar without-topic" style="width: ${(topic.avgScoreWithoutTopic/10)*100}%">
+                                <span class="score-label">${topic.avgScoreWithoutTopic.toFixed(2)}</span>
+                            </div>
+                            <div class="score-bar with-topic" style="width: ${(topic.avgScoreWithTopic/10)*100}%">
+                                <span class="score-label">${topic.avgScoreWithTopic.toFixed(2)}</span>
+                            </div>
                         </div>
-                        <div class="impact-bar" style="width: ${Math.abs(topic.impactPercentage)}%">
-                            -${topic.scoreImpact.toFixed(2)} pts (${Math.abs(topic.impactPercentage).toFixed(0)}%)
+                        
+                        <div class="impact-indicator">
+                            <div class="impact-bar" style="width: ${(Math.abs(topic.scoreImpact)/maxImpact)*100}%">
+                                <span class="impact-value">-${topic.scoreImpact.toFixed(2)} pts</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="affected-count">${topic.studentsAffected} estudiantes</div>
+                    
+                    <div class="affected-students">
+                        <div class="student-icon">👥</div>
+                        <span>${topic.studentsAffected}</span>
+                    </div>
                 </div>
             `).join('')}
+            
+            <div class="chart-legend">
+                <div class="legend-item">
+                    <div class="legend-color without-topic"></div>
+                    <span>Sin dificultad en el tema</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color with-topic"></div>
+                    <span>Con dificultad en el tema</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color impact"></div>
+                    <span>Impacto negativo</span>
+                </div>
+            </div>
         </div>
     `;
 }
@@ -791,35 +847,52 @@ renderCorrelationChart(topImpactTopics) {
  * Renderizar card de simulacro con drill-down
  */
 renderSimulationTopicCard(simData) {
+    const criticalCount = simData.topProblematicTopics?.filter(t => t.percentage >= 30).length || 0;
+    const totalTopics = simData.topProblematicTopics?.length || 0;
+    
     return `
-        <div class="simulation-topic-card" data-simulation-id="${simData.simulation?.id || ''}">
+        <div class="simulation-card-enhanced" data-simulation-id="${simData.simulation?.id || ''}">
             <div class="card-header">
-                <h4>RF${simData.weekNumber || '?'}</h4>
-                <span class="participant-count">${simData.totalParticipants || 0} participantes</span>
+                <div class="simulation-badge">RF${simData.weekNumber || '?'}</div>
+                <div class="simulation-date">${this.formatSimulationDate(simData.simulation?.start_date)}</div>
             </div>
-            <div class="card-body">
+            
+            <div class="card-stats">
+                <div class="stat">
+                    <span class="stat-value">${simData.totalParticipants || 0}</span>
+                    <span class="stat-label">Participantes</span>
+                </div>
+                <div class="stat ${criticalCount > 0 ? 'critical' : ''}">
+                    <span class="stat-value">${criticalCount}</span>
+                    <span class="stat-label">Temas críticos</span>
+                </div>
+            </div>
+            
+            <div class="topics-preview">
                 ${simData.topProblematicTopics && simData.topProblematicTopics.length > 0 ? `
-                    <div class="topic-list">
-                        ${simData.topProblematicTopics.map((topic, index) => `
-                            <div class="topic-item ${topic.percentage >= 30 ? 'critical' : ''} clickable"
-                                 data-simulation-id="${simData.simulation?.id || ''}"
-                                 data-topic="${topic.topic}">
-                                <span class="topic-rank">#${index + 1}</span>
-                                <span class="topic-name">${topic.topic}</span>
-                                <div class="topic-stats">
-                                    <span class="topic-percentage">${topic.percentage.toFixed(0)}%</span>
-                                    <span class="topic-count">(${topic.count})</span>
-                                </div>
-                                <span class="drill-down-icon">👁️</span>
+                    <div class="top-topics-list">
+                        ${simData.topProblematicTopics.slice(0, 3).map((topic, index) => `
+                            <div class="topic-pill ${topic.percentage >= 30 ? 'critical' : ''}"
+                                 onclick="window.analyticsModule.topicInsights.showTopicDrillDown('${simData.simulation?.id || ''}', '${topic.topic}')">
+                                <span class="pill-rank">${index + 1}</span>
+                                <span class="pill-name">${this.truncateText(topic.topic, 20)}</span>
+                                <span class="pill-percentage">${topic.percentage.toFixed(0)}%</span>
                             </div>
                         `).join('')}
                     </div>
-                ` : '<p class="no-data">Sin datos de temas problemáticos</p>'}
+                    ${totalTopics > 3 ? `
+                        <div class="more-topics">+${totalTopics - 3} más</div>
+                    ` : ''}
+                ` : '<p class="no-topics">Sin temas problemáticos</p>'}
             </div>
+            
+            <button class="view-details-btn" 
+                    onclick="window.analyticsModule.showSimulationDetails('${simData.simulation?.id || ''}')">
+                Ver detalles →
+            </button>
         </div>
     `;
 }
-
 /**
  * Renderizar modal de drill-down
  */
@@ -846,7 +919,94 @@ renderTopicDrillDownModal() {
         </div>
     `;
 }
+/**
+ * Renderizar insight de tema mejorado
+ */
+renderTopicInsight(insight) {
+    const icons = {
+        critical: '🚨',
+        warning: '⚠️',
+        info: 'ℹ️',
+        success: '✅'
+    };
+    
+    const colors = {
+        critical: '#dc2626',
+        warning: '#f59e0b',
+        info: '#3b82f6',
+        success: '#10b981'
+    };
+    
+    return `
+        <div class="insight-card-enhanced ${insight.type}">
+            <div class="insight-icon" style="background-color: ${colors[insight.type]}20; color: ${colors[insight.type]}">
+                ${icons[insight.type]}
+            </div>
+            <div class="insight-content">
+                <h5 class="insight-title">${insight.title}</h5>
+                <p class="insight-message">${insight.message}</p>
+                ${insight.action ? `
+                    <div class="insight-action">
+                        <span class="action-icon">→</span>
+                        ${insight.action}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
 
+/**
+ * Renderizar ranking global de temas
+ */
+renderGlobalTopicsRanking(globalTrends) {
+    if (!globalTrends || Object.keys(globalTrends).length === 0) {
+        return '';
+    }
+    
+    const sortedTopics = Object.values(globalTrends)
+        .sort((a, b) => b.totalMentions - a.totalMentions)
+        .slice(0, 10);
+    
+    return `
+        <div class="global-topics-ranking">
+            <h4>🏆 Top 10 Temas Más Problemáticos (Global)</h4>
+            <div class="ranking-grid">
+                ${sortedTopics.map((topic, index) => `
+                    <div class="ranking-item ${topic.trend}">
+                        <div class="rank-number">${index + 1}</div>
+                        <div class="topic-details">
+                            <div class="topic-name">${topic.topic}</div>
+                            <div class="topic-stats">
+                                <span class="mentions">${topic.totalMentions} menciones</span>
+                                <span class="avg-percentage">${topic.avgPercentage.toFixed(1)}% promedio</span>
+                            </div>
+                        </div>
+                        <div class="trend-indicator ${topic.trend}">
+                            ${topic.trend === 'increasing' ? '📈' : topic.trend === 'decreasing' ? '📉' : '➡️'}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// Métodos auxiliares
+formatSimulationDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
+truncateText(text, maxLength) {
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+}
+
+showSimulationDetails(simulationId) {
+    // Implementar según necesites
+    console.log('Ver detalles del simulacro:', simulationId);
+}
 /**
  * Configurar event listeners para análisis de temas
  */
