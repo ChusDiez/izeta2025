@@ -498,6 +498,42 @@
         background: rgba(16, 185, 129, 0.9);
     }
     
+    /* ============================================ */
+    /* ESTILOS PARA DIVISIONES DEL SISTEMA IP */
+    /* ============================================ */
+    
+    /* Iconos de división con animación */
+    .division-indicator {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.5rem;
+        font-size: 1.1rem;
+        vertical-align: middle;
+        transition: transform 0.3s ease;
+    }
+    
+    .division-indicator:hover {
+        transform: scale(1.2);
+    }
+    
+    /* División específica en stats */
+    .division-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Colores de divisiones */
+    .division-elite { color: #FFD700; }
+    .division-advanced { color: #C0C0C0; }
+    .division-progressing { color: #CD7F32; }
+    .division-initiated { color: #4A5568; }
+    
     .realtime-indicator.disconnected {
         background: rgba(220, 38, 38, 0.9);
     }
@@ -710,16 +746,16 @@
                 </div>
             </div>
             
-            <!-- Ranking ELO Global -->
+            <!-- Ranking Índice de Progreso Global -->
             <div class="ranking-container">
                 <div class="ranking-header" style="background: #111827;">
-                    <h2>⚡ Ranking ELO Global</h2>
-                    <p>Clasificación general acumulada</p>
+                    <h2>📊 Ranking Índice de Progreso (IP)</h2>
+                    <p>Clasificación basada en mejora continua y constancia</p>
                 </div>
                 <div class="ranking-list" id="eloRanking">
                     <div class="loading">
                         <div class="loading-spinner"></div>
-                        <p style="margin-top: 1rem;">Cargando ranking ELO...</p>
+                        <p style="margin-top: 1rem;">Cargando ranking IP...</p>
                     </div>
                 </div>
             </div>
@@ -834,7 +870,7 @@ async function onSimulationChange() {
         // Actualizar el título del header principal solo si es el activo
         if (selectedSim.status === 'active') {
             document.getElementById('headerSubtitle').textContent = 
-                `Semana ${selectedSim.week_number} - Sistema ELO + Ranking Semanal`;
+                `Semana ${selectedSim.week_number} - Sistema IP + Ranking Semanal`;
         }
         
         // Recargar el ranking
@@ -956,7 +992,7 @@ function renderWeeklyRanking(data, simulation = activeSimulation) {
     }).join('');
 }
 
-// Cargar ranking ELO global
+// Cargar ranking de Índice de Progreso global
 async function loadEloRanking() {
     try {
         const { data, error } = await supabaseClient
@@ -970,18 +1006,27 @@ async function loadEloRanking() {
         renderEloRanking(data);
 
     } catch (error) {
-        console.error('Error cargando ranking ELO:', error);
-        document.getElementById('eloRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking ELO</p>';
+        console.error('Error cargando ranking IP:', error);
+        document.getElementById('eloRanking').innerHTML = '<p style="text-align: center; color: #ef4444;">Error al cargar el ranking IP</p>';
     }
 }
 
-// Renderizar ranking ELO
+// Función para obtener la división basada en el IP
+function getDivision(elo) {
+    if (elo >= 2000) return { name: 'Élite', icon: '⭐', color: '#FFD700' };
+    if (elo >= 1500) return { name: 'Avanzado', icon: '🎯', color: '#C0C0C0' };
+    if (elo >= 1200) return { name: 'Progresando', icon: '📈', color: '#CD7F32' };
+    return { name: 'Iniciado', icon: '🌱', color: '#4A5568' };
+}
+
+// Renderizar ranking de Índice de Progreso (anteriormente ELO)
 function renderEloRanking(data) {
     const container = document.getElementById('eloRanking');
     
     container.innerHTML = data.map((user, index) => {
         const position = index + 1;
         const isTop3 = position <= 3;
+        const division = getDivision(user.current_elo || 1000);
         let rowClass = 'ranking-row';
         if (position === 1) rowClass += ' top-1';
         else if (position === 2) rowClass += ' top-2';
@@ -1026,9 +1071,13 @@ function renderEloRanking(data) {
             <div class="${rowClass}" data-user-id="${user.user_id || user.id}" data-elo="${user.current_elo}">
                 <div class="rank-position ${position <= 3 ? `rank-${position}` : ''}">${position}º</div>
                 <div class="user-info">
-                    <div class="user-name">${user.slug}</div>
+                    <div class="user-name">
+                        ${user.slug}
+                        <span style="color: ${division.color}; margin-left: 0.5rem;" title="${division.name}">${division.icon}</span>
+                    </div>
                     <div class="user-stats">
                         <span>📋 ${user.cohort}</span>
+                        <span style="color: ${division.color};">🏆 ${division.name}</span>
                         ${streakHTML}
                         ${user.last_score ? `<span>📊 Último: ${user.last_score}/100</span>` : ''}
                     </div>
@@ -1036,7 +1085,7 @@ function renderEloRanking(data) {
                 ${medalHTML}
                 <div class="elo-display">
                     <div class="elo-number">${formatNumber(user.current_elo)}</div>
-                    <div class="score-label">Puntos ELO</div>
+                    <div class="score-label">Índice IP</div>
                     ${user.last_elo_change ? 
                         `<div class="elo-change ${changeClass}">${changeSymbol} ${Math.abs(user.last_elo_change)}</div>` : 
                         ''}
@@ -1097,7 +1146,7 @@ function setupRealtimeSubscriptions() {
             console.log('Estado de suscripción a resultados:', status);
         });
     
-    // Suscribirse a cambios en users (ELO, estadísticas)
+    // Suscribirse a cambios en users (IP, estadísticas)
     realtimeSubscriptions.users = supabaseClient
         .channel('public-leaderboard-users')
         .on(
@@ -1148,7 +1197,7 @@ async function handleUpdatedResult(updatedResult) {
 }
 
 async function handleUserUpdate(updatedUser) {
-    // Actualizar ranking ELO específicamente para ese usuario
+    // Actualizar ranking IP específicamente para ese usuario
     await updateEloRankingRow(updatedUser.id);
     
     // Si cambió significativamente, mostrar animación
@@ -1219,14 +1268,14 @@ async function updateEloRankingRow(userId) {
         if (existingRow) {
             updateRowWithAnimation(existingRow, data, 'elo');
         } else {
-            // Recargar todo el ranking ELO
+            // Recargar todo el ranking IP
             await loadEloRanking();
         }
         
         recalculatePositions('eloRanking');
         
     } catch (error) {
-        console.error('Error actualizando ELO row:', error);
+        console.error('Error actualizando fila IP:', error);
     }
 }
 
@@ -1257,9 +1306,9 @@ function updateRowWithAnimation(row, newData, type) {
         
         // Actualizar data-score
         row.dataset.score = newData.score;
-    } else if (type === 'elo') {
-        // Actualizar ELO
-        const eloElement = row.querySelector('.elo-number');
+            } else if (type === 'elo') {
+            // Actualizar IP
+            const eloElement = row.querySelector('.elo-number');
         if (eloElement) {
             const oldElo = parseInt(eloElement.textContent.replace(/\./g, ''));
             const newElo = newData.current_elo;

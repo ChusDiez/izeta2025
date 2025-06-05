@@ -403,7 +403,7 @@ export class DashboardCore {
             'medals': 'Medallas y Logros',
             'risk': 'Análisis de Riesgo',
             'bulk-users': 'Carga Masiva de Alumnos',
-            'elo-manual': 'Actualización Manual ELO'
+            'elo-manual': 'Sistema de Índice de Progreso'
         };
         
         document.getElementById('pageTitle').textContent = titles[page] || page;
@@ -599,9 +599,9 @@ export class DashboardCore {
                 </button>
                 
                 <button class="action-card" onclick="window.dashboardAdmin.showPage('elo-manual')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚡</div>
-                    <h3 style="margin-bottom: 0.5rem;">Actualizar ELO</h3>
-                    <p style="color: #6b7280; font-size: 0.875rem;">Procesar resultados manualmente</p>
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                    <h3 style="margin-bottom: 0.5rem;">Índice de Progreso</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem;">Gestionar divisiones y reconocimientos</p>
                 </button>
                 
                 <button class="action-card" onclick="window.dashboardAdmin.showPage('risk')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">

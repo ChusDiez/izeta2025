@@ -1,5 +1,7 @@
 // admin/js/modules/students.js
 import AnalyticsModule from './analytics/index.js';
+import { GamificationHelper } from './gamification-config.js';
+
 export default class StudentsModule {
     constructor(supabaseClient, dashboardCore) {
         this.supabase = supabaseClient;
@@ -818,5 +820,65 @@ export default class StudentsModule {
 
     formatDate(dateString) {
         return new Date(dateString).toLocaleDateString('es-ES');
+    }
+
+    renderStudentRow(student) {
+        // Obtener división del estudiante
+        const division = this.getDivision(student.current_elo || 1000);
+        
+        return `
+            <tr data-student-id="${student.id}" onclick="window.dashboardAdmin.showStudentDetail('${student.id}')">
+                <td>
+                    <div class="student-name-cell">
+                        <strong>${student.username}</strong>
+                        <span class="division-indicator" style="color: ${division.color}; margin-left: 0.5rem;" title="${division.description}">
+                            ${division.icon}
+                        </span>
+                        <div class="text-small text-muted">${student.email || 'No email'}</div>
+                    </div>
+                </td>
+                <td><span class="badge badge-${this.getCohortClass(student.cohort)}">${student.cohort}</span></td>
+                <td>${student.slug || 'N/A'}</td>
+                <td class="${student.active ? 'text-success' : 'text-danger'}">
+                    ${student.active ? '✅ Activo' : '❌ Inactivo'}
+                </td>
+                <td>
+                    <div class="progress-indicator">
+                        <span class="ip-value">${student.current_elo || 1000} IP</span>
+                        ${this.renderTrendIndicator(student.trend_direction)}
+                    </div>
+                </td>
+                <td>
+                    <span class="probability ${this.getProbabilityClass(student.probability_pass)}">
+                        ${student.probability_pass || 50}%
+                    </span>
+                </td>
+                <td>
+                    <span class="risk-badge ${student.risk_level || 'unknown'}">
+                        ${this.getRiskLabel(student.risk_level)}
+                    </span>
+                </td>
+                <td>${student.results_count || 0}</td>
+                <td>${student.medals_count || 0}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.studentsModule.editStudent('${student.id}')">
+                        ✏️
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    getDivision(elo) {
+        return GamificationHelper.getDivision(elo);
+    }
+
+    renderTrendIndicator(trend) {
+        const indicators = {
+            'up': '<span style="color: #10b981;">↗️</span>',
+            'down': '<span style="color: #ef4444;">↘️</span>',
+            'stable': '<span style="color: #6b7280;">→</span>'
+        };
+        return indicators[trend] || indicators.stable;
     }
 }
