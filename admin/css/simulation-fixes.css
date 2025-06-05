@@ -1,0 +1,88 @@
+/* Simulation Fixes - Mejoras de visibilidad manteniendo el diseño azul */
+
+/* Mejoras para los botones en la tarjeta azul */
+.active-simulation-card .btn {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #1e3a8a !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.active-simulation-card .btn:hover {
+    background: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mejorar el contraste del título */
+.active-simulation-card h3 {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Badge mejorado en la tarjeta azul */
+.active-simulation-card .badge {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #10b981 !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: 700;
+}
+
+/* Mejorar visibilidad de textos secundarios */
+.active-simulation-card p,
+.active-simulation-card span {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el ícono de estado activo */
+.active-simulation-card h3::before {
+    content: '🟢';
+    margin-right: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Mejoras adicionales para otros headers azules si existen */
+.section-header-blue {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    position: relative;
+}
+
+/* Agregar un overlay sutil para mejorar el contraste */
+.section-header-blue::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+/* Asegurar que el contenido esté por encima del overlay */
+.section-header-blue > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mejorar el contraste de elementos interactivos */
+.section-header-blue .btn,
+.section-header-blue .badge,
+.section-header-blue a {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #1e3a8a !important;
+    font-weight: 600;
+}
+
+.section-header-blue .btn:hover,
+.section-header-blue a:hover {
+    background: white !important;
+    transform: translateY(-1px);
+} 

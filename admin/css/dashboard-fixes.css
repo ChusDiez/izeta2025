@@ -1,0 +1,137 @@
+/* Dashboard Fixes - Solución a problemas de solapamiento */
+
+/* Asegurar que las secciones no se solapen */
+.stats-grid,
+.charts-section,
+.charts-grid {
+    margin-bottom: 2rem !important;
+    clear: both;
+}
+
+/* Fix para el contenedor principal */
+#contentWrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Asegurar espaciado adecuado entre elementos */
+.stats-grid + .charts-section,
+.charts-section + .charts-section,
+.charts-section + div {
+    margin-top: 2rem !important;
+}
+
+/* Fix específico para la Vista General */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem !important;
+}
+
+/* Evitar que los gráficos se superpongan */
+.chart-card,
+.chart-container {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 2rem;
+    overflow: visible !important;
+}
+
+/* Fix para canvas de Chart.js */
+.chart-body {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-body canvas {
+    position: relative !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-height: 300px !important;
+}
+
+/* Asegurar que los controles no floten */
+.chart-controls,
+.chart-header,
+.table-controls {
+    position: relative;
+    z-index: 2;
+    background: inherit;
+}
+
+/* Fix para tablas */
+.table-card {
+    margin-top: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Evitar solapamiento con secciones siguientes */
+.charts-section::after,
+.stats-grid::after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
+/* Fix específico para la sección de análisis */
+#analysisSection,
+#riskSection {
+    margin-top: 3rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Asegurar que los modales estén por encima */
+.modal {
+    z-index: 9999 !important;
+}
+
+/* Fix para responsive */
+@media (max-width: 768px) {
+    .stats-grid,
+    .charts-section,
+    .charts-grid {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .chart-body {
+        height: 250px;
+    }
+}
+
+/* Fix para botones de acción rápida */
+.header-actions {
+    position: relative;
+    z-index: 10;
+    flex-wrap: nowrap;
+}
+
+/* Evitar que elementos absolutos causen problemas */
+.notification,
+.tooltip,
+.dropdown-menu {
+    z-index: 9000 !important;
+}
+
+/* Clear fix general */
+.clear-fix {
+    clear: both;
+    height: 1px;
+    margin: -1px 0 0;
+}
+
+/* Fix específico para evolución semanal */
+.weekly-evolution-container {
+    position: relative;
+    margin-bottom: 2rem;
+    min-height: 400px;
+}
+
+/* Separador visual entre secciones */
+.section-divider {
+    height: 2rem;
+    clear: both;
+} 

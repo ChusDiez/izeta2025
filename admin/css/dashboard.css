@@ -1590,15 +1590,17 @@ textarea {
 }
 
 .simulation-stats .stat {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    color: #1e293b;
     padding: 1rem;
     border-radius: 8px;
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .simulation-stats .stat-label {
     font-size: 0.875rem;
-    opacity: 0.9;
+    color: #64748b;
     display: block;
     margin-bottom: 0.25rem;
 }
@@ -1606,6 +1608,7 @@ textarea {
 .simulation-stats .stat-value {
     font-size: 1.25rem;
     font-weight: 600;
+    color: #1e3a8a;
 }
 
 /* Resumen de resultados */
