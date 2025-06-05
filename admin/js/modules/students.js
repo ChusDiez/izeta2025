@@ -227,9 +227,9 @@ export default class StudentsModule {
                                 title="Análisis rápido">
                             ⚡
                         </button>
-                        <button class="btn-icon" onclick="window.studentsModule.sendRecommendations('${student.id}')"
-                                title="Enviar recomendaciones">
-                            📧
+                        <button class="btn-icon" onclick="window.studentsModule.openDirectEmail('${student.id}')"
+                                title="Enviar email directo">
+                            ✉️
                         </button>
                         <button class="btn-icon" onclick="window.studentsModule.viewNotes('${student.id}')"
                                 title="Ver notas">
@@ -440,6 +440,20 @@ export default class StudentsModule {
                 this.dashboard.showNotification('error', 'Error al enviar recomendaciones');
             }
         }
+    }
+    
+    /**
+     * Abrir email directo desde la tabla
+     */
+    async openDirectEmail(studentId) {
+        // Redirigir a la página de detalle del estudiante y abrir el modal de email
+        await this.dashboard.showStudentDetail(studentId);
+        // Esperar un momento para que se cargue la página
+        setTimeout(() => {
+            if (window.studentDetail && window.studentDetail.openEmailModal) {
+                window.studentDetail.openEmailModal();
+            }
+        }, 500);
     }
 
     /**

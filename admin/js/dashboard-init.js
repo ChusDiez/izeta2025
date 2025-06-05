@@ -159,7 +159,30 @@ window.dashboardAdmin = {
         return exportsModule?.exportData(type);
     },
     showStudentDetail: (studentId) => dashboard?.showStudentDetail(studentId),
-    showNotification: (type, message) => dashboard?.showNotification(type, message)
+    showNotification: (type, message) => dashboard?.showNotification(type, message),
+    refreshDashboard: async () => {
+        if (dashboard) {
+            await dashboard.refreshCurrentPage();
+        }
+    },
+    exportDashboard: async () => {
+        const exportsModule = await dashboard?.loadModule('exports');
+        await exportsModule?.exportCurrentView('csv');
+    },
+    viewStudent: async (studentId) => {
+        await dashboard?.showStudentDetail(studentId);
+    },
+    contactStudent: (studentId) => {
+        console.log('Contactar estudiante:', studentId);
+        dashboard?.showNotification('info', 'Funcionalidad de contacto en desarrollo');
+    },
+    showRiskStudents: () => {
+        dashboard?.showPage('risk');
+    },
+    sendEvolcampusReminders: () => {
+        console.log('Enviar recordatorios de Evolcampus');
+        dashboard?.showNotification('info', 'Funcionalidad de recordatorios en desarrollo');
+    }
 };
 
 // Esperar a que el DOM esté listo

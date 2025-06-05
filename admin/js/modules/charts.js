@@ -26,10 +26,41 @@ export default class ChartsModule {
         // Preparar datos
         const weeklyData = this.prepareWeeklyData(data.results);
         
-        // Crear canvas con ID único
-        const canvasId = `${containerId}_canvas`;
-        container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
-        const ctx = document.getElementById(canvasId).getContext('2d');
+        // Crear estructura moderna del gráfico
+        container.innerHTML = `
+            <div class="chart-container performance-chart">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">Evolución de Resultados</h3>
+                        <p class="chart-subtitle">Rendimiento y participación semanal</p>
+                    </div>
+                    <div class="chart-controls">
+                        <button class="chart-control-btn active" data-range="month">Mes</button>
+                        <button class="chart-control-btn" data-range="quarter">Trimestre</button>
+                        <button class="chart-control-btn" data-range="year">Año</button>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <canvas id="${containerId}_canvas"></canvas>
+                </div>
+                <div class="chart-footer">
+                    <div class="chart-stat">
+                        <span class="chart-stat-value">${weeklyData.avgScores[weeklyData.avgScores.length - 1] || 0}</span>
+                        <span class="chart-stat-label">Última media</span>
+                    </div>
+                    <div class="chart-stat">
+                        <span class="chart-stat-value">${weeklyData.participation[weeklyData.participation.length - 1] || 0}</span>
+                        <span class="chart-stat-label">Última participación</span>
+                    </div>
+                    <div class="chart-stat">
+                        <span class="chart-stat-value">${this.calculateTrend(weeklyData.avgScores)}</span>
+                        <span class="chart-stat-label">Tendencia</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const ctx = document.getElementById(`${containerId}_canvas`).getContext('2d');
 
         // Destruir gráfico existente si existe
         if (this.charts.has('weekly')) {
@@ -71,10 +102,16 @@ export default class ChartsModule {
                 plugins: {
                     legend: {
                         position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
                     title: {
-                        display: true,
-                        text: 'Evolución de Resultados Semanales'
+                        display: false
                     },
                     tooltip: {
                         callbacks: {
@@ -206,12 +243,43 @@ async renderRiskAnalysis(containerId, students) {
 
     // Agrupar por niveles de riesgo
     const riskLevels = this.calculateRiskDistribution(students);
+    const totalStudents = students.length;
+    const avgRisk = students.reduce((sum, s) => sum + (s.probability_pass || 50), 0) / totalStudents;
 
-    // Crear el canvas dinámicamente
-    const canvasId = `${containerId}_canvas`;
-    container.innerHTML = `<canvas id="${canvasId}"></canvas>`;
-    const canvas = document.getElementById(canvasId);
-    const ctx = canvas.getContext('2d');
+    // Crear estructura moderna del gráfico
+    container.innerHTML = `
+        <div class="chart-container risk-chart">
+            <div class="chart-header">
+                <div>
+                    <h3 class="chart-title">Análisis de Riesgo</h3>
+                    <p class="chart-subtitle">Probabilidad de aprobar por grupos</p>
+                </div>
+                <div class="chart-controls">
+                    <button class="chart-control-btn active" data-view="count">Cantidad</button>
+                    <button class="chart-control-btn" data-view="percentage">Porcentaje</button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="${containerId}_canvas"></canvas>
+            </div>
+            <div class="chart-footer">
+                <div class="chart-stat">
+                    <span class="chart-stat-value">${riskLevels.critical}</span>
+                    <span class="chart-stat-label">En riesgo crítico</span>
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-value">${avgRisk.toFixed(1)}%</span>
+                    <span class="chart-stat-label">Probabilidad media</span>
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-value">${riskLevels.low}</span>
+                    <span class="chart-stat-label">Riesgo bajo</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const ctx = document.getElementById(`${containerId}_canvas`).getContext('2d');
 
     if (this.charts.has('risk')) {
         this.charts.get('risk').destroy();
@@ -245,8 +313,7 @@ async renderRiskAnalysis(containerId, students) {
                     display: false
                 },
                 title: {
-                    display: true,
-                    text: 'Distribución de Riesgo - Probabilidad de Aprobar'
+                    display: false
                 }
             },
             scales: {
@@ -504,6 +571,25 @@ async renderRiskAnalysis(containerId, students) {
             sunday: [30, 35, 38, 40, 42],
             weekday: [25, 22, 20, 18, 15]
         };
+    }
+
+    /**
+     * Calcular tendencia de una serie de datos
+     */
+    calculateTrend(data) {
+        if (!data || data.length < 2) return '→';
+        
+        const lastValue = data[data.length - 1];
+        const prevValue = data[data.length - 2];
+        const diff = lastValue - prevValue;
+        const percentage = ((diff / prevValue) * 100).toFixed(1);
+        
+        if (diff > 0) {
+            return `↑ +${percentage}%`;
+        } else if (diff < 0) {
+            return `↓ ${percentage}%`;
+        }
+        return '→ 0%';
     }
 
     /**

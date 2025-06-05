@@ -1,0 +1,207 @@
+/* Students Actions - Modern 2025 Design */
+
+/* Estilos para la columna de acciones */
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  width: 100px;
+}
+
+.btn-icon {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+  position: relative;
+}
+
+.btn-icon:hover {
+  background: #fff;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-icon:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooltips mejorados */
+.btn-icon:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  margin-bottom: 4px;
+  opacity: 0;
+  animation: fadeIn 0.2s ease forwards;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.btn-icon:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+  margin-bottom: -2px;
+  opacity: 0;
+  animation: fadeIn 0.2s ease forwards;
+  z-index: 10;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Colores específicos para cada acción */
+.btn-icon[title*="análisis completo"] {
+  color: #3b82f6;
+}
+
+.btn-icon[title*="análisis completo"]:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.btn-icon[title*="Análisis rápido"] {
+  color: #f59e0b;
+}
+
+.btn-icon[title*="Análisis rápido"]:hover {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.btn-icon[title*="recomendaciones"] {
+  color: #10b981;
+}
+
+.btn-icon[title*="recomendaciones"]:hover {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.btn-icon[title*="notas"] {
+  color: #8b5cf6;
+}
+
+.btn-icon[title*="notas"]:hover {
+  background: #f3f0ff;
+  border-color: #8b5cf6;
+}
+
+/* Responsive: en móviles, hacer los botones más grandes */
+@media (max-width: 768px) {
+  .action-buttons {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    width: 110px;
+  }
+  
+  .btn-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+}
+
+/* Alternativa: diseño horizontal con todos los botones en línea */
+.action-buttons-horizontal {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.action-buttons-horizontal .btn-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+}
+
+/* Variante con botones más descriptivos */
+.action-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.action-button:hover {
+  background: white;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.action-button-icon {
+  font-size: 1rem;
+}
+
+/* Estados especiales */
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* Animación de carga */
+.btn-icon.loading {
+  pointer-events: none;
+}
+
+.btn-icon.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f4f6;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 

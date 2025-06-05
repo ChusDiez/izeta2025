@@ -2,6 +2,7 @@ export default class EvolcampusSyncModule {
   constructor(supabaseClient, dashboardCore) {
     this.supabase = supabaseClient;
     this.dashboard = dashboardCore;
+    window.evolcampusSync = this; // Referencia global para el modal
   }
 
   async render(container) {
@@ -65,7 +66,22 @@ export default class EvolcampusSyncModule {
 
       if (error) throw error;
 
-      this.notify('success', `Sincronización completada: ${data.records_synced} registros`);
+      // Mostrar resumen detallado
+      let message = `✅ Sincronización completada: ${data.records_synced} registros procesados`;
+      
+      if (data.summary && data.not_found_emails && data.not_found_emails.length > 0) {
+        message += `\n\n⚠️ ${data.not_found_emails.length} usuarios no encontrados en el sistema:`;
+        data.not_found_emails.forEach(email => {
+          message += `\n• ${email}`;
+        });
+        
+        // Mostrar modal con detalles si hay muchos no encontrados
+        if (data.not_found_emails.length > 5) {
+          this.showNotFoundReport(data);
+        }
+      }
+      
+      this.notify('success', message);
 
       // Refrescar vista
       await this.render(container);
@@ -84,5 +100,50 @@ export default class EvolcampusSyncModule {
       // Fallback: simple alert
       console[type === 'error' ? 'error' : 'log'](message);
     }
+  }
+
+  showNotFoundReport(data) {
+    const modalHtml = `
+      <div id="notFoundModal" class="modal" style="display: flex;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>📋 Reporte de Usuarios No Encontrados</h3>
+            <button class="btn-icon" onclick="document.getElementById('notFoundModal').remove()">✖️</button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Resumen de sincronización:</strong></p>
+            <ul>
+              <li>Total en Evolcampus: ${data.summary.total_evolcampus}</li>
+              <li>Encontrados en sistema: ${data.summary.found_in_system}</li>
+              <li>No encontrados: ${data.summary.not_found}</li>
+              <li>Registros sincronizados: ${data.summary.synced_records}</li>
+            </ul>
+            
+            <p><strong>Emails no encontrados:</strong></p>
+            <div style="max-height: 300px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 4px;">
+              ${data.not_found_emails.map(email => `<div>• ${email}</div>`).join('')}
+            </div>
+            
+            <div style="margin-top: 20px;">
+              <button class="btn btn-primary" onclick="window.evolcampusSync.copyNotFoundEmails('${data.not_found_emails.join(',')}')">
+                📋 Copiar emails
+              </button>
+              <button class="btn btn-secondary" onclick="document.getElementById('notFoundModal').remove()">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+  
+  copyNotFoundEmails(emailsStr) {
+    const emails = emailsStr.split(',').join('\n');
+    navigator.clipboard.writeText(emails).then(() => {
+      this.notify('success', 'Emails copiados al portapapeles');
+    });
   }
 } 

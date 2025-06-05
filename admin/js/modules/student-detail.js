@@ -147,21 +147,24 @@ export default class StudentDetailModule {
                 value: student.average_score?.toFixed(2) || 'N/A',
                 subtitle: 'Últimos 5: ' + analytics.recentAverage.toFixed(2),
                 icon: '📊',
-                trend: analytics.scoreTrend
+                trend: analytics.scoreTrend,
+                class: this.getScoreClass(student.average_score)
             },
             {
                 title: 'ELO Actual',
                 value: student.current_elo,
                 subtitle: `Cambio mensual: ${analytics.monthlyEloChange > 0 ? '+' : ''}${analytics.monthlyEloChange}`,
                 icon: '⚡',
-                trend: analytics.eloTrend
+                trend: analytics.eloTrend,
+                trendClass: analytics.monthlyEloChange >= 0 ? 'trend-positive' : 'trend-negative'
             },
             {
                 title: 'Probabilidad de Aprobar',
                 value: student.probability_pass + '%',
                 subtitle: this.getRiskText(student.probability_pass),
                 icon: '🎯',
-                trend: null
+                trend: null,
+                class: this.getProbabilityClass(student.probability_pass)
             },
             {
                 title: 'Participación',
@@ -169,19 +172,37 @@ export default class StudentDetailModule {
                 subtitle: `${student.total_simulations} de ${analytics.totalSimulations} simulacros`,
                 icon: '📈',
                 trend: null
+            },
+            {
+                title: 'Racha Actual',
+                value: student.current_streak || 0,
+                subtitle: `Mejor: ${student.longest_streak || 0} semanas`,
+                icon: '🔥',
+                trend: null
+            },
+            {
+                title: 'Mejor Día',
+                value: analytics.bestDay || 'N/A',
+                subtitle: 'Para rendir mejor',
+                icon: '🏆',
+                trend: null
             }
         ];
         
         return cards.map(card => `
-            <div class="metric-card">
-                <div class="metric-icon">${card.icon}</div>
-                <div class="metric-content">
-                    <div class="metric-title">${card.title}</div>
-                    <div class="metric-value">
-                        ${card.value}
-                        ${card.trend ? this.getTrendIndicator(card.trend) : ''}
-                    </div>
-                    <div class="metric-subtitle">${card.subtitle}</div>
+            <div class="metric-card ${card.class || ''}">
+                <div class="metric-header">
+                    <div class="metric-icon">${card.icon}</div>
+                    ${card.trend ? `
+                        <div class="metric-trend ${card.trendClass || ''}">
+                            ${this.getTrendIndicator(card.trend)}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="metric-value">${card.value}</div>
+                <div class="metric-label">${card.title}</div>
+                <div class="metric-trend">
+                    <span>${card.subtitle}</span>
                 </div>
             </div>
         `).join('');
@@ -419,6 +440,15 @@ Un saludo,
         
         // Preview de email en tiempo real
         document.getElementById('emailBody')?.addEventListener('input', () => this.updateEmailPreview());
+        
+        // Botón de sincronización Evolcampus
+        const syncBtn = document.getElementById('syncEvolcampusBtn');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', async (e) => {
+                const email = e.target.dataset.email;
+                await this.syncEvolcampusForStudent(email);
+            });
+        }
     }
 
     // Métodos faltantes que necesitas implementar:
@@ -545,6 +575,21 @@ Un saludo,
         if (trend === 'up') return '↗️';
         if (trend === 'down') return '↘️';
         return '→';
+    }
+    
+    getScoreClass(score) {
+        if (!score) return '';
+        if (score >= 8) return 'success';
+        if (score >= 6) return 'warning';
+        return 'danger';
+    }
+    
+    getProbabilityClass(probability) {
+        if (!probability) probability = 50;
+        if (probability >= 70) return 'success';
+        if (probability >= 50) return 'warning';
+        if (probability >= 30) return 'danger';
+        return 'critical';
     }
     
     renderRiskAlert(student, analytics) {
@@ -969,7 +1014,12 @@ Un saludo,
         return `
             <div class="evolcampus-progress-section">
                 <div class="evolcampus-header">
-                    <h3>📚 Progreso en Evolcampus</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0;">📚 Progreso en Evolcampus</h3>
+                        <button class="btn btn-primary btn-sm" id="syncEvolcampusBtn" data-email="${student.email}" style="padding: 0.5rem 1rem;">
+                            🔄 Sincronizar ahora
+                        </button>
+                    </div>
                     <div class="evolcampus-stats" id="evolcampusStats">
                         <div class="loading">Cargando datos...</div>
                     </div>
@@ -1080,5 +1130,40 @@ Un saludo,
                 </div>
             </div>
         `;
+    }
+    
+    async syncEvolcampusForStudent(email) {
+        try {
+            const syncBtn = document.getElementById('syncEvolcampusBtn');
+            if (syncBtn) {
+                syncBtn.disabled = true;
+                syncBtn.innerHTML = '⏳ Sincronizando...';
+            }
+            
+            // Llamar a la función edge específica para un estudiante
+            const { data, error } = await this.supabase.functions.invoke('sync-evolvcampus-student', {
+                body: { studentEmail: email }
+            });
+            
+            if (error) throw error;
+            
+            // Mostrar notificación de éxito
+            const message = data.message || `Sincronización completada: ${data.records_synced} registros`;
+            this.dashboard.showNotification('success', message);
+            
+            // Recargar los datos de Evolcampus
+            const evolcampusData = await this.loadEvolcampusData(this.currentStudentId);
+            this.updateEvolcampusTab(evolcampusData);
+            
+        } catch (error) {
+            console.error('Error sincronizando Evolcampus:', error);
+            this.dashboard.showNotification('error', 'Error al sincronizar: ' + error.message);
+        } finally {
+            const syncBtn = document.getElementById('syncEvolcampusBtn');
+            if (syncBtn) {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = '🔄 Sincronizar ahora';
+            }
+        }
     }
 }
