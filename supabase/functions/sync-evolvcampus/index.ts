@@ -150,6 +150,13 @@ serve(async (req) => {
     
     console.log(`📊 Total de enrollments: ${enrollments.length}`);
     console.log(`🎯 Procesando los primeros ${studentsToProcess} estudiantes en esta ejecución`);
+    
+    // DEBUG: Verificar qué emails tenemos en la BD (comentar en producción)
+    const { data: existingEmails } = await supabase
+      .from("users")
+      .select("email")
+      .limit(5);
+    console.log("📧 Muestra de emails en BD:", existingEmails?.map(u => u.email.toLowerCase()));
 
     // Procesar cada estudiante con rate limiting
     for (let i = 0; i < studentsToProcess; i++) {
@@ -216,18 +223,47 @@ serve(async (req) => {
           continue;
         }
 
-        // Resolver student_id local
+        // Normalizar email antes de buscar
+        const email = enrollment.person.email.trim().toLowerCase();
+        
+        // Log temporal para debugging (comentar en producción)
+        if (email.includes('luciahita') || email.includes('zbendeman')) {
+          console.log(`🔍 Buscando email normalizado: "${email}" (original: "${enrollment.person.email}")`);
+        }
+
+        // Resolver student_id local - usando eq para búsqueda exacta
         const { data: user, error: userErr } = await supabase
           .from("users")
           .select("id")
-          .ilike("email", enrollment.person.email);
+          .eq("email", email)
+          .maybeSingle();
 
-        if (userErr || !user || user.length === 0) {
-          console.warn(`Usuario no encontrado para ${enrollment.person.email}`);
+        if (userErr) {
+          console.error(`Error buscando usuario ${email}:`, userErr);
           notFoundEmails.push(enrollment.person.email);
           continue;
         }
-        const studentId = user[0].id;
+
+        if (!user) {
+          // Intentar buscar en auth.users como fallback
+          const { data: authUser, error: authErr } = await supabase
+            .from("auth.users")
+            .select("id")
+            .eq("email", email)
+            .maybeSingle();
+          
+          if (authUser) {
+            console.warn(`⚠️ Usuario ${email} encontrado en auth.users pero NO en public.users`);
+            notFoundEmails.push(`${enrollment.person.email} (en auth pero no en public)`);
+            continue;
+          }
+          
+          console.warn(`Usuario no encontrado: ${email}`);
+          notFoundEmails.push(enrollment.person.email);
+          continue;
+        }
+        
+        const studentId = user.id;
 
         // Guardar datos generales del enrollment
         const { error: enrollError } = await supabase.from("evolcampus_enrollments").upsert({
@@ -278,16 +314,22 @@ serve(async (req) => {
     }
 
     // Registrar en api_sync_log con reporte de no encontrados
+    const logDetails = { 
+      totalStudents: enrollments.length,
+      processedInThisRun: studentsToProcess,
+      notFoundEmails: notFoundEmails,
+      notFoundCount: notFoundEmails.length,
+      successfullyProcessed: studentsToProcess - notFoundEmails.length,
+      recordsSynced: totalSynced
+    };
+    
+    console.log("📊 Resumen de sincronización:", logDetails);
+    
     await supabase.from("api_sync_log").insert({
       endpoint: "full_sync",
       status_code: 200,
       records_synced: totalSynced,
-      details: { 
-        totalStudents: enrollments.length,
-        notFoundEmails: notFoundEmails,
-        notFoundCount: notFoundEmails.length,
-        processedCount: enrollments.length - notFoundEmails.length
-      },
+      details: logDetails,
     });
 
     return new Response(
