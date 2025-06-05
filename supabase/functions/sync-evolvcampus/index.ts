@@ -8,16 +8,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const BASE_URL = "https://api.evolcampus.com/api/v1";
 
 interface TokenResponse {
-  access_token: string;
-  expires_in: number;
+  token: string;
+  expires_in?: number;
 }
 
 interface Enrollment {
-  id: string;
+  enrollmentid: number;  // ID numérico de la matrícula
+  userid: number;
+  courseid: number;
   email: string;
   username: string;
   slug?: string;
-  // Otros campos omitidos
+  // Otros campos según la API
 }
 
 interface ProgressRecord {
@@ -43,9 +45,9 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    // Credenciales directas (temporal - cambiar por env vars después)
-    const evolClientId = Deno.env.get("EVOLCAMPUS_CLIENT_ID")!;
-    const evolKey = Deno.env.get("EVOLCAMPUS_KEY")!;
+    // Credenciales hardcodeadas temporalmente para pruebas
+    const evolClientId = "74097";
+    const evolKey = "az3fmvjf.dfhj45";
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -54,29 +56,50 @@ serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: evolClientId,
-        client_secret: evolKey,
+        clientid: Number(evolClientId),  // clientid como número
+        key: evolKey,                     // key en lugar de client_secret
       }),
     });
 
     if (!tokenResp.ok) {
-      throw new Error(`Error autenticando contra Evolcampus: ${tokenResp.status}`);
+      const errorBody = await tokenResp.text();
+      throw new Error(`Error autenticando contra Evolcampus: ${tokenResp.status} - ${errorBody}`);
     }
-    const tokenData: TokenResponse = await tokenResp.json();
+    const tokenData = await tokenResp.json();
     const authHeader = {
-      Authorization: `Bearer ${tokenData.access_token}`,
+      Authorization: `Bearer ${tokenData.token}`,  // token, no access_token
     };
 
-    // Paso 2: Obtener inscripciones / estudiantes
-    const enrollmentsResp = await fetch(`${BASE_URL}/getEnrollments`, {
-      headers: { ...authHeader, "Content-Type": "application/json" },
-    });
+    // Paso 2: Obtener inscripciones / estudiantes con paginación
+    let allEnrollments: Enrollment[] = [];
+    let page = 1;
+    let hasMore = true;
 
-    if (!enrollmentsResp.ok) {
-      throw new Error(`Error obteniendo inscripciones: ${enrollmentsResp.status}`);
+    while (hasMore) {
+      const enrollmentsResp = await fetch(`${BASE_URL}/getEnrollments`, {
+        method: "POST",  // POST, no GET
+        headers: { ...authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          regs_per_page: 1000,
+          page: page
+        }),
+      });
+
+      if (!enrollmentsResp.ok) {
+        const errorBody = await enrollmentsResp.text();
+        throw new Error(`Error obteniendo inscripciones: ${enrollmentsResp.status} - ${errorBody}`);
+      }
+
+      const response = await enrollmentsResp.json();
+      const pageEnrollments = response.data || [];
+      allEnrollments = [...allEnrollments, ...pageEnrollments];
+      
+      // Verificar si hay más páginas
+      hasMore = response.pages > page;
+      page++;
     }
 
-    const enrollments: Enrollment[] = await enrollmentsResp.json();
+    const enrollments = allEnrollments;
 
     let totalSynced = 0;
 
@@ -84,13 +107,17 @@ serve(async (req) => {
     for (const enrollment of enrollments) {
       try {
         // Paso 2b: Obtener progreso detallado por estudiante
-        const progressResp = await fetch(
-          `${BASE_URL}/getEnrollment?enrollment_id=${enrollment.id}`,
-          { headers: authHeader },
-        );
+        const progressResp = await fetch(`${BASE_URL}/getEnrollment`, {
+          method: "POST",  // POST, no GET
+          headers: { ...authHeader, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            enrollmentid: enrollment.enrollmentid,  // usar enrollmentid
+          }),
+        });
 
         if (!progressResp.ok) {
-          console.error(`Error progreso ${enrollment.id}: ${progressResp.status}`);
+          const errorBody = await progressResp.text();
+          console.error(`Error progreso ${enrollment.enrollmentid}: ${progressResp.status} - ${errorBody}`);
           continue;
         }
 
@@ -130,7 +157,7 @@ serve(async (req) => {
           }
         }
       } catch (innerErr) {
-        console.error(`Error procesando enrollment ${enrollment.id}:`, innerErr);
+        console.error(`Error procesando enrollment ${enrollment.enrollmentid}:`, innerErr);
       }
     }
 
