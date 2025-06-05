@@ -1,0 +1,10 @@
+node_modules/
+assets/images/
+dist/
+build/
+coverage/
+.git/
+*.log
+*.tmp
+.env.local
+.DS_Store

@@ -1,10 +1,32 @@
-// config.js
-const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ'
+// config.js - Configuración principal con detección automática de entorno
+
+// Función para cargar la configuración correcta según el entorno
+function loadConfig() {
+    // Intentar cargar configuración local primero (para desarrollo)
+    if (typeof ENV_CONFIG !== 'undefined') {
+        return ENV_CONFIG;
+    }
+    
+    // Si no hay configuración cargada, usar valores por defecto
+    console.warn('No se encontró configuración de entorno. Usando valores por defecto.');
+    return {
+        SUPABASE_URL: '',
+        SUPABASE_ANON_KEY: '',
+        BASE_PATH: '',
+        APP_NAME: 'IZETA 2025'
+    };
+}
+
+// Obtener configuración
+const config = loadConfig();
+
+// Exportar las variables para compatibilidad con código existente
+const SUPABASE_URL = config.SUPABASE_URL;
+const SUPABASE_ANON_KEY = config.SUPABASE_ANON_KEY;
 
 // Inicializar cliente Supabase
-const { createClient } = supabase
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const { createClient } = supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Funciones helper globales
 async function checkAuth() {

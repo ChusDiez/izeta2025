@@ -3,6 +3,12 @@
 <head>
     <title>Test Weekly Update</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Sistema de configuración de entorno -->
+    <script src="../../assets/js/env-config.js"></script>
+    
+    <!-- Configuración de Supabase -->
+    <script src="../../assets/js/config.js"></script>
 </head>
 <body>
     <h1>Verificando Weekly Update...</h1>
@@ -10,13 +16,6 @@
     <script>
         // Script para verificar el funcionamiento de weekly-update
 // Ejecutar en la consola del navegador o en un archivo HTML
-
-// Configuración
-const SUPABASE_URL = 'https://hindymhwohevsqumekyv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3ODc4OTksImV4cCI6MjA2NDM2Mzg5OX0.oHuotC0MjPDrEMQksKt6QJ-Z_Yh0G60ZNRv5Ncy4MUQ';
-
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 1. VERIFICAR ÚLTIMA EJECUCIÓN DE LA FUNCIÓN
 async function checkLastExecution() {
