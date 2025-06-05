@@ -87,7 +87,10 @@ export default class DashboardVisualizations {
         `;
 
         // Actualizar el contenido
-        this.dashboard.showContent(content);
+        const contentWrapper = document.getElementById('contentWrapper');
+        if (contentWrapper) {
+            contentWrapper.innerHTML = content;
+        }
 
         // Cargar datos y renderizar
         await this.loadDashboardData();
@@ -145,7 +148,7 @@ export default class DashboardVisualizations {
      * Renderizar métricas principales
      */
     renderMainMetrics(students, results, elo, evolcampus) {
-        const activeStudents = students.filter(s => s.status === 'active').length;
+        const activeStudents = students.filter(s => s.active !== false).length;
         const avgScore = results.length > 0 
             ? (results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(1)
             : 0;
@@ -244,7 +247,7 @@ export default class DashboardVisualizations {
      */
     renderRiskStudents(students) {
         const riskStudents = students
-            .filter(s => s.probability_pass < 50 && s.status === 'active')
+            .filter(s => s.probability_pass < 50 && s.active !== false)
             .sort((a, b) => a.probability_pass - b.probability_pass)
             .slice(0, 6);
 
@@ -254,7 +257,7 @@ export default class DashboardVisualizations {
                     <div class="student-avatar">${this.getInitials(student.name)}</div>
                     <div class="student-info">
                         <h4>${student.name}</h4>
-                        <p class="student-cohort">${this.dashboard.formatCohort(student.cohort)}</p>
+                        <p class="student-cohort">${this.formatCohort(student.cohort)}</p>
                     </div>
                 </div>
                 <div class="risk-indicator">
@@ -413,6 +416,16 @@ export default class DashboardVisualizations {
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    }
+
+    formatCohort(cohort) {
+        const formats = {
+            '20h': '20h - Base',
+            '36h': '36h - Intensivo',
+            '48h': '48h - Élite',
+            'sin_asignar': 'Sin asignar'
+        };
+        return formats[cohort] || cohort || 'Sin asignar';
     }
 
     renderPlaceholderChart(containerId, title) {
