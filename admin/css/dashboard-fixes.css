@@ -134,4 +134,35 @@
 .section-divider {
     height: 2rem;
     clear: both;
+}
+
+/* Fix específico para Vista General */
+.quick-actions-grid {
+    margin-top: 3rem !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Asegurar que múltiples charts-section no se solapen */
+.charts-section + .charts-section {
+    margin-top: 2rem !important;
+}
+
+/* Fix para el contenido del dashboard en general */
+#contentWrapper > div:not(:first-child) {
+    margin-top: 2rem;
+}
+
+/* Asegurar altura mínima para gráficos */
+.chart-card {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card .chart-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 } 

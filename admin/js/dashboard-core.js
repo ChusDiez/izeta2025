@@ -602,6 +602,26 @@ export class DashboardCore {
                 </div>
             </div>
             
+            <!-- Segunda fila de gráficos -->
+            <div class="charts-section" style="margin-top: 2rem;">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">⚠️ Análisis de Riesgo</h3>
+                    </div>
+                    <div class="chart-body" id="riskChart">
+                        <!-- Chart.js canvas aquí -->
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📊 Tendencia ELO</h3>
+                    </div>
+                    <div class="chart-body" id="eloChart">
+                        <!-- Chart.js canvas aquí -->
+                    </div>
+                </div>
+            </div>
+            
             <!-- Acciones rápidas -->
             <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
                 <button class="action-card" onclick="window.dashboardAdmin.showPage('bulk-users')" style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; cursor: pointer; transition: all 0.3s;">
@@ -670,11 +690,14 @@ export class DashboardCore {
                     
                     try {
                         // Renderizar tendencia ELO si hay datos
-                        if (this.data.eloHistory && this.data.eloHistory.length > 0) {
-                            await chartsModule.renderEloTrends('eloChart', this.data.eloHistory);
-                        } else {
-                            document.getElementById('eloChart').parentElement.innerHTML = 
-                                '<p style="text-align: center; color: #6b7280; margin-top: 50px;">No hay datos de ELO disponibles</p>';
+                        const eloContainer = document.getElementById('eloChart');
+                        if (eloContainer) {
+                            if (this.data.eloHistory && this.data.eloHistory.length > 0) {
+                                await chartsModule.renderEloTrends('eloChart', this.data.eloHistory);
+                            } else {
+                                eloContainer.parentElement.innerHTML = 
+                                    '<p style="text-align: center; color: #6b7280; margin-top: 50px;">No hay datos de ELO disponibles</p>';
+                            }
                         }
                     } catch (e) {
                         console.error('Error en gráfico ELO:', e);
