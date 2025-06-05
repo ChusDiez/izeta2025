@@ -8,39 +8,27 @@ export default class StudentDetailModule {
     }
 
     async render(container, studentId) {
+        this.currentStudentId = studentId;
+        
         try {
-            // Mostrar indicador de carga mientras obtenemos todos los datos
+            // Mostrar loading
             container.innerHTML = this.getLoadingTemplate();
             
-            // Cargar todos los datos del estudiante en paralelo para optimizar
-            const [studentData, resultsData, eloHistory, medals, alerts] = await Promise.all([
-                this.loadStudentData(studentId),
-                this.loadStudentResults(studentId),
-                this.loadEloHistory(studentId),
-                this.loadStudentMedals(studentId),
-                this.loadStudentAlerts(studentId)
-            ]);
+            // Cargar datos del estudiante
+            const { student, results, analytics, eloHistory, medals, alerts, evolcampusData } = await this.loadStudentData(studentId);
+            this.currentStudent = student;
             
-            this.currentStudent = studentData;
+            // Renderizar dashboard
+            container.innerHTML = this.renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts, evolcampusData);
             
-            // Calcular métricas avanzadas
-            const analytics = this.calculateDetailedAnalytics(resultsData, eloHistory);
-            
-            // Renderizar la vista completa
-            container.innerHTML = this.renderStudentDashboard(
-                studentData, 
-                resultsData, 
-                analytics, 
-                eloHistory,
-                medals,
-                alerts
-            );
-            
-            // Configurar los gráficos después de renderizar el HTML
-            await this.renderCharts(resultsData, eloHistory, analytics);
-            
-            // Establecer event listeners
+            // Configurar event listeners
             this.setupEventListeners();
+            
+            // Renderizar gráficos con delay para asegurar que el DOM esté listo
+            setTimeout(() => {
+                this.renderCharts(results, eloHistory, analytics);
+                this.updateEvolcampusTab(evolcampusData);
+            }, 100);
             
         } catch (error) {
             console.error('Error cargando detalles del estudiante:', error);
@@ -48,7 +36,7 @@ export default class StudentDetailModule {
         }
     }
 
-    renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts) {
+    renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts, evolcampusData) {
         return `
             <div class="student-detail-page">
                 <!-- Header con información principal -->
@@ -99,6 +87,9 @@ export default class StudentDetailModule {
                         <button class="tab-header" data-tab="communication">
                             💬 Comunicación
                         </button>
+                        <button class="tab-header" data-tab="evolcampus">
+                            📚 Evolcampus
+                        </button>
                     </div>
                     
                     <div class="tab-content">
@@ -134,6 +125,11 @@ export default class StudentDetailModule {
                         <!-- Tab de Comunicación -->
                         <div class="tab-pane" id="communication-tab">
                             ${this.renderCommunicationHistory(student)}
+                        </div>
+                        
+                        <!-- Tab de Evolcampus -->
+                        <div class="tab-pane" id="evolcampus-tab">
+                            ${this.renderEvolcampusProgress(student)}
                         </div>
                     </div>
                 </div>
@@ -412,7 +408,7 @@ Un saludo,
         }
     }
     
-// Guardar referencia global
+    // Guardar referencia global
     setupEventListeners() {
         window.studentDetail = this;
         
@@ -428,6 +424,23 @@ Un saludo,
     // Métodos faltantes que necesitas implementar:
     
     async loadStudentData(studentId) {
+        const [student, results, eloHistory, medals, alerts] = await Promise.all([
+            this.loadStudentInfo(studentId),
+            this.loadStudentResults(studentId),
+            this.loadEloHistory(studentId),
+            this.loadStudentMedals(studentId),
+            this.loadStudentAlerts(studentId)
+        ]);
+        
+        // Cargar datos de Evolcampus
+        const evolcampusData = await this.loadEvolcampusData(studentId);
+        
+        const analytics = this.calculateDetailedAnalytics(results, eloHistory);
+        
+        return { student, results, analytics, eloHistory, medals, alerts, evolcampusData };
+    }
+    
+    async loadStudentInfo(studentId) {
         const { data, error } = await this.supabase
             .from('users')
             .select('*')
@@ -436,6 +449,21 @@ Un saludo,
         
         if (error) throw error;
         return data;
+    }
+    
+    async loadEvolcampusData(studentId) {
+        const { data, error } = await this.supabase
+            .from('topic_results')
+            .select('*')
+            .eq('student_id', studentId)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Error cargando datos de Evolcampus:', error);
+            return [];
+        }
+        
+        return data || [];
     }
     
     async loadStudentResults(studentId) {
@@ -935,5 +963,122 @@ Un saludo,
         }
         
         return recommendations;
+    }
+    
+    renderEvolcampusProgress(student) {
+        return `
+            <div class="evolcampus-progress-section">
+                <div class="evolcampus-header">
+                    <h3>📚 Progreso en Evolcampus</h3>
+                    <div class="evolcampus-stats" id="evolcampusStats">
+                        <div class="loading">Cargando datos...</div>
+                    </div>
+                </div>
+                
+                <div class="evolcampus-content" id="evolcampusContent">
+                    <div class="loading">Cargando progreso detallado...</div>
+                </div>
+            </div>
+        `;
+    }
+
+    updateEvolcampusTab(evolcampusData) {
+        const statsContainer = document.getElementById('evolcampusStats');
+        const contentContainer = document.getElementById('evolcampusContent');
+        
+        if (!statsContainer || !contentContainer) return;
+        
+        if (!evolcampusData || evolcampusData.length === 0) {
+            statsContainer.innerHTML = '<div class="no-data">❌ Sin datos de Evolcampus aún</div>';
+            contentContainer.innerHTML = `
+                <div class="no-data-message">
+                    <h4>🔄 Esperando sincronización</h4>
+                    <p>Los datos aparecerán aquí después de la primera sincronización con Evolcampus.</p>
+                    <p>Ve a la sección "🔄 Evolcampus" para forzar una sincronización.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Calcular estadísticas
+        const totalActivities = evolcampusData.length;
+        const avgScore = evolcampusData.reduce((sum, item) => sum + (item.score || 0), 0) / totalActivities;
+        const completedActivities = evolcampusData.filter(item => item.score > 0).length;
+        const lastActivity = evolcampusData[0]; // Más reciente
+        
+        // Renderizar estadísticas
+        statsContainer.innerHTML = `
+            <div class="evolcampus-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${totalActivities}</div>
+                    <div class="stat-label">Actividades totales</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${completedActivities}</div>
+                    <div class="stat-label">Completadas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgScore.toFixed(1)}</div>
+                    <div class="stat-label">Promedio</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${lastActivity ? new Date(lastActivity.last_attempt).toLocaleDateString() : 'N/A'}</div>
+                    <div class="stat-label">Última actividad</div>
+                </div>
+            </div>
+        `;
+        
+        // Agrupar por temas
+        const topicGroups = this.groupByTopic(evolcampusData);
+        
+        // Renderizar contenido detallado
+        contentContainer.innerHTML = `
+            <div class="evolcampus-topics">
+                <h4>�� Progreso por Temas</h4>
+                ${Object.entries(topicGroups).map(([topic, activities]) => 
+                    this.renderTopicGroup(topic, activities)
+                ).join('')}
+            </div>
+        `;
+    }
+    
+    groupByTopic(evolcampusData) {
+        return evolcampusData.reduce((groups, item) => {
+            const topic = item.topic_code || 'Sin categoría';
+            if (!groups[topic]) groups[topic] = [];
+            groups[topic].push(item);
+            return groups;
+        }, {});
+    }
+    
+    renderTopicGroup(topic, activities) {
+        const avgScore = activities.reduce((sum, a) => sum + (a.score || 0), 0) / activities.length;
+        const maxScore = Math.max(...activities.map(a => a.max_score || 100));
+        const completionRate = (avgScore / maxScore) * 100;
+        
+        return `
+            <div class="topic-group">
+                <div class="topic-header">
+                    <h5>${topic}</h5>
+                    <div class="topic-stats">
+                        <span class="completion-rate">${completionRate.toFixed(1)}%</span>
+                        <span class="activity-count">${activities.length} actividades</span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${completionRate}%"></div>
+                </div>
+                <div class="activities-list">
+                    ${activities.slice(0, 3).map(activity => `
+                        <div class="activity-item">
+                            <span class="activity-name">${activity.activity || 'Test'}</span>
+                            <span class="activity-score">${activity.score}/${activity.max_score}</span>
+                            <span class="activity-attempts">${activity.attempts || 1} intentos</span>
+                        </div>
+                    `).join('')}
+                    ${activities.length > 3 ? `<div class="more-activities">+${activities.length - 3} más...</div>` : ''}
+                </div>
+            </div>
+        `;
     }
 }
