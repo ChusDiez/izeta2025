@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema ELO IZETA 2025 - Dashboard y Base de Datos</title>
+    <title>Sistema IP IZETA 2025 - Índice de Progreso y Rankings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #1e40af;
@@ -15,8 +18,9 @@
             --danger-red: #ef4444;
             --bg-light: #f8fafc;
             --text-dark: #0f172a;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.08);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
         
         * {
@@ -26,11 +30,13 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-light);
             color: var(--text-dark);
             line-height: 1.6;
             padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         .container {
@@ -69,9 +75,11 @@
         
         .header h1 {
             font-size: 3rem;
+            font-weight: 800;
             margin-bottom: 1rem;
             position: relative;
             z-index: 1;
+            letter-spacing: -1px;
         }
         
         .header p {
@@ -88,19 +96,27 @@
         
         .section-title {
             font-size: 2rem;
+            font-weight: 700;
             color: var(--primary-blue);
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            letter-spacing: -0.5px;
         }
         
         .card {
             background: white;
             padding: 2rem;
-            border-radius: 15px;
+            border-radius: 16px;
             box-shadow: var(--shadow);
             margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-lg);
         }
         
         /* Sistema de Puntos Visual */
@@ -112,18 +128,20 @@
         }
         
         .point-card {
-            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             text-align: center;
-            transition: transform 0.3s;
+            transition: all 0.2s ease-in-out;
             position: relative;
             overflow: hidden;
         }
         
         .point-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-5px) scale(1.02);
             box-shadow: var(--shadow-lg);
+            border-color: var(--primary-blue);
         }
         
         .point-card::before {
@@ -154,33 +172,37 @@
             border-collapse: collapse;
             margin: 2rem 0;
             box-shadow: var(--shadow);
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
+            border: 1px solid #e5e7eb;
         }
         
         .calculation-table th {
-            background: var(--primary-blue);
-            color: white;
+            background: #f8fafc;
+            color: var(--primary-blue);
             padding: 1rem;
             text-align: left;
             font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
         }
         
         .calculation-table td {
             padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #f3f4f6;
+            background: white;
         }
         
         .calculation-table tr:last-child td {
             border-bottom: none;
         }
         
-        .calculation-table tr:nth-child(even) {
-            background: #f9fafb;
+        .calculation-table tbody tr:nth-child(odd) td {
+            background: #fafbfc;
         }
         
-        .calculation-table tr:hover {
-            background: #f3f4f6;
+        .calculation-table tbody tr:hover td {
+            background: #f0f9ff;
+            transition: background-color 0.2s ease;
         }
         
         /* Sistema de Rachas */
@@ -235,16 +257,19 @@
         .ranking-row {
             display: flex;
             align-items: center;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            background: #f9fafb;
-            border-radius: 10px;
-            transition: all 0.3s;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
         }
         
         .ranking-row:hover {
-            background: #f3f4f6;
-            transform: translateX(5px);
+            background: #f9fafb;
+            transform: translateX(8px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary-blue);
         }
         
         .rank-position {
@@ -275,7 +300,7 @@
             color: var(--secondary-gray);
         }
         
-        .elo-change {
+        .ip-change {
             font-weight: bold;
             font-size: 1.1rem;
             min-width: 60px;
@@ -404,13 +429,13 @@
         
         /* Animaciones */
         .fade-in {
-            animation: fadeIn 0.5s ease-out;
+            animation: fadeIn 0.4s ease-out forwards;
         }
         
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
@@ -485,22 +510,41 @@
             font-weight: bold;
             transition: width 0.5s ease;
         }
+        
+        /* Accesibilidad mejorada */
+        *:focus-visible {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+        
+        button:focus-visible,
+        a:focus-visible {
+            outline-offset: 4px;
+        }
 
         .float-home {
             position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
+            bottom: 2rem;
+            right: 2rem;
             background: var(--primary-blue);
             color: white;
-            width: 3rem;
-            height: 3rem;
+            width: 3.5rem;
+            height: 3.5rem;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-lg);
             font-size: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .float-home:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-xl);
+            background: #1a3788;
         }
     </style>
 </head>
@@ -508,14 +552,14 @@
     <div class="container">
         <!-- Header Principal -->
         <div class="header fade-in">
-            <h1>🏆 Sistema ELO IZETA 2025</h1>
-            <p>Sistema de Puntuación Competitiva y Dashboard de Seguimiento</p>
+            <h1>🏆 Sistema IP IZETA 2025</h1>
+            <p>Índice de Progreso Competitivo y Rankings en Tiempo Real</p>
             <p style="margin-top: 1rem; font-size: 1rem;">Transparente • Justo • Motivador</p>
         </div>
         
         <!-- SECCIÓN 1: SISTEMA DE PUNTOS -->
         <section class="section">
-            <h2 class="section-title">📊 Sistema de Puntuación ELO (0-25 puntos semanales)</h2>
+            <h2 class="section-title">📊 Sistema de Puntuación IP (0-25 puntos semanales)</h2>
             
             <div class="card">
                 <h3 style="margin-bottom: 1.5rem;">¿Cómo se calculan tus puntos semanales?</h3>
@@ -715,10 +759,10 @@
                         <div class="user-stats">
                             <span>📊 93/100</span>
                             <span>🔥 15 semanas</span>
-                            <span>⚡ 1,847 ELO</span>
+                            <span>⚡ 1,847 IP</span>
                         </div>
                     </div>
-                    <div class="elo-change change-positive">↗ +25</div>
+                    <div class="ip-change change-positive">↗ +25</div>
                 </div>
                 
                 <div class="ranking-row">
@@ -728,10 +772,10 @@
                         <div class="user-stats">
                             <span>📊 91/100</span>
                             <span>🔥 12 semanas</span>
-                            <span>⚡ 1,765 ELO</span>
+                            <span>⚡ 1,765 IP</span>
                         </div>
                     </div>
-                    <div class="elo-change change-positive">↗ +38</div>
+                    <div class="ip-change change-positive">↗ +38</div>
                 </div>
                 
                 <div class="ranking-row">
@@ -741,10 +785,10 @@
                         <div class="user-stats">
                             <span>📊 89/100</span>
                             <span>⭐ 6 semanas</span>
-                            <span>⚡ 1,523 ELO</span>
+                            <span>⚡ 1,523 IP</span>
                         </div>
                     </div>
-                    <div class="elo-change change-positive">↗ +23</div>
+                    <div class="ip-change change-positive">↗ +23</div>
                 </div>
                 
                 <div class="ranking-row">
@@ -754,10 +798,10 @@
                         <div class="user-stats">
                             <span>📊 83/100</span>
                             <span class="tooltip" data-tooltip="Primera vez en top 20!">🎯 Nueva</span>
-                            <span>⚡ 1,285 ELO</span>
+                            <span>⚡ 1,285 IP</span>
                         </div>
                     </div>
-                    <div class="elo-change change-positive">↗ +21</div>
+                    <div class="ip-change change-positive">↗ +21</div>
                 </div>
                 
                 <div class="ranking-row">
@@ -767,10 +811,10 @@
                         <div class="user-stats">
                             <span>📊 72/100</span>
                             <span>📚 2 semanas</span>
-                            <span>⚡ 987 ELO</span>
+                            <span>⚡ 987 IP</span>
                         </div>
                     </div>
-                    <div class="elo-change change-positive">↗ +8</div>
+                    <div class="ip-change change-positive">↗ +8</div>
                 </div>
             </div>
         </section>
@@ -781,7 +825,7 @@
             
             <div class="card">
                 <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-gray);">
-                    Las medallas reconocen logros especiales pero NO suman puntos ELO adicionales
+                    Las medallas reconocen logros especiales pero NO suman puntos IP adicionales
                 </p>
                 
                 <div class="medals-showcase">
@@ -827,7 +871,7 @@
         
         <!-- Footer -->
         <div style="text-align: center; margin-top: 4rem; padding: 2rem; color: var(--secondary-gray);">
-            <p>Sistema ELO IZETA 2025</p>
+            <p>Sistema IP IZETA 2025</p>
             <p style="margin-top: 0.5rem;">La transparencia genera confianza • La competición sana motiva • Los datos impulsan la mejora</p>
         </div>
     </div>
