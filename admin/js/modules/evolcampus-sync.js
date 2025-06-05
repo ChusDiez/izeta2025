@@ -65,13 +65,24 @@ export default class EvolcampusSyncModule {
 
       if (error) throw error;
 
-      window.dashboardAdmin.showNotification('success', `Sincronización completada: ${data.records_synced} registros`);
+      this.notify('success', `Sincronización completada: ${data.records_synced} registros`);
 
       // Refrescar vista
       await this.render(container);
     } catch (err) {
       console.error('Error ejecutando sincronización:', err);
-      window.dashboardAdmin.showNotification('error', 'Error al sincronizar: ' + err.message);
+      this.notify('error', 'Error al sincronizar: ' + err.message);
+    }
+  }
+
+  notify(type, message) {
+    if (this.dashboard && typeof this.dashboard.showNotification === 'function') {
+      this.dashboard.showNotification(type, message);
+    } else if (window.dashboardAdmin && typeof window.dashboardAdmin.showNotification === 'function') {
+      window.dashboardAdmin.showNotification(type, message);
+    } else {
+      // Fallback: simple alert
+      console[type === 'error' ? 'error' : 'log'](message);
     }
   }
 } 
