@@ -126,6 +126,8 @@ serve(async (req) => {
         enrollment_status: enrollment.enroll.enrollmentstatus,
         pass_requirements: enrollment.enroll.passrequierements,
         synced_at: new Date().toISOString(),
+      }, {
+        onConflict: 'student_id,enrollmentid'
       });
 
       if (enrollError) {
@@ -157,7 +159,7 @@ serve(async (req) => {
 
       // Insertar nuevos registros
       for (const record of progressData.progress || []) {
-        const { error } = await supabase.from("topic_results").insert({
+        const { error } = await supabase.from("topic_results").upsert({
           student_id: user.id,
           topic_code: record.topic_code,
           activity: record.activity,
@@ -168,6 +170,8 @@ serve(async (req) => {
           attempts: record.attempts,
           source: "evolcampus",
           created_at: new Date().toISOString(),
+        }, {
+          onConflict: 'student_id,topic_code,activity'
         });
 
         if (!error) {

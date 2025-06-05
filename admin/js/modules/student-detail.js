@@ -482,18 +482,35 @@ Un saludo,
     }
     
     async loadEvolcampusData(studentId) {
-        const { data, error } = await this.supabase
-            .from('topic_results')
-            .select('*')
-            .eq('student_id', studentId)
-            .order('created_at', { ascending: false });
+        // Cargar tanto los topic_results como los enrollment data
+        const [topicData, enrollmentData] = await Promise.all([
+            this.supabase
+                .from('topic_results')
+                .select('*')
+                .eq('student_id', studentId)
+                .eq('source', 'evolcampus')
+                .order('last_attempt', { ascending: false }),
+            this.supabase
+                .from('evolcampus_enrollments')
+                .select('*')
+                .eq('student_id', studentId)
+                .order('synced_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+        ]);
         
-        if (error) {
-            console.error('Error cargando datos de Evolcampus:', error);
-            return [];
+        if (topicData.error) {
+            console.error('Error cargando topic_results:', topicData.error);
         }
         
-        return data || [];
+        if (enrollmentData.error) {
+            console.error('Error cargando enrollment data:', enrollmentData.error);
+        }
+        
+        return {
+            topics: topicData.data || [],
+            enrollment: enrollmentData.data
+        };
     }
     
     async loadStudentResults(studentId) {
@@ -1038,58 +1055,98 @@ Un saludo,
         
         if (!statsContainer || !contentContainer) return;
         
-        if (!evolcampusData || evolcampusData.length === 0) {
+        const topics = evolcampusData.topics || [];
+        const enrollment = evolcampusData.enrollment;
+        
+        // Si no hay datos de ningún tipo
+        if ((!topics || topics.length === 0) && !enrollment) {
             statsContainer.innerHTML = '<div class="no-data">❌ Sin datos de Evolcampus aún</div>';
             contentContainer.innerHTML = `
                 <div class="no-data-message">
                     <h4>🔄 Esperando sincronización</h4>
                     <p>Los datos aparecerán aquí después de la primera sincronización con Evolcampus.</p>
-                    <p>Ve a la sección "🔄 Evolcampus" para forzar una sincronización.</p>
+                    <p>Haz clic en "Sincronizar ahora" para forzar una sincronización.</p>
                 </div>
             `;
             return;
         }
         
-        // Calcular estadísticas
-        const totalActivities = evolcampusData.length;
-        const avgScore = evolcampusData.reduce((sum, item) => sum + (item.score || 0), 0) / totalActivities;
-        const completedActivities = evolcampusData.filter(item => item.score > 0).length;
-        const lastActivity = evolcampusData[0]; // Más reciente
+        // Renderizar estadísticas usando datos de enrollment si están disponibles
+        if (enrollment) {
+            statsContainer.innerHTML = `
+                <div class="evolcampus-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${enrollment.completed_percent || 0}%</div>
+                        <div class="stat-label">Completado</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${enrollment.grade || 0}</div>
+                        <div class="stat-label">Nota</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${enrollment.connections || 0}</div>
+                        <div class="stat-label">Conexiones</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${enrollment.last_connect ? new Date(enrollment.last_connect).toLocaleDateString() : 'N/A'}</div>
+                        <div class="stat-label">Última conexión</div>
+                    </div>
+                </div>
+                
+                <div class="enrollment-info" style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <p><strong>Estudio:</strong> ${enrollment.study || 'N/A'}</p>
+                    <p><strong>Grupo:</strong> ${enrollment.group_name || 'N/A'}</p>
+                    <p><strong>Tiempo conectado:</strong> ${this.formatTime(enrollment.time_connected || 0)}</p>
+                </div>
+            `;
+        } else if (topics.length > 0) {
+            // Si solo tenemos topics pero no enrollment
+            const totalActivities = topics.length;
+            const avgScore = topics.reduce((sum, item) => sum + (item.score || 0), 0) / totalActivities;
+            const completedActivities = topics.filter(item => item.score > 0).length;
+            const lastActivity = topics[0];
+            
+            statsContainer.innerHTML = `
+                <div class="evolcampus-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${totalActivities}</div>
+                        <div class="stat-label">Actividades totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${completedActivities}</div>
+                        <div class="stat-label">Completadas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgScore.toFixed(1)}</div>
+                        <div class="stat-label">Promedio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${lastActivity ? new Date(lastActivity.last_attempt).toLocaleDateString() : 'N/A'}</div>
+                        <div class="stat-label">Última actividad</div>
+                    </div>
+                </div>
+            `;
+        }
         
-        // Renderizar estadísticas
-        statsContainer.innerHTML = `
-            <div class="evolcampus-stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">${totalActivities}</div>
-                    <div class="stat-label">Actividades totales</div>
+        // Renderizar contenido detallado de topics
+        if (topics.length > 0) {
+            const topicGroups = this.groupByTopic(topics);
+            
+            contentContainer.innerHTML = `
+                <div class="evolcampus-topics">
+                    <h4>📚 Progreso por Temas</h4>
+                    ${Object.entries(topicGroups).map(([topic, activities]) => 
+                        this.renderTopicGroup(topic, activities)
+                    ).join('')}
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">${completedActivities}</div>
-                    <div class="stat-label">Completadas</div>
+            `;
+        } else {
+            contentContainer.innerHTML = `
+                <div class="no-data-message">
+                    <p>No hay datos detallados de actividades disponibles.</p>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">${avgScore.toFixed(1)}</div>
-                    <div class="stat-label">Promedio</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${lastActivity ? new Date(lastActivity.last_attempt).toLocaleDateString() : 'N/A'}</div>
-                    <div class="stat-label">Última actividad</div>
-                </div>
-            </div>
-        `;
-        
-        // Agrupar por temas
-        const topicGroups = this.groupByTopic(evolcampusData);
-        
-        // Renderizar contenido detallado
-        contentContainer.innerHTML = `
-            <div class="evolcampus-topics">
-                <h4>�� Progreso por Temas</h4>
-                ${Object.entries(topicGroups).map(([topic, activities]) => 
-                    this.renderTopicGroup(topic, activities)
-                ).join('')}
-            </div>
-        `;
+            `;
+        }
     }
     
     groupByTopic(evolcampusData) {
@@ -1165,5 +1222,11 @@ Un saludo,
                 syncBtn.innerHTML = '🔄 Sincronizar ahora';
             }
         }
+    }
+
+    formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${hours}h ${minutes}m`;
     }
 }
