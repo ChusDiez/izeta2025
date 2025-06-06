@@ -435,7 +435,7 @@ export default class ExcelImportModule {
                 
                 // Subir archivo al bucket
                 const { data, error } = await this.supabase.storage
-                    .from('evol-excel-import')
+                    .from('excel-public')
                     .upload(fileName, file, {
                         cacheControl: '3600',
                         upsert: false
