@@ -7,6 +7,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BASE_URL = "https://api.evolcampus.com/api/v1";
 
+// IDs de Simulacros 42
+const STUDY_ID_SIMULACROS = 198;   // Curso
+const GROUP_ID_SIMULACROS = 237;   // Grupo con 334 matrículas activas
+
 interface TokenResponse {
   token: string;
   expires_in?: number;
@@ -112,7 +116,9 @@ serve(async (req) => {
         headers: { ...authHeader, "Content-Type": "application/json" },
         body: JSON.stringify({
           regs_per_page: 1000,
-          page: page
+          page,
+          // Filtrar sólo las matrículas del grupo Simulacros 42
+          groupid: GROUP_ID_SIMULACROS
         }),
       });
 
@@ -128,6 +134,7 @@ serve(async (req) => {
       if (page === 1 && pageEnrollments.length > 0) {
         console.log("🔍 Estructura del primer enrollment:", JSON.stringify(pageEnrollments[0], null, 2));
       }
+      console.log(`📚 Page ${page}: recibidos ${pageEnrollments.length} enrollments del grupo ${GROUP_ID_SIMULACROS}`);
       
       allEnrollments = [...allEnrollments, ...pageEnrollments];
       
@@ -363,6 +370,9 @@ serve(async (req) => {
         records_synced: 0,
         details: { error: error.message },
       });
+      // refrescar medias para gráficos individuales
+      await supabase.rpc("refresh_evolcampus_activity_stats");
+      await supabase.rpc("refresh_evolcampus_enrollments");
     } catch (_) {
       // ignore nested errors
     }
