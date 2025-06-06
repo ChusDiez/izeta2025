@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Importar Excel de Evolcampus - IZETA Admin</title>
-    <link rel="stylesheet" href="css/admin-styles.css">
+    <!-- CSS del Dashboard -->
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modern-dashboard.css">
+    <link rel="stylesheet" href="css/dashboard-fixes.css">
+    
+    <!-- Scripts necesarios -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/env-config.js"></script>
+    <script src="../assets/js/config.js"></script>
     <style>
         .excel-import-container {
             max-width: 1200px;
@@ -126,17 +133,28 @@
     </style>
 </head>
 <body>
-    <nav class="admin-nav">
-        <div class="nav-container">
-            <h1>IZETA Admin - Importar Excel</h1>
-            <div class="nav-links">
-                <a href="index.html">Dashboard</a>
-                <a href="#" id="logoutBtn">Cerrar Sesión</a>
-            </div>
+    <!-- Header principal con el mismo estilo del dashboard -->
+    <header class="main-header">
+        <div class="header-left">
+            <h1 class="page-title">📥 Importar Excel de Evolcampus</h1>
+            <nav class="breadcrumb">
+                <a href="dashboard.html">Dashboard</a>
+                <span>/</span>
+                <span>Importar Excel</span>
+            </nav>
         </div>
-    </nav>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">
+                ← Volver
+            </button>
+            <button class="btn btn-secondary" onclick="logout()">
+                🚪 Cerrar Sesión
+            </button>
+        </div>
+    </header>
 
-    <div class="excel-import-container">
+    <div class="content-wrapper">
+        <div class="excel-import-container">
         <h2>Importar Informes Excel de Evolcampus</h2>
         
         <div class="info-box">
@@ -184,204 +202,236 @@
             </tbody>
         </table>
     </div>
+    </div> <!-- Cerrar content-wrapper -->
 
     <script>
-        // Configuración de Supabase
-        const { createClient } = supabase;
-        const supabaseUrl = 'https://hindymhwohevsqumekyv.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbmR5bWh3b2hldnNxdW1la3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE0MTgxMjAsImV4cCI6MjA0Njk5NDEyMH0.AcYv1F3CSpGZR_JIHGcuQW23Wm4jkOsYmLjPgZR9OJs';
-        const supabaseClient = createClient(supabaseUrl, supabaseKey);
-
+        // Variables globales
+        let supabaseClient;
         let selectedFiles = [];
-        const uploadZone = document.getElementById('uploadZone');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const uploadBtn = document.getElementById('uploadBtn');
-
-        // Verificar autenticación
-        async function checkAuth() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-        }
-
-        // Drag and drop
-        uploadZone.addEventListener('click', () => fileInput.click());
         
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.classList.add('dragover');
-        });
-        
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('dragover');
-        });
-        
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('dragover');
-            handleFiles(e.dataTransfer.files);
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        function handleFiles(files) {
-            selectedFiles = Array.from(files).filter(file => 
-                file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
-            );
+        // Esperar a que las configuraciones estén cargadas
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Usar la configuración global de config.js
+            const { createClient } = supabase;
+            supabaseClient = createClient(window.supabaseUrl, window.supabaseAnonKey);
             
-            displaySelectedFiles();
-            uploadBtn.disabled = selectedFiles.length === 0;
-        }
+            // Elementos del DOM
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileList = document.getElementById('fileList');
+            const uploadBtn = document.getElementById('uploadBtn');
 
-        function displaySelectedFiles() {
-            fileList.innerHTML = '<h3>📁 Archivos seleccionados:</h3>';
-            
-            selectedFiles.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <div>
-                        <strong>${file.name}</strong>
-                        <span style="color: #666; margin-left: 10px;">${(file.size / 1024).toFixed(2)} KB</span>
-                    </div>
-                    <button onclick="removeFile(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                        Eliminar
-                    </button>
-                `;
-                fileList.appendChild(fileItem);
-            });
-        }
-
-        window.removeFile = function(index) {
-            selectedFiles.splice(index, 1);
-            displaySelectedFiles();
-            uploadBtn.disabled = selectedFiles.length === 0;
-        };
-
-        uploadBtn.addEventListener('click', async () => {
-            if (selectedFiles.length === 0) return;
-            
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Subiendo archivos...';
-            
-            for (const file of selectedFiles) {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item processing';
-                fileItem.innerHTML = `
-                    <div>
-                        <strong>${file.name}</strong>
-                        <span class="status-badge status-processing">Procesando...</span>
-                    </div>
-                `;
-                fileList.appendChild(fileItem);
-                
+            // Verificar autenticación y permisos de admin
+            async function checkAuth() {
                 try {
-                    // Subir archivo al bucket
-                    const { data, error } = await supabaseClient.storage
-                        .from('evol-excel-import')
-                        .upload(file.name, file, {
-                            cacheControl: '3600',
-                            upsert: true
-                        });
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    // Verificar si es admin
+                    const { data: profile, error } = await supabaseClient
+                        .from('users')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (error || !profile || profile.role !== 'admin') {
+                        alert('No tienes permisos para acceder a esta sección');
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                    
+                    console.log('✅ Usuario admin verificado');
+                } catch (error) {
+                    console.error('Error verificando auth:', error);
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // Drag and drop
+            uploadZone.addEventListener('click', () => fileInput.click());
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            function handleFiles(files) {
+                selectedFiles = Array.from(files).filter(file => 
+                    file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
+                );
+                
+                displaySelectedFiles();
+                uploadBtn.disabled = selectedFiles.length === 0;
+            }
+
+            function displaySelectedFiles() {
+                fileList.innerHTML = '<h3>📁 Archivos seleccionados:</h3>';
+                
+                selectedFiles.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <div>
+                            <strong>${file.name}</strong>
+                            <span style="color: #666; margin-left: 10px;">${(file.size / 1024).toFixed(2)} KB</span>
+                        </div>
+                        <button onclick="removeFile(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                            Eliminar
+                        </button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+
+            uploadBtn.addEventListener('click', async () => {
+                if (selectedFiles.length === 0) return;
+                
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Subiendo archivos...';
+                
+                for (const file of selectedFiles) {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item processing';
+                    fileItem.innerHTML = `
+                        <div>
+                            <strong>${file.name}</strong>
+                            <span class="status-badge status-processing">Procesando...</span>
+                        </div>
+                    `;
+                    fileList.appendChild(fileItem);
+                    
+                    try {
+                        // Subir archivo al bucket
+                        const { data, error } = await supabaseClient.storage
+                            .from('evol-excel-import')
+                            .upload(file.name, file, {
+                                cacheControl: '3600',
+                                upsert: true
+                            });
+                        
+                        if (error) throw error;
+                        
+                        // Actualizar UI
+                        fileItem.className = 'file-item completed';
+                        fileItem.innerHTML = `
+                            <div>
+                                <strong>${file.name}</strong>
+                                <span class="status-badge status-completed">✓ Subido</span>
+                            </div>
+                        `;
+                        
+                        // El procesamiento se hará automáticamente por el trigger
+                        console.log(`Archivo ${file.name} subido exitosamente`);
+                        
+                    } catch (error) {
+                        console.error('Error subiendo archivo:', error);
+                        fileItem.className = 'file-item error';
+                        fileItem.innerHTML = `
+                            <div>
+                                <strong>${file.name}</strong>
+                                <span class="status-badge status-error">✗ Error: ${error.message}</span>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Limpiar selección
+                selectedFiles = [];
+                fileInput.value = '';
+                uploadBtn.textContent = 'Subir archivos seleccionados';
+                uploadBtn.disabled = true;
+                
+                // Actualizar historial
+                setTimeout(loadHistory, 2000);
+            });
+
+            // Cargar historial
+            async function loadHistory() {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('excel_import_history')
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .limit(20);
                     
                     if (error) throw error;
                     
-                    // Actualizar UI
-                    fileItem.className = 'file-item completed';
-                    fileItem.innerHTML = `
-                        <div>
-                            <strong>${file.name}</strong>
-                            <span class="status-badge status-completed">✓ Subido</span>
-                        </div>
-                    `;
+                    const historyBody = document.getElementById('historyBody');
                     
-                    // El procesamiento se hará automáticamente por el trigger
-                    console.log(`Archivo ${file.name} subido exitosamente`);
+                    if (!data || data.length === 0) {
+                        historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay importaciones previas</td></tr>';
+                        return;
+                    }
+                    
+                    historyBody.innerHTML = data.map(record => {
+                        const date = new Date(record.created_at).toLocaleString('es-ES');
+                        const statusClass = `status-${record.status}`;
+                        const statusText = {
+                            pending: 'Pendiente',
+                            processing: 'Procesando',
+                            completed: 'Completado',
+                            error: 'Error'
+                        }[record.status] || record.status;
+                        
+                        return `
+                            <tr>
+                                <td>${date}</td>
+                                <td>${record.file_name}</td>
+                                <td>${record.student_email || '-'}</td>
+                                <td>${record.records_imported || 0}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td>${record.error_message || '-'}</td>
+                            </tr>
+                        `;
+                    }).join('');
                     
                 } catch (error) {
-                    console.error('Error subiendo archivo:', error);
-                    fileItem.className = 'file-item error';
-                    fileItem.innerHTML = `
-                        <div>
-                            <strong>${file.name}</strong>
-                            <span class="status-badge status-error">✗ Error: ${error.message}</span>
-                        </div>
-                    `;
+                    console.error('Error cargando historial:', error);
                 }
             }
+
+            // Inicializar
+            checkAuth();
+            loadHistory();
             
-            // Limpiar selección
-            selectedFiles = [];
-            fileInput.value = '';
-            uploadBtn.textContent = 'Subir archivos seleccionados';
-            uploadBtn.disabled = true;
+            // Actualizar historial cada 10 segundos
+            setInterval(loadHistory, 10000);
             
-            // Actualizar historial
-            setTimeout(loadHistory, 2000);
-        });
-
-        // Cargar historial
-        async function loadHistory() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('excel_import_history')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                
-                if (error) throw error;
-                
-                const historyBody = document.getElementById('historyBody');
-                
-                if (data.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay importaciones previas</td></tr>';
-                    return;
-                }
-                
-                historyBody.innerHTML = data.map(record => {
-                    const date = new Date(record.created_at).toLocaleString('es-ES');
-                    const statusClass = `status-${record.status}`;
-                    const statusText = {
-                        pending: 'Pendiente',
-                        processing: 'Procesando',
-                        completed: 'Completado',
-                        error: 'Error'
-                    }[record.status] || record.status;
-                    
-                    return `
-                        <tr>
-                            <td>${date}</td>
-                            <td>${record.file_name}</td>
-                            <td>${record.student_email || '-'}</td>
-                            <td>${record.records_imported || 0}</td>
-                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                            <td>${record.error_message || '-'}</td>
-                        </tr>
-                    `;
-                }).join('');
-                
-            } catch (error) {
-                console.error('Error cargando historial:', error);
-            }
-        }
-
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            window.location.href = 'login.html';
-        });
-
-        // Inicializar
-        checkAuth();
-        loadHistory();
+            // Hacer funciones accesibles globalmente
+            window.displaySelectedFiles = displaySelectedFiles;
+        }); // Cerrar DOMContentLoaded
         
-        // Actualizar historial cada 10 segundos
-        setInterval(loadHistory, 10000);
+        // Funciones globales que necesitan estar fuera del DOMContentLoaded
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            window.displaySelectedFiles();
+            document.getElementById('uploadBtn').disabled = selectedFiles.length === 0;
+        };
+
+        // Función de logout
+        window.logout = async function() {
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            window.location.href = 'login.html';
+        };
     </script>
 </body>
 </html> 
