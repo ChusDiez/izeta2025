@@ -513,6 +513,10 @@ Un saludo,
             .single();
 
         const studentEmail = userRow?.email;
+        if (!studentEmail) {
+            console.warn('Estudiante sin email, se omite llamada a Evolcampus:', studentId);
+            return { activities: [], enrollment: null };
+        }
 
         // 2. Edge Function individual
         const { data: edgeData, error: edgeErr } = await this.supabase
@@ -1137,7 +1141,9 @@ Un saludo,
           </style>`;
 
         /* ─────────  C. Bar chart comparativo  ───────── */
-        const doneActs = activities.filter(a => a.done && a.score !== null && a.avg_score !== null);
+        const doneActs = activities
+            .filter(a => a.done && a.score !== null && a.avg_score !== null)
+            .slice(0, 20);   // limitar a 20 barras para legibilidad
         if (doneActs.length === 0) return;
 
         const labels      = doneActs.map(a => a.activity);
