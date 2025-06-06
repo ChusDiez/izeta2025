@@ -482,34 +482,43 @@ Un saludo,
     }
     
     async loadEvolcampusData(studentId) {
-        // Cargar tanto los topic_results como los enrollment data
-        const [topicData, enrollmentData] = await Promise.all([
-            this.supabase
-                .from('topic_results')
-                .select('*')
-                .eq('student_id', studentId)
-                .eq('source', 'evolcampus')
-                .order('last_attempt', { ascending: false }),
-            this.supabase
-                .from('evolcampus_enrollments')
-                .select('*')
-                .eq('student_id', studentId)
-                .order('synced_at', { ascending: false })
-                .limit(1)
-                .maybeSingle()
-        ]);
-        
-        if (topicData.error) {
-            console.error('Error cargando topic_results:', topicData.error);
+        /*  Nueva estrategia:
+            ─ Obtiene el email del alumno.
+            ─ Invoca la función edge `sync-evolvcampus-student`
+              para recibir:
+              { activities: [ {topic_code, activity, done, score, avg_score}, … ] }
+            ─ Recupera el último enrollment almacenado para stats rápidos.
+        */
+        // 1. Email del usuario
+        const { data: userRow } = await this.supabase
+            .from('users')
+            .select('email')
+            .eq('id', studentId)
+            .single();
+
+        const studentEmail = userRow?.email;
+
+        // 2. Edge Function individual
+        const { data: edgeData, error: edgeErr } = await this.supabase
+            .functions
+            .invoke('sync-evolvcampus-student', { body: { studentEmail } });
+
+        if (edgeErr) {
+            console.error('Edge sync error:', edgeErr);
         }
-        
-        if (enrollmentData.error) {
-            console.error('Error cargando enrollment data:', enrollmentData.error);
-        }
-        
+
+        // 3. Último enrollment (para % completado, nota, etc.)
+        const { data: enrollmentRow } = await this.supabase
+            .from('evolcampus_enrollments')
+            .select('*')
+            .eq('student_id', studentId)
+            .order('synced_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
         return {
-            topics: topicData.data || [],
-            enrollment: enrollmentData.data
+            activities: edgeData?.activities || [],
+            enrollment: enrollmentRow || null
         };
     }
     
@@ -1050,103 +1059,86 @@ Un saludo,
     }
 
     updateEvolcampusTab(evolcampusData) {
-        const statsContainer = document.getElementById('evolcampusStats');
+        const statsContainer   = document.getElementById('evolcampusStats');
         const contentContainer = document.getElementById('evolcampusContent');
-        
         if (!statsContainer || !contentContainer) return;
-        
-        const topics = evolcampusData.topics || [];
+
+        const activities = evolcampusData.activities || [];
         const enrollment = evolcampusData.enrollment;
-        
-        // Si no hay datos de ningún tipo
-        if ((!topics || topics.length === 0) && !enrollment) {
-            statsContainer.innerHTML = '<div class="no-data">❌ Sin datos de Evolcampus aún</div>';
-            contentContainer.innerHTML = `
-                <div class="no-data-message">
-                    <h4>🔄 Esperando sincronización</h4>
-                    <p>Los datos aparecerán aquí después de la primera sincronización con Evolcampus.</p>
-                    <p>Haz clic en "Sincronizar ahora" para forzar una sincronización.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Renderizar estadísticas usando datos de enrollment si están disponibles
+
+        /* ─────────  A. Cabecera de estadísticas  ───────── */
         if (enrollment) {
             statsContainer.innerHTML = `
-                <div class="evolcampus-stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${enrollment.completed_percent || 0}%</div>
-                        <div class="stat-label">Completado</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${enrollment.grade || 0}</div>
-                        <div class="stat-label">Nota</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${enrollment.connections || 0}</div>
-                        <div class="stat-label">Conexiones</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${enrollment.last_connect ? new Date(enrollment.last_connect).toLocaleDateString() : 'N/A'}</div>
-                        <div class="stat-label">Última conexión</div>
-                    </div>
-                </div>
-                
-                <div class="enrollment-info" style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
-                    <p><strong>Estudio:</strong> ${enrollment.study || 'N/A'}</p>
-                    <p><strong>Grupo:</strong> ${enrollment.group_name || 'N/A'}</p>
-                    <p><strong>Tiempo conectado:</strong> ${this.formatTime(enrollment.time_connected || 0)}</p>
-                </div>
-            `;
-        } else if (topics.length > 0) {
-            // Si solo tenemos topics pero no enrollment
-            const totalActivities = topics.length;
-            const avgScore = topics.reduce((sum, item) => sum + (item.score || 0), 0) / totalActivities;
-            const completedActivities = topics.filter(item => item.score > 0).length;
-            const lastActivity = topics[0];
-            
-            statsContainer.innerHTML = `
-                <div class="evolcampus-stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value">${totalActivities}</div>
-                        <div class="stat-label">Actividades totales</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${completedActivities}</div>
-                        <div class="stat-label">Completadas</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${avgScore.toFixed(1)}</div>
-                        <div class="stat-label">Promedio</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${lastActivity ? new Date(lastActivity.last_attempt).toLocaleDateString() : 'N/A'}</div>
-                        <div class="stat-label">Última actividad</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Renderizar contenido detallado de topics
-        if (topics.length > 0) {
-            const topicGroups = this.groupByTopic(topics);
-            
-            contentContainer.innerHTML = `
-                <div class="evolcampus-topics">
-                    <h4>📚 Progreso por Temas</h4>
-                    ${Object.entries(topicGroups).map(([topic, activities]) => 
-                        this.renderTopicGroup(topic, activities)
-                    ).join('')}
-                </div>
-            `;
+              <div class="evolcampus-stats-grid">
+                <div class="stat-card"><div class="stat-value">${enrollment.completed_percent || 0}%</div><div class="stat-label">Completado</div></div>
+                <div class="stat-card"><div class="stat-value">${enrollment.grade ?? 'N/A'}</div><div class="stat-label">Nota</div></div>
+                <div class="stat-card"><div class="stat-value">${enrollment.connections || 0}</div><div class="stat-label">Conexiones</div></div>
+                <div class="stat-card"><div class="stat-value">${enrollment.last_connect ? new Date(enrollment.last_connect).toLocaleDateString() : 'N/A'}</div><div class="stat-label">Última conexión</div></div>
+              </div>`;
         } else {
-            contentContainer.innerHTML = `
-                <div class="no-data-message">
-                    <p>No hay datos detallados de actividades disponibles.</p>
-                </div>
-            `;
+            statsContainer.innerHTML = '<div class="no-data">Sin enrollment registrado</div>';
         }
+
+        /* ─────────  B. Tabla completa de tests  ───────── */
+        if (activities.length === 0) {
+            contentContainer.innerHTML = '<p class="no-data-message">No hay datos de actividades todavía.</p>';
+            return;
+        }
+
+        const rows = activities.map(a => `
+          <tr class="${a.done ? 'done' : 'pending'}">
+            <td>${a.activity}</td>
+            <td style="text-align:center;">${a.done ? '✔️' : '—'}</td>
+            <td style="text-align:center;">${a.score ?? '—'}</td>
+            <td style="text-align:center;">${a.avg_score !== null ? a.avg_score.toFixed(1) : '—'}</td>
+          </tr>`).join('');
+
+        contentContainer.innerHTML = `
+          <table class="activity-table" style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">
+            <thead>
+              <tr>
+                <th style="width:45%;">Actividad</th>
+                <th style="width:10%;">Hecho</th>
+                <th style="width:15%;">Tu nota</th>
+                <th style="width:15%;">Media</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <canvas id="studentVsAvgChart" style="max-height:400px;"></canvas>
+          <style>
+            .activity-table th, .activity-table td { padding:.5rem; border-bottom:1px solid #e5e7eb; }
+            .activity-table .done    { background:#ecfdf5; }
+            .activity-table .pending { background:#fef2f2; }
+          </style>`;
+
+        /* ─────────  C. Bar chart comparativo  ───────── */
+        const doneActs = activities.filter(a => a.done && a.score !== null && a.avg_score !== null);
+        if (doneActs.length === 0) return;
+
+        const labels      = doneActs.map(a => a.activity);
+        const studentData = doneActs.map(a => a.score);
+        const avgData     = doneActs.map(a => a.avg_score);
+
+        import('https://cdn.jsdelivr.net/npm/chart.js').then(() => {
+            const ctx = document.getElementById('studentVsAvgChart').getContext('2d');
+            new window.Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Alumno', data: studentData, order: 1 },
+                        { label: 'Media',  data: avgData,     order: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    interaction: { mode: 'index' },
+                    scales: { y: { beginAtZero: true, max: 10 } }
+                }
+            });
+        });
     }
     
     groupByTopic(evolcampusData) {
