@@ -189,15 +189,55 @@ serve(async req => {
 
     console.log(`✅ Sincronización completada: ${recordsSynced} registros`);
 
-    // 9. Formatear respuesta para el frontend
-    // Transformar el progreso en el formato esperado por el frontend
-    const activities = progress.map(record => ({
-      topic_code: record.topic_code,
-      activity: record.activity,
-      done: true,
-      score: record.score || null,
-      avg_score: null // TODO: Calcular medias si tienes la tabla de estadísticas
-    }));
+    // 9. Obtener TODOS los topic_results (incluyendo los de Excel)
+    const { data: allTopicResults, error: topicError } = await supabase
+      .from("topic_results")
+      .select("*")
+      .eq("student_id", studentId)
+      .in("source", ["evolcampus", "evol_excel"]) // Incluir ambas fuentes
+      .order("last_attempt", { ascending: false });
+
+    if (topicError) {
+      console.error("Error obteniendo topic_results:", topicError);
+    }
+
+    // 10. Formatear respuesta para el frontend
+    // Combinar datos de API y Excel, priorizando los más recientes
+    const activitiesMap = new Map();
+    
+    // Primero agregar los de Excel (si existen)
+    if (allTopicResults) {
+      allTopicResults.forEach(record => {
+        const key = `${record.topic_code}-${record.activity}`;
+        activitiesMap.set(key, {
+          topic_code: record.topic_code,
+          activity: record.activity,
+          done: true,
+          score: record.score || null,
+          attempts: record.attempts || 1,
+          last_attempt: record.last_attempt,
+          source: record.source,
+          avg_score: null
+        });
+      });
+    }
+
+    // Los de la API actual sobrescriben si existen duplicados
+    progress.forEach(record => {
+      const key = `${record.topic_code}-${record.activity}`;
+      activitiesMap.set(key, {
+        topic_code: record.topic_code,
+        activity: record.activity,
+        done: true,
+        score: record.score || null,
+        attempts: record.attempts || 1,
+        last_attempt: record.last_attempt || new Date().toISOString(),
+        source: "evolcampus",
+        avg_score: null
+      });
+    });
+
+    const activities = Array.from(activitiesMap.values());
 
     // Registrar en log
     await supabase.from("api_sync_log").insert({
