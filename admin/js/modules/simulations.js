@@ -22,11 +22,14 @@ export default class SimulationsModule {
                         <button class="btn btn-primary" onclick="window.simulationsModule.createNewSimulation()">
                             ➕ Crear Nuevo Simulacro
                         </button>
+                        <button class="btn btn-success" onclick="window.simulationsModule.updateSimulationStatus()">
+                            🔄 Actualizar Estados
+                        </button>
                         <button class="btn btn-warning" onclick="window.dashboardAdmin.showPage('elo-manual')">
                             ⚡ Actualizar ELO Manual
                         </button>
                         <button class="btn btn-secondary" onclick="window.simulationsModule.processWeeklyResults()">
-                            🔄 Procesar Resultados Semanales
+                            📊 Procesar Resultados Semanales
                         </button>
                     </div>
                 </div>
@@ -346,6 +349,30 @@ export default class SimulationsModule {
             
         } catch (error) {
             this.dashboard.showNotification('error', 'Error al procesar: ' + error.message);
+        }
+    }
+
+    async updateSimulationStatus() {
+        try {
+            this.dashboard.showNotification('info', 'Actualizando estados de simulacros...');
+            
+            // Invocar la Edge Function
+            const { data, error } = await this.supabase.functions.invoke('update-simulation-status');
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 
+                data.message || `Estados actualizados: ${data.completed} completados, ${data.activated} activados`
+            );
+            
+            console.log('Estados actualizados:', data);
+            
+            // Recargar datos
+            await this.dashboard.loadInitialData();
+            await this.dashboard.refreshCurrentPage();
+            
+        } catch (error) {
+            this.dashboard.showNotification('error', 'Error actualizando estados: ' + error.message);
         }
     }
 

@@ -130,7 +130,7 @@ serve(async (req) => {
       })
       .lte('start_date', hoy.toISOString().split('T')[0])
       .gte('end_date', hoy.toISOString().split('T')[0])
-      .eq('status', 'futuro')
+      .eq('status', 'future')
     
     if (!activateError) {
       console.log('✅ Simulacro actual activado (si había alguno pendiente)')
