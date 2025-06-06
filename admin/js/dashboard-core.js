@@ -109,6 +109,7 @@ export class DashboardCore {
             'elo-manual': './modules/elo-manual.js',
             'student-detail': './modules/student-detail.js',
             'evolcampus': './modules/evolcampus-sync.js',
+            'excel-import': './modules/excel-import.js',
             'dashboard': './modules/dashboard-visualizations.js',
             'dashboard-modular': './modules/dashboard-modular.js'
         };
@@ -369,6 +370,10 @@ export class DashboardCore {
                     const evolModule = await this.loadModule('evolcampus');
                     await evolModule.render(contentWrapper);
                     break;
+                case 'excel-import':
+                    const excelImportModule = await this.loadModule('excel-import');
+                    await excelImportModule.render(contentWrapper);
+                    break;
                 case 'dashboard':
                     const dashboardModule = await this.loadModule('dashboard');
                     await dashboardModule.render();
@@ -420,6 +425,7 @@ export class DashboardCore {
             'bulk-users': 'Carga Masiva de Alumnos',
             'elo-manual': 'Sistema de Índice de Progreso',
             'evolcampus': 'Sincronización Evolcampus',
+            'excel-import': 'Importar Excel de Evolcampus',
             'dashboard': 'Dashboard Analítico',
             'dashboard-modular': 'Dashboard Personalizable'
         };

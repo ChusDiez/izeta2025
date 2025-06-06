@@ -81,7 +81,7 @@ SELECT cron.schedule(
   SELECT net.http_post(
     url := 'https://hindymhwohevsqumekyv.supabase.co/functions/v1/update-simulation-status',
     headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || current_setting('app.settings.supabase_service_role_key'),
+      'Authorization', 'Bearer [TU_SERVICE_ROLE_KEY]',
       'Content-Type', 'application/json'
     ),
     body := '{}'::jsonb
