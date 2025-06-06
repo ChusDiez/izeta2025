@@ -153,7 +153,7 @@ export default class ExcelImportModule {
         setTimeout(() => {
             this.setupEventListeners();
             // Cargar historial
-            this.loadHistory();
+           // this.loadHistory();
         }, 100);
     }
 
@@ -371,10 +371,14 @@ export default class ExcelImportModule {
         uploadBtn.disabled = true;
         
         // Actualizar historial después de 2 segundos
-        setTimeout(() => this.loadHistory(), 2000);
+       // setTimeout(() => this.loadHistory(), 2000);
     }
 
     async loadHistory() {
+        const historyBody = document.getElementById('historyBody');
+        historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Historial desactivado temporalmente</td></tr>';
+        return; // Salir sin hacer nada
+        
         try {
             const { data, error } = await this.supabase
                 .from('excel_import_history')
@@ -383,8 +387,6 @@ export default class ExcelImportModule {
                 .limit(20);
             
             if (error) throw error;
-            
-            const historyBody = document.getElementById('historyBody');
             
             if (!data || data.length === 0) {
                 historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay importaciones previas</td></tr>';
