@@ -233,11 +233,11 @@
                     // Verificar si es admin
                     const { data: profile, error } = await supabaseClient
                         .from('users')
-                        .select('role')
+                        .select('is_admin')
                         .eq('id', user.id)
                         .single();
                     
-                    if (error || !profile || profile.role !== 'admin') {
+                    if (error || !profile || profile.is_admin !== true) {
                         alert('No tienes permisos para acceder a esta sección');
                         window.location.href = 'dashboard.html';
                         return;
