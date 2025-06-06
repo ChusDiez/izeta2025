@@ -23,17 +23,28 @@ serve(async req => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Validar credenciales de Evolcampus
+    const evolClientId = Deno.env.get("EVOL_CLIENT_ID");
+    const evolKey      = Deno.env.get("EVOL_KEY");
+    if (!evolClientId || !evolKey) {
+      throw new Error("EVOL_CLIENT_ID o EVOL_KEY no configurados");
+    }
+
     /* ---------- 2. Token Evolcampus ---------- */
     const tokenRes = await fetch(`${BASE_URL}/token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        clientid: Number(Deno.env.get("EVOL_CLIENT_ID")),
-        key:      Deno.env.get("EVOL_KEY"),
+        clientid: Number(evolClientId),
+        key: evolKey,
       }),
     });
     if (!tokenRes.ok) throw new Error("auth Evolcampus");
-    const { token } = await tokenRes.json();
+    const tokenJson = await tokenRes.json();
+    if (!tokenJson?.token) {
+      throw new Error(`Error token Evolcampus: ${JSON.stringify(tokenJson)}`);
+    }
+    const { token } = tokenJson;
     const auth = { Authorization: `Bearer ${token}` };
 
     /* ---------- 3. Localizar enrollment del alumno ---------- */
@@ -49,7 +60,10 @@ serve(async req => {
     });
     if (!enrollRes.ok) throw new Error("getEnrollments error");
     const { data: enrollments } = await enrollRes.json();
-    if (!enrollments?.length) throw new Error("alumno no encontrado");
+    if (!enrollments?.length) {
+      console.error("Enrollments vacío para", studentEmail, JSON.stringify(enrollments));
+      throw new Error("alumno no encontrado en Evolcampus");
+    }
 
     const enrollmentId = enrollments[0].person.enrollmentid;
 
@@ -61,6 +75,9 @@ serve(async req => {
     });
     if (!progRes.ok) throw new Error("getEnrollment error");
     const { progress } = await progRes.json();   // array de records
+    if (!progress || !Array.isArray(progress)) {
+      throw new Error(`Progreso vacío para enrollment ${enrollmentId}`);
+    }
 
     /* ---------- 5. Fusionar con catálogo & medias ---------- */
     const [{ data: catalog }, { data: stats }] = await Promise.all([

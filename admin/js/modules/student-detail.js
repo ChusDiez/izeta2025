@@ -5,6 +5,15 @@ export default class StudentDetailModule {
         this.dashboard = dashboardCore;
         this.currentStudent = null;
         this.studentHistory = null;
+        // Helper genérico: ejecuta la query Supabase y lanza error salvo 'no rows'
+        this.safeQuery = async (promise, logCtx) => {
+            const { data, error } = await promise;
+            if (error && error.code !== 'PGRST116') {           // 116 = no rows found
+                console.error(`${logCtx}:`, error);
+                throw new Error(`${logCtx}: ${error.message}`);
+            }
+            return data;
+        };
     }
 
     async render(container, studentId) {
@@ -454,6 +463,10 @@ Un saludo,
     // Métodos faltantes que necesitas implementar:
     
     async loadStudentData(studentId) {
+        // Validación básica del parámetro
+        if (!studentId || (typeof studentId !== 'string' && typeof studentId !== 'number')) {
+            throw new Error('ID de estudiante inválido');
+        }
         const [student, results, eloHistory, medals, alerts] = await Promise.all([
             this.loadStudentInfo(studentId),
             this.loadStudentResults(studentId),
@@ -471,14 +484,17 @@ Un saludo,
     }
     
     async loadStudentInfo(studentId) {
-        const { data, error } = await this.supabase
-            .from('users')
-            .select('*')
-            .eq('id', studentId)
-            .single();
-        
-        if (error) throw error;
-        return data;
+        return await this.safeQuery(
+            this.supabase
+                .from('users')
+                .select(`
+                    *,
+                    user_results(count)
+                `)
+                .eq('id', studentId)
+                .single(),
+            'loadStudentInfo'
+        );
     }
     
     async loadEvolcampusData(studentId) {
@@ -514,7 +530,7 @@ Un saludo,
             .eq('student_id', studentId)
             .order('synced_at', { ascending: false })
             .limit(1)
-            .maybeSingle();
+            .single();
 
         return {
             activities: edgeData?.activities || [],
@@ -523,28 +539,36 @@ Un saludo,
     }
     
     async loadStudentResults(studentId) {
-        const { data, error } = await this.supabase
-            .from('user_results')
-            .select(`
-                *,
-                weekly_simulations!inner(week_number, start_date, end_date)
-            `)
-            .eq('user_id', studentId)
-            .order('submitted_at', { ascending: false });
-        
-        if (error) throw error;
-        return data || [];
+        const res = await this.safeQuery(
+            this.supabase
+                .from('user_results')
+                .select(`
+                    *,
+                    weekly_simulations!inner(
+                        week_number,
+                        start_date,
+                        end_date,
+                        status
+                    )
+                `)
+                .eq('user_id', studentId)
+                .order('submitted_at', { ascending: false }),
+            'loadStudentResults'
+        );
+        return res ?? [];
     }
     
     async loadEloHistory(studentId) {
-        const { data, error } = await this.supabase
-            .from('elo_history')
-            .select('*')
-            .eq('user_id', studentId)
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        return data || [];
+        const rows = await this.safeQuery(
+            this.supabase
+                .from('elo_history')
+                .select('*')
+                .eq('user_id', studentId)
+                .order('created_at', { ascending: false })
+                .limit(100),
+            'loadEloHistory'
+        );
+        return rows ?? [];
     }
     
     async loadStudentMedals(studentId) {

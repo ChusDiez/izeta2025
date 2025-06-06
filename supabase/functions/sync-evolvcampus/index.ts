@@ -81,8 +81,12 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     // Credenciales hardcodeadas temporalmente para pruebas
-    const evolClientId = "74097";
-    const evolKey = "az3fmvjf.dfhj45";
+    // Credenciales desde variables de entorno
+    const evolClientId = Deno.env.get("EVOL_CLIENT_ID");
+    const evolKey      = Deno.env.get("EVOL_KEY");
+    if (!evolClientId || !evolKey) {
+      throw new Error("EVOL_CLIENT_ID o EVOL_KEY no configurados");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -100,9 +104,12 @@ serve(async (req) => {
       const errorBody = await tokenResp.text();
       throw new Error(`Error autenticando contra Evolcampus: ${tokenResp.status} - ${errorBody}`);
     }
-    const tokenData = await tokenResp.json();
+    const tokenJson = await tokenResp.json();
+    if (!tokenJson?.token) {
+      throw new Error(`Auth Evolcampus KO: ${JSON.stringify(tokenJson)}`);
+    }
     const authHeader = {
-      Authorization: `Bearer ${tokenData.token}`,  // token, no access_token
+      Authorization: `Bearer ${tokenJson.token}`,
     };
 
     // Paso 2: Obtener inscripciones / estudiantes con paginación
@@ -138,9 +145,8 @@ serve(async (req) => {
       
       allEnrollments = [...allEnrollments, ...pageEnrollments];
       
-      // Verificar si hay más páginas
-      hasMore = response.pages > page;
       page++;
+      hasMore = page <= response.pages;
     }
 
     const enrollments = allEnrollments;
@@ -158,13 +164,6 @@ serve(async (req) => {
     console.log(`📊 Total de enrollments: ${enrollments.length}`);
     console.log(`🎯 Procesando los primeros ${studentsToProcess} estudiantes en esta ejecución`);
     
-    // DEBUG: Verificar qué emails tenemos en la BD (comentar en producción)
-    const { data: existingEmails } = await supabase
-      .from("users")
-      .select("email")
-      .limit(5);
-    console.log("📧 Muestra de emails en BD:", existingEmails?.map(u => u.email.toLowerCase()));
-
     // Procesar cada estudiante con rate limiting
     for (let i = 0; i < studentsToProcess; i++) {
       const enrollment = enrollments[i];
@@ -233,11 +232,6 @@ serve(async (req) => {
         // Normalizar email antes de buscar
         const email = enrollment.person.email.trim().toLowerCase();
         
-        // Log temporal para debugging (comentar en producción)
-        if (email.includes('luciahita') || email.includes('zbendeman')) {
-          console.log(`🔍 Buscando email normalizado: "${email}" (original: "${enrollment.person.email}")`);
-        }
-
         // Resolver student_id local - usando eq para búsqueda exacta
         const { data: user, error: userErr } = await supabase
           .from("users")
@@ -343,6 +337,9 @@ serve(async (req) => {
       details: logDetails,
     });
 
+    // Refrescar medias globales para front-end
+    await supabase.rpc("refresh_evolcampus_activity_stats");
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -372,7 +369,6 @@ serve(async (req) => {
       });
       // refrescar medias para gráficos individuales
       await supabase.rpc("refresh_evolcampus_activity_stats");
-      await supabase.rpc("refresh_evolcampus_enrollments");
     } catch (_) {
       // ignore nested errors
     }
@@ -382,4 +378,4 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-}); 
+});
