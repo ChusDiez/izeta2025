@@ -374,6 +374,10 @@ export class DashboardCore {
                     const excelImportModule = await this.loadModule('excel-import');
                     await excelImportModule.render(contentWrapper);
                     break;
+                case 'name-mappings':
+                    const nameMappingsModule = await this.loadModule('name-mappings');
+                    await nameMappingsModule.render(contentWrapper);
+                    break;
                 case 'dashboard':
                     const dashboardModule = await this.loadModule('dashboard');
                     await dashboardModule.render();
@@ -426,6 +430,7 @@ export class DashboardCore {
             'elo-manual': 'Sistema de Índice de Progreso',
             'evolcampus': 'Sincronización Evolcampus',
             'excel-import': 'Importar Excel de Evolcampus',
+            'name-mappings': 'Mapeo de Nombres Excel',
             'dashboard': 'Dashboard Analítico',
             'dashboard-modular': 'Dashboard Personalizable'
         };

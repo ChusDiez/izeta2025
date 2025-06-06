@@ -45,7 +45,18 @@ DECLARE
   bonus_racha int;
   bonus_score int;
   total_change int;
+  v_week_number int;
 BEGIN
+  -- Obtener el week_number del simulacro
+  SELECT week_number INTO v_week_number
+  FROM weekly_simulations
+  WHERE id = p_simulation_id;
+  
+  -- Si no encontramos el simulacro, salir
+  IF v_week_number IS NULL THEN
+    RAISE EXCEPTION 'No se encontró el simulacro con ID %', p_simulation_id;
+  END IF;
+
   -- Procesar cada resultado del simulacro
   FOR r IN 
     SELECT 
@@ -101,6 +112,7 @@ BEGIN
     -- Registrar en historial con detalles
     INSERT INTO elo_history (
       user_id,
+      week_number,
       simulation_id,
       elo_before,
       elo_after,
@@ -110,6 +122,7 @@ BEGIN
       details
     ) VALUES (
       r.user_id,
+      v_week_number,
       p_simulation_id,
       r.current_elo,
       new_elo,
@@ -224,14 +237,14 @@ FROM stats;
 -- 10. Ver top 10 después del recálculo
 SELECT 
     '🏆 TOP 10 DESPUÉS DEL RECÁLCULO' as titulo,
-    username,
-    current_elo as ip_actual,
-    position as posicion_rf1,
-    score as puntuacion_rf1,
-    (details->>'base_points')::int as puntos_base,
-    (details->>'bonus_racha')::int as bonus_racha,
-    (details->>'bonus_score')::int as bonus_score,
-    (details->>'total_change')::int as cambio_total
+    u.username,
+    u.current_elo as ip_actual,
+    ur.position as posicion_rf1,
+    ur.score as puntuacion_rf1,
+    (eh.details->>'base_points')::int as puntos_base,
+    (eh.details->>'bonus_racha')::int as bonus_racha,
+    (eh.details->>'bonus_score')::int as bonus_score,
+    (eh.details->>'total_change')::int as cambio_total
 FROM users u
 LEFT JOIN user_results ur ON u.id = ur.user_id 
     AND ur.simulation_id = (SELECT id FROM weekly_simulations WHERE week_number = 1)

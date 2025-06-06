@@ -18,7 +18,8 @@ export default class ExcelImportModule {
                         <li>Los archivos se procesarán automáticamente</li>
                         <li>Una vez procesados, los datos aparecerán en el dashboard principal</li>
                     </ol>
-                    <p><strong>Formato esperado:</strong> expediente-nombre-apellidos-email.xlsx</p>
+                    <p><strong>Formato esperado:</strong> expediente-nombre-apellidos-fecha.xlsx</p>
+                    <p><small>El sistema buscará el email automáticamente por el nombre del alumno</small></p>
                 </div>
 
                 <div class="upload-zone" id="uploadZone">
@@ -98,10 +99,13 @@ export default class ExcelImportModule {
                     border-radius: 8px;
                     padding: 15px;
                     margin: 10px 0;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                }
+                
+                .file-item.uploading {
+                    background: #e3f2fd;
+                    border-color: #2196f3;
                 }
                 
                 .file-item.processing {
@@ -117,6 +121,89 @@ export default class ExcelImportModule {
                 .file-item.error {
                     background: #f8d7da;
                     border-color: #dc3545;
+                }
+                
+                .file-info {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 10px;
+                }
+                
+                .file-name {
+                    flex: 1;
+                }
+                
+                .file-size {
+                    color: #666;
+                    font-size: 0.9em;
+                    margin-left: 10px;
+                }
+                
+                .file-details {
+                    margin-top: 15px;
+                    padding-top: 15px;
+                    border-top: 1px solid rgba(0,0,0,0.1);
+                }
+                
+                .student-info {
+                    background: rgba(255,255,255,0.8);
+                    padding: 10px;
+                    border-radius: 5px;
+                    margin-bottom: 10px;
+                }
+                
+                .process-stats {
+                    background: rgba(255,255,255,0.8);
+                    padding: 10px;
+                    border-radius: 5px;
+                }
+                
+                .process-stats ul {
+                    margin: 5px 0;
+                    padding-left: 20px;
+                }
+                
+                .manual-mapping-form {
+                    background: white;
+                    padding: 15px;
+                    border-radius: 5px;
+                }
+                
+                .error-message {
+                    color: #dc3545;
+                    font-size: 0.9em;
+                    margin-bottom: 10px;
+                }
+                
+                .mapping-input {
+                    margin: 15px 0;
+                }
+                
+                .mapping-input label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 500;
+                }
+                
+                .mapping-input select {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+                
+                .mapping-actions {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                }
+                
+                .success-message {
+                    color: #28a745;
+                    padding: 10px;
+                    background: rgba(40, 167, 69, 0.1);
+                    border-radius: 5px;
                 }
                 
                 .status-badge {
@@ -311,13 +398,27 @@ export default class ExcelImportModule {
         uploadBtn.disabled = true;
         uploadBtn.textContent = '⏳ Subiendo archivos...';
         
+        // Limpiar lista anterior
+        fileList.innerHTML = '<h3>📊 Procesamiento de archivos:</h3>';
+        
         for (const file of this.selectedFiles) {
+            // Crear elemento para este archivo con ID único
+            const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const fileItem = document.createElement('div');
+            fileItem.id = fileId;
             fileItem.className = 'file-item processing';
             fileItem.innerHTML = `
-                <div>
-                    <strong>${file.name}</strong>
-                    <span class="status-badge status-processing">Procesando...</span>
+                <div class="file-info">
+                    <div class="file-name">
+                        <strong>${file.name}</strong>
+                        <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
+                    </div>
+                    <div class="processing-status">
+                        <span class="status-badge status-processing">⏳ Subiendo...</span>
+                    </div>
+                </div>
+                <div class="file-details" style="display: none;">
+                    <div class="detail-content"></div>
                 </div>
             `;
             fileList.appendChild(fileItem);
@@ -329,9 +430,12 @@ export default class ExcelImportModule {
                 
                 console.log(`Subiendo archivo como: ${fileName}`);
                 
+                // Actualizar estado a "subiendo"
+                this.updateFileStatus(fileId, 'uploading', '📤 Subiendo archivo...');
+                
                 // Subir archivo al bucket
                 const { data, error } = await this.supabase.storage
-                    .from('excel-public')
+                    .from('evol-excel-import')
                     .upload(fileName, file, {
                         cacheControl: '3600',
                         upsert: false
@@ -339,28 +443,42 @@ export default class ExcelImportModule {
                 
                 if (error) throw error;
                 
-                // Actualizar UI
-                fileItem.className = 'file-item completed';
-                fileItem.innerHTML = `
-                    <div>
-                        <strong>${file.name}</strong>
-                        <span class="status-badge status-completed">✓ Subido exitosamente</span>
-                    </div>
-                `;
+                // Actualizar estado a "procesando"
+                this.updateFileStatus(fileId, 'processing', '🔄 Procesando Excel...');
                 
-                this.dashboard.showNotification('success', `Archivo ${file.name} subido correctamente`);
+                // Esperar un poco para que el trigger se ejecute y procesar
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Verificar el resultado del procesamiento
+                const processResult = await this.checkProcessingResult(fileName);
+                
+                if (processResult.success) {
+                    // Actualizar UI con éxito y detalles del estudiante
+                    this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
+                        student: processResult.student,
+                        recordsProcessed: processResult.recordsProcessed,
+                        details: processResult.details
+                    });
+                    
+                    this.dashboard.showNotification('success', 
+                        `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
+                    );
+                } else {
+                    throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                }
                 
             } catch (error) {
-                console.error('Error subiendo archivo:', error);
-                fileItem.className = 'file-item error';
-                fileItem.innerHTML = `
-                    <div>
-                        <strong>${file.name}</strong>
-                        <span class="status-badge status-error">✗ Error: ${error.message}</span>
-                    </div>
-                `;
+                console.error('Error con archivo:', error);
                 
-                this.dashboard.showNotification('error', `Error subiendo ${file.name}: ${error.message}`);
+                // Actualizar UI con error
+                this.updateFileStatus(fileId, 'error', `❌ Error: ${error.message}`);
+                
+                // Si es error de usuario no encontrado, ofrecer mapeo manual
+                if (error.message.includes('No se pudo encontrar') || error.message.includes('Usuario no encontrado')) {
+                    this.offerManualMapping(fileId, file.name, error.message);
+                }
+                
+                this.dashboard.showNotification('error', `Error con ${file.name}: ${error.message}`);
             }
         }
         
@@ -371,7 +489,255 @@ export default class ExcelImportModule {
         uploadBtn.disabled = true;
         
         // Actualizar historial después de 2 segundos
-       // setTimeout(() => this.loadHistory(), 2000);
+        setTimeout(() => this.loadImportSummary(), 2000);
+    }
+    
+    updateFileStatus(fileId, status, message, details = null) {
+        const fileItem = document.getElementById(fileId);
+        if (!fileItem) return;
+        
+        const statusBadge = fileItem.querySelector('.status-badge');
+        const fileDetails = fileItem.querySelector('.file-details');
+        const detailContent = fileItem.querySelector('.detail-content');
+        
+        // Actualizar clases
+        fileItem.className = `file-item ${status}`;
+        statusBadge.className = `status-badge status-${status}`;
+        statusBadge.textContent = message;
+        
+        // Si hay detalles, mostrarlos
+        if (details && details.student) {
+            fileDetails.style.display = 'block';
+            detailContent.innerHTML = `
+                <div class="student-info">
+                    <strong>👤 Estudiante identificado:</strong> ${details.student.name || details.student.email}
+                    <br><small>📧 Email: ${details.student.email}</small>
+                    ${details.student.cohort ? `<br><small>🎓 Cohorte: ${details.student.cohort}</small>` : ''}
+                </div>
+                <div class="process-stats">
+                    <strong>📊 Estadísticas:</strong>
+                    <ul>
+                        <li>Registros procesados: ${details.recordsProcessed || 0}</li>
+                        <li>Fuente: Excel importado</li>
+                        <li>Fecha: ${new Date().toLocaleString('es-ES')}</li>
+                    </ul>
+                </div>
+            `;
+        }
+    }
+    
+    async checkProcessingResult(fileName) {
+        try {
+            // Buscar en el log de sincronización el resultado del procesamiento
+            const { data, error } = await this.supabase
+                .from('api_sync_log')
+                .select('*')
+                .eq('endpoint', 'process_excel')
+                .like('details', `%${fileName}%`)
+                .order('executed_at', { ascending: false })
+                .limit(1)
+                .single();
+            
+            if (error || !data) {
+                // Si no hay log todavía, esperar un poco más
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Intentar de nuevo
+                const { data: retryData, error: retryError } = await this.supabase
+                    .from('api_sync_log')
+                    .select('*')
+                    .eq('endpoint', 'process_excel')
+                    .like('details', `%${fileName}%`)
+                    .order('executed_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                
+                if (retryError || !retryData) {
+                    return { success: false, error: 'No se pudo verificar el resultado del procesamiento' };
+                }
+                
+                data = retryData;
+            }
+            
+            // Extraer información del log
+            const details = data.details || {};
+            
+            if (data.status_code === 200) {
+                // Buscar información del estudiante
+                const studentEmail = details.studentEmail;
+                let studentInfo = { email: studentEmail };
+                
+                if (studentEmail) {
+                    // Obtener información completa del estudiante
+                    const { data: userData } = await this.supabase
+                        .from('users')
+                        .select('id, username, email, cohort')
+                        .eq('email', studentEmail)
+                        .single();
+                    
+                    if (userData) {
+                        studentInfo = userData;
+                    }
+                }
+                
+                return {
+                    success: true,
+                    student: studentInfo,
+                    recordsProcessed: details.recordsProcessed || data.records_synced || 0,
+                    details: details
+                };
+            } else {
+                return {
+                    success: false,
+                    error: details.error || 'Error en el procesamiento'
+                };
+            }
+            
+        } catch (error) {
+            console.error('Error verificando resultado:', error);
+            return {
+                success: false,
+                error: 'Error al verificar el procesamiento'
+            };
+        }
+    }
+    
+    offerManualMapping(fileId, fileName, errorMessage) {
+        const fileItem = document.getElementById(fileId);
+        if (!fileItem) return;
+        
+        const detailContent = fileItem.querySelector('.detail-content');
+        const fileDetails = fileItem.querySelector('.file-details');
+        
+        fileDetails.style.display = 'block';
+        
+        // Extraer el nombre del archivo
+        const nameParts = fileName.replace('.xlsx', '').replace('.xls', '').split('-');
+        const possibleName = nameParts.slice(1, 3).join(' ');
+        
+        detailContent.innerHTML = `
+            <div class="manual-mapping-form">
+                <p class="error-message">${errorMessage}</p>
+                <p><strong>¿Quieres crear un mapeo manual para este archivo?</strong></p>
+                <p>Nombre detectado: <code>${possibleName}</code></p>
+                
+                <div class="mapping-input">
+                    <label>Selecciona el estudiante correcto:</label>
+                    <select id="mapping-select-${fileId}" class="form-control">
+                        <option value="">-- Selecciona un estudiante --</option>
+                    </select>
+                </div>
+                
+                <div class="mapping-actions">
+                    <button class="btn btn-sm btn-primary" onclick="window.excelImportModule.saveMapping('${fileId}', '${possibleName}')">
+                        💾 Guardar mapeo
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="window.excelImportModule.retryFile('${fileId}', '${fileName}')">
+                        🔄 Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Cargar lista de estudiantes
+        this.loadStudentsList(`mapping-select-${fileId}`);
+    }
+    
+    async loadStudentsList(selectId) {
+        try {
+            const { data: students } = await this.supabase
+                .from('users')
+                .select('id, email, username, cohort')
+                .eq('role', 'user')
+                .order('username');
+            
+            const select = document.getElementById(selectId);
+            if (!select || !students) return;
+            
+            // Agrupar por cohorte
+            const grouped = {};
+            students.forEach(student => {
+                const cohort = student.cohort || 'Sin cohorte';
+                if (!grouped[cohort]) grouped[cohort] = [];
+                grouped[cohort].push(student);
+            });
+            
+            // Llenar el select
+            Object.entries(grouped).forEach(([cohort, cohortStudents]) => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = cohort;
+                
+                cohortStudents.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.email;
+                    option.textContent = `${student.username} (${student.email})`;
+                    optgroup.appendChild(option);
+                });
+                
+                select.appendChild(optgroup);
+            });
+            
+        } catch (error) {
+            console.error('Error cargando estudiantes:', error);
+        }
+    }
+    
+    async saveMapping(fileId, excelName) {
+        const select = document.getElementById(`mapping-select-${fileId}`);
+        if (!select || !select.value) {
+            this.dashboard.showNotification('warning', 'Por favor selecciona un estudiante');
+            return;
+        }
+        
+        try {
+            // Guardar el mapeo
+            const { error } = await this.supabase
+                .from('excel_name_mappings')
+                .insert({
+                    excel_name: excelName.toLowerCase(),
+                    user_email: select.value,
+                    notes: 'Mapeo manual desde importación'
+                });
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 'Mapeo guardado correctamente. Los próximos archivos con este nombre se procesarán automáticamente.');
+            
+            // Actualizar UI
+            const fileItem = document.getElementById(fileId);
+            if (fileItem) {
+                const detailContent = fileItem.querySelector('.detail-content');
+                detailContent.innerHTML = `
+                    <div class="success-message">
+                        ✅ Mapeo guardado exitosamente<br>
+                        <small>Los próximos archivos de "${excelName}" se asociarán automáticamente a ${select.value}</small>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Error guardando mapeo:', error);
+            this.dashboard.showNotification('error', 'Error al guardar el mapeo: ' + error.message);
+        }
+    }
+    
+    async loadImportSummary() {
+        // Cargar resumen de importaciones recientes
+        try {
+            const { data: recentImports } = await this.supabase
+                .from('api_sync_log')
+                .select('*')
+                .eq('endpoint', 'process_excel')
+                .order('executed_at', { ascending: false })
+                .limit(10);
+            
+            if (recentImports && recentImports.length > 0) {
+                // Mostrar resumen
+                console.log('Importaciones recientes:', recentImports);
+            }
+        } catch (error) {
+            console.error('Error cargando resumen:', error);
+        }
     }
 
     async loadHistory() {

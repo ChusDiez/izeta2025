@@ -33,6 +33,16 @@ ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS simulation_id uuid;
 ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS details jsonb DEFAULT '{}';
 ```
 
+### 2️⃣.5 Actualizar la función update_elo_for_simulation (NUEVO - IMPORTANTE)
+**⚠️ CRÍTICO: La función debe incluir week_number en los INSERTs**
+
+Ejecuta:
+```sql
+-- Archivo: fix_elo_function_week_number.sql
+```
+
+Este paso corrige el error: "null value in column week_number violates not-null constraint"
+
 ### 3️⃣ Ejecutar el Reset Completo
 **Solo después de completar los pasos anteriores**, ejecuta:
 ```sql
@@ -49,6 +59,12 @@ ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS elo_change integer DEFAULT 0;
 
 ### Error: "column simulation_id does not exist"
 **Solución**: Ejecuta el script completo del paso 2.
+
+### Error: "null value in column week_number violates not-null constraint"
+**Solución**: No saltaste el paso 2.5. Ejecuta:
+```sql
+-- Archivo: fix_elo_function_week_number.sql
+```
 
 ## 🎯 ¿Qué hace el script?
 

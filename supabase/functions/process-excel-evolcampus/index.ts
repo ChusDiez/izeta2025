@@ -132,8 +132,134 @@ serve(async (req) => {
       }
     }
 
+    // Si aún no tenemos email, intentar buscar por nombre
+    let searchName = '';
     if (!studentInfo.email) {
-      throw new Error("No se pudo encontrar el email del estudiante en el archivo");
+      console.log("🔍 No se encontró email, intentando buscar por nombre...");
+      
+      // Intentar extraer nombre del archivo
+      // Formato esperado: expediente-nombre-apellidos-fecha.xlsx
+      const cleanFileName = fileName.replace('.xlsx', '').replace('.xls', '');
+      const parts = cleanFileName.split('-');
+      
+      // Asumiendo que el nombre y apellidos están en las posiciones 1 y 2
+      if (parts.length >= 3) {
+        searchName = `${parts[1]} ${parts[2]}`.trim();
+      }
+      
+      // Si no encontramos nombre en el archivo, usar el que extrajimos del contenido
+      if (!searchName && (studentInfo.name || studentInfo.lastname)) {
+        searchName = `${studentInfo.name || ''} ${studentInfo.lastname || ''}`.trim();
+      }
+      
+      if (searchName) {
+        console.log(`🔍 Buscando usuario con nombre similar a: ${searchName}`);
+        
+        // 1. Primero buscar en la tabla de mapeo manual
+        const { data: mapping, error: mappingError } = await supabase
+          .from("excel_name_mappings")
+          .select("user_email")
+          .eq("excel_name", searchName)
+          .single();
+        
+        if (mapping && !mappingError) {
+          studentInfo.email = mapping.user_email;
+          console.log(`✅ Usuario encontrado en mapeo manual: ${mapping.user_email}`);
+        } else {
+          // 2. Buscar con normalización de nombres
+          const { data: normalizedSearch } = await supabase
+            .rpc('normalize_name', { input_name: searchName });
+          
+          if (normalizedSearch) {
+            // Buscar usuarios donde el nombre normalizado coincida
+            const { data: users, error: searchError } = await supabase
+              .from("users")
+              .select("id, email, username")
+              .filter('username', 'ilike', `%${searchName}%`);
+            
+            if (!searchError && users && users.length > 0) {
+              // Intentar encontrar coincidencia exacta normalizada
+              let bestMatch = null;
+              let bestScore = 0;
+              
+              for (const user of users) {
+                // Normalizar el nombre del usuario también
+                const { data: normalizedUserName } = await supabase
+                  .rpc('normalize_name', { input_name: user.username });
+                
+                if (normalizedUserName === normalizedSearch) {
+                  bestMatch = user;
+                  bestScore = 100;
+                  break;
+                } else if (normalizedUserName && normalizedSearch) {
+                  // Calcular similitud parcial
+                  const searchWords = normalizedSearch.split(' ');
+                  const userWords = normalizedUserName.split(' ');
+                  let matchCount = 0;
+                  
+                  for (const searchWord of searchWords) {
+                    if (userWords.some(userWord => userWord.includes(searchWord))) {
+                      matchCount++;
+                    }
+                  }
+                  
+                  const score = (matchCount / searchWords.length) * 100;
+                  if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = user;
+                  }
+                }
+              }
+              
+              if (bestMatch && bestScore >= 70) { // 70% de coincidencia mínima
+                studentInfo.email = bestMatch.email;
+                console.log(`✅ Usuario encontrado por normalización (${bestScore}% match): ${bestMatch.email}`);
+              } else if (users.length === 1) {
+                // Si solo hay un resultado, usarlo aunque no sea perfecto
+                studentInfo.email = users[0].email;
+                console.log(`⚠️ Usuario único encontrado: ${users[0].email}`);
+              } else {
+                console.log(`❌ No se encontró coincidencia suficiente. Mejor score: ${bestScore}%`);
+              }
+            }
+          }
+        }
+        
+        // Buscar en la base de datos por nombre similar
+        const { data: users, error: searchError } = await supabase
+          .from("users")
+          .select("id, email, username")
+          .ilike("username", `%${searchName}%`);
+        
+        if (!searchError && users && users.length > 0) {
+          // Si encontramos exactamente un usuario, usarlo
+          if (users.length === 1) {
+            studentInfo.email = users[0].email;
+            console.log(`✅ Usuario encontrado: ${users[0].email}`);
+          } else {
+            // Si hay múltiples coincidencias, intentar encontrar la mejor
+            const exactMatch = users.find(u => 
+              u.username.toLowerCase() === searchName.toLowerCase()
+            );
+            
+            if (exactMatch) {
+              studentInfo.email = exactMatch.email;
+              console.log(`✅ Coincidencia exacta encontrada: ${exactMatch.email}`);
+            } else {
+              // Usar el primero como fallback
+              studentInfo.email = users[0].email;
+              console.log(`⚠️ Múltiples usuarios encontrados, usando: ${users[0].email}`);
+            }
+          }
+        }
+      }
+    }
+
+    if (!studentInfo.email) {
+      const errorMsg = searchName 
+        ? `No se pudo encontrar el email del estudiante. Nombre buscado: ${searchName}`
+        : "No se pudo encontrar el email del estudiante en el archivo ni extraer el nombre";
+      throw new Error(errorMsg);
     }
 
     // Buscar la fila de cabecera (donde está "Asignatura")
