@@ -3,7 +3,7 @@
 ## ⚠️ ADVERTENCIA IMPORTANTE
 Este proceso **reseteará TODO el progreso de ELO/IP** de todos los usuarios. Es **IRREVERSIBLE** sin los backups.
 
-## 📋 Pasos a Seguir
+## 📋 Pasos a Seguir (EN ORDEN)
 
 ### 1️⃣ Verificación Previa
 Ejecuta en el SQL Editor de Supabase:
@@ -16,20 +16,39 @@ Este script te mostrará:
 - Estado actual del sistema
 - Qué se va a hacer
 
-### 2️⃣ Verificar/Arreglar Estructura de elo_history
-**IMPORTANTE**: Ejecuta esto para evitar errores
+### 2️⃣ Arreglar la tabla elo_history (OBLIGATORIO)
+**⚠️ IMPORTANTE: Este paso es OBLIGATORIO para evitar errores**
+
+Ejecuta:
 ```sql
--- Archivo: verificar_estructura_elo_history.sql
+-- Archivo: arreglar_elo_history_completo.sql
 ```
-Esto agregará las columnas necesarias:
-- `simulation_id` (si no existe)
-- `details` (para el nuevo sistema)
+
+O si tienes prisa, ejecuta solo:
+```sql
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS elo_change integer DEFAULT 0;
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS position integer;
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS score numeric(5,2);
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS simulation_id uuid;
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS details jsonb DEFAULT '{}';
+```
 
 ### 3️⃣ Ejecutar el Reset Completo
-Ejecuta:
+**Solo después de completar los pasos anteriores**, ejecuta:
 ```sql
 -- Archivo: reset_y_recalcular_elo.sql
 ```
+
+## 🚨 Errores Comunes
+
+### Error: "column elo_change does not exist"
+**Solución**: No saltaste el paso 2. Ejecuta:
+```sql
+ALTER TABLE elo_history ADD COLUMN IF NOT EXISTS elo_change integer DEFAULT 0;
+```
+
+### Error: "column simulation_id does not exist"
+**Solución**: Ejecuta el script completo del paso 2.
 
 ## 🎯 ¿Qué hace el script?
 
