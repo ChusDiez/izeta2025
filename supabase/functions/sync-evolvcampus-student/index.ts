@@ -3,6 +3,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BASE_URL = "https://api.evolcampus.com/api/v1";
 
+// IDs de Simulacros 42
+const STUDY_ID_SIMULACROS = 198;   // Curso
+const GROUP_ID_SIMULACROS = 237;   // Grupo
+
 interface ProgressRecord {
   topic_code: string;
   activity: string;
@@ -78,9 +82,11 @@ serve(async (req) => {
       method: "POST",
       headers: { ...authHeader, "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: studentEmail, // Filtrar por email
+        email: studentEmail,          // Filtrar por email
         regs_per_page: 100,
-        page: 1
+        page: 1,
+        studyid: STUDY_ID_SIMULACROS, // Curso Simulacros
+        groupid: GROUP_ID_SIMULACROS  // Grupo Simulacros
       }),
     });
 
@@ -91,6 +97,7 @@ serve(async (req) => {
 
     const response = await enrollmentsResp.json();
     const enrollments = response.data || [];
+    console.log(`🔍 Recibidos ${enrollments.length} enrollments de Simulacros para ${studentEmail}`);
 
     if (enrollments.length === 0) {
       return new Response(
