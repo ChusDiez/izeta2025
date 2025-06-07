@@ -456,7 +456,7 @@ export default class ExcelImportModule {
             fileItem.innerHTML = `
                 <div class="file-info">
                     <div class="file-name">
-                        <strong>${file.name}</strong>
+                    <strong>${file.name}</strong>
                         <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
                     </div>
                     <div class="processing-status">
@@ -1000,11 +1000,10 @@ export default class ExcelImportModule {
         try {
             console.log('🔍 Cargando lista de estudiantes...');
             
-            // Primero cargar todos los estudiantes
+            // Primero cargar todos los estudiantes (sin filtro de rol)
             let { data: allStudents, error } = await this.supabase
                 .from('users')
                 .select('id, email, username, cohort, role')
-                .eq('role', 'user')
                 .order('username');
             
             console.log('📊 Estudiantes cargados:', allStudents?.length || 0);
@@ -1015,24 +1014,8 @@ export default class ExcelImportModule {
             }
             
             if (!allStudents || allStudents.length === 0) {
-                console.warn('⚠️ No se encontraron estudiantes con role="user"');
-                
-                // Intentar cargar todos los usuarios sin filtro de rol
-                console.log('🔄 Intentando cargar todos los usuarios...');
-                const { data: allUsers, error: allUsersError } = await this.supabase
-                    .from('users')
-                    .select('id, email, username, cohort, role')
-                    .order('username');
-                
-                console.log('👥 Todos los usuarios:', allUsers?.length || 0);
-                if (allUsers && allUsers.length > 0) {
-                    console.log('📋 Roles encontrados:', [...new Set(allUsers.map(u => u.role))]);
-                    // Usar todos los usuarios como fallback
-                    allStudents = allUsers;
-                } else {
-                    console.error('❌ No hay usuarios en la base de datos');
-                    return;
-                }
+                console.error('❌ No hay usuarios en la base de datos');
+                return;
             }
             
             const select = document.getElementById(selectId);
