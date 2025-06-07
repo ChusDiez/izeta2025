@@ -453,25 +453,49 @@ export default class ExcelImportModule {
                 // Actualizar estado a "procesando"
                 this.updateFileStatus(fileId, 'processing', '🔄 Procesando Excel...');
                 
-                // Esperar un poco para que el trigger se ejecute y procesar
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // OPCIÓN: Forzar procesamiento manual siempre (descomenta si hay problemas con el trigger)
+                const FORCE_MANUAL_PROCESSING = true; // Cambia a false para usar trigger automático
                 
-                // Verificar el resultado del procesamiento
-                const processResult = await this.checkProcessingResult(fileName);
-                
-                if (processResult.success) {
-                    // Actualizar UI con éxito y detalles del estudiante
-                    this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
-                        student: processResult.student,
-                        recordsProcessed: processResult.recordsProcessed,
-                        details: processResult.details
-                    });
+                if (FORCE_MANUAL_PROCESSING) {
+                    // Procesar directamente sin esperar al trigger
+                    const processResult = await this.processManually(fileName, file);
                     
-                    this.dashboard.showNotification('success', 
-                        `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
-                    );
+                    if (processResult.success) {
+                        // Actualizar UI con éxito y detalles del estudiante
+                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
+                            student: processResult.student,
+                            recordsProcessed: processResult.recordsProcessed,
+                            details: processResult.details
+                        });
+                        
+                        this.dashboard.showNotification('success', 
+                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`
+                        );
+                    } else {
+                        throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                    }
                 } else {
-                    throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                    // Usar el flujo normal con trigger automático
+                    // Esperar un poco para que el trigger se ejecute y procesar
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    // Verificar el resultado del procesamiento
+                    const processResult = await this.checkProcessingResult(fileName, file);
+                    
+                    if (processResult.success) {
+                        // Actualizar UI con éxito y detalles del estudiante
+                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
+                            student: processResult.student,
+                            recordsProcessed: processResult.recordsProcessed,
+                            details: processResult.details
+                        });
+                        
+                        this.dashboard.showNotification('success', 
+                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
+                        );
+                    } else {
+                        throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                    }
                 }
                 
             } catch (error) {
@@ -533,33 +557,42 @@ export default class ExcelImportModule {
         }
     }
     
-    async checkProcessingResult(fileName) {
+    async checkProcessingResult(fileName, originalFile = null) {
         try {
             // Buscar en el log de sincronización el resultado del procesamiento
-            const { data, error } = await this.supabase
+            let { data, error } = await this.supabase
                 .from('api_sync_log')
                 .select('*')
                 .eq('endpoint', 'process_excel')
-                .like('details', `%${fileName}%`)
+                .filter('details->fileName', 'eq', fileName)
                 .order('executed_at', { ascending: false })
                 .limit(1)
                 .single();
             
             if (error || !data) {
+                console.log('No se encontró log inmediato, esperando...');
                 // Si no hay log todavía, esperar un poco más
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 
-                // Intentar de nuevo
+                // Intentar de nuevo con búsqueda más flexible
                 const { data: retryData, error: retryError } = await this.supabase
                     .from('api_sync_log')
                     .select('*')
                     .eq('endpoint', 'process_excel')
-                    .like('details', `%${fileName}%`)
+                    .filter('details::text', 'ilike', `%${fileName}%`)
                     .order('executed_at', { ascending: false })
                     .limit(1)
                     .single();
                 
                 if (retryError || !retryData) {
+                    console.log('No se encontró resultado del procesamiento automático');
+                    
+                    // Si el trigger no funcionó, llamar manualmente a la función
+                    if (originalFile) {
+                        console.log('Intentando procesar manualmente...');
+                        return await this.processManually(fileName, originalFile);
+                    }
+                    
                     return { success: false, error: 'No se pudo verificar el resultado del procesamiento' };
                 }
                 
@@ -584,6 +617,7 @@ export default class ExcelImportModule {
                     
                     if (userData) {
                         studentInfo = userData;
+                        studentInfo.name = userData.username;
                     }
                 }
                 
@@ -602,9 +636,85 @@ export default class ExcelImportModule {
             
         } catch (error) {
             console.error('Error verificando resultado:', error);
+            
+            // Si hay error y tenemos el archivo original, intentar procesar manualmente
+            if (originalFile) {
+                console.log('Error en verificación, intentando procesar manualmente...');
+                return await this.processManually(fileName, originalFile);
+            }
+            
             return {
                 success: false,
                 error: 'Error al verificar el procesamiento'
+            };
+        }
+    }
+    
+    async processManually(fileName, file) {
+        try {
+            console.log('Procesando archivo manualmente:', fileName);
+            
+            // Llamar directamente a la función Edge
+            const { data, error } = await this.supabase.functions.invoke('process-excel-evolcampus', {
+                body: {
+                    bucket: 'excel-public',
+                    fileName: fileName
+                }
+            });
+            
+            if (error) throw error;
+            
+            if (data && data.success) {
+                // Buscar información completa del estudiante si tenemos el email
+                let studentInfo = data.details?.student || {};
+                if (!studentInfo.email && data.details?.studentEmail) {
+                    studentInfo.email = data.details.studentEmail;
+                }
+                
+                // Si tenemos email, buscar datos completos del usuario
+                if (studentInfo.email) {
+                    const { data: userData } = await this.supabase
+                        .from('users')
+                        .select('id, username, email, cohort')
+                        .eq('email', studentInfo.email)
+                        .single();
+                    
+                    if (userData) {
+                        studentInfo = {
+                            ...studentInfo,
+                            ...userData,
+                            name: userData.username
+                        };
+                    }
+                }
+                
+                return {
+                    success: true,
+                    student: studentInfo,
+                    recordsProcessed: data.details?.recordsProcessed || 0,
+                    details: data.details || {}
+                };
+            } else {
+                return {
+                    success: false,
+                    error: data?.error || data?.message || 'Error procesando el archivo'
+                };
+            }
+            
+        } catch (error) {
+            console.error('Error en procesamiento manual:', error);
+            
+            // Si es un error de CORS o de red, dar mensaje más claro
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                return {
+                    success: false,
+                    error: 'Error de conexión. Verifica que la función Edge esté activa.'
+                };
+            }
+            
+            return {
+                success: false,
+                error: `Error procesando archivo: ${error.message}`
             };
         }
     }
