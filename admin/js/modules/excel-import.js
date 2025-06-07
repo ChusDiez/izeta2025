@@ -430,6 +430,13 @@ export default class ExcelImportModule {
                 
                 console.log(`Subiendo archivo como: ${fileName}`);
                 
+                // Verificar permisos primero
+                const { data: { user } } = await this.supabase.auth.getUser();
+                if (!user) {
+                    throw new Error('No estás autenticado. Por favor, inicia sesión de nuevo.');
+                }
+                console.log('Usuario autenticado:', user.email);
+                
                 // Actualizar estado a "subiendo"
                 this.updateFileStatus(fileId, 'uploading', '📤 Subiendo archivo...');
                 
