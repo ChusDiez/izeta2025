@@ -964,14 +964,16 @@ export default class ExcelImportModule {
     
     async loadStudentsList(selectId) {
         try {
-            const { data: students } = await this.supabase
+            const { data: allUsers } = await this.supabase
                 .from('users')
-                .select('id, email, username, cohort')
-                .eq('role', 'user')
+                .select('id, email, username, cohort, is_admin')
                 .order('username');
             
             const select = document.getElementById(selectId);
-            if (!select || !students) return;
+            if (!select || !allUsers) return;
+            
+            // Filtrar solo estudiantes (no administradores)
+            const students = allUsers.filter(user => !user.is_admin);
             
             // Agrupar por cohorte
             const grouped = {};
@@ -1005,7 +1007,7 @@ export default class ExcelImportModule {
         try {
             console.log('🔍 Cargando lista de estudiantes...');
             
-            // Primero cargar todos los estudiantes (sin filtro de rol)
+            // Cargar todos los estudiantes
             let { data: allStudents, error } = await this.supabase
                 .from('users')
                 .select('id, email, username, cohort')
@@ -1607,7 +1609,7 @@ export default class ExcelImportModule {
             // Buscar usuario directamente por email
             const { data: user, error: userError } = await this.supabase
                 .from('users')
-                .select('id, username, email, cohort')
+                , username, email, cohort')
                 .eq('email', userEmail)
                 .single();
             
