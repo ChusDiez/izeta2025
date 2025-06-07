@@ -1007,11 +1007,14 @@ export default class ExcelImportModule {
         try {
             console.log('🔍 Cargando lista de estudiantes...');
             
-            // Cargar todos los estudiantes
-            let { data: allStudents, error } = await this.supabase
+            // Primero cargar todos los usuarios
+            let { data: allUsers, error } = await this.supabase
                 .from('users')
-                .select('id, email, username, cohort')
+                .select('id, email, username, cohort, is_admin')
                 .order('username');
+            
+            // Filtrar solo estudiantes (no administradores)
+            const allStudents = allUsers ? allUsers.filter(user => !user.is_admin) : [];
             
             console.log('📊 Estudiantes cargados:', allStudents?.length || 0);
             
@@ -1609,7 +1612,7 @@ export default class ExcelImportModule {
             // Buscar usuario directamente por email
             const { data: user, error: userError } = await this.supabase
                 .from('users')
-                , username, email, cohort')
+                .select('id, username, email, cohort')
                 .eq('email', userEmail)
                 .single();
             
