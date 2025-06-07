@@ -159,7 +159,7 @@ serve(async (req) => {
         const { data: mapping, error: mappingError } = await supabase
           .from("excel_name_mappings")
           .select("user_email")
-          .eq("excel_name", searchName)
+          .eq("excel_name", searchName.toLowerCase())
           .single();
         
         if (mapping && !mappingError) {
@@ -364,13 +364,20 @@ serve(async (req) => {
     // Mover archivo a carpeta procesados
     const processedFileName = `processed/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
     
-    const { error: moveError } = await supabase
-      .storage
-      .from(bucket)
-      .move(fileName, processedFileName);
+    // Solo intentar mover si NO es el bucket excel-public
+    // (excel-public puede tener restricciones diferentes)
+    if (bucket !== 'excel-public') {
+      const { error: moveError } = await supabase
+        .storage
+        .from(bucket)
+        .move(fileName, processedFileName);
 
-    if (moveError) {
-      console.error("Error moviendo archivo a procesados:", moveError);
+      if (moveError) {
+        console.error("Error moviendo archivo a procesados:", moveError);
+        // No fallar si no se puede mover, solo loguear
+      }
+    } else {
+      console.log("Archivo en excel-public - no se mueve a procesados");
     }
 
     // Registrar en log

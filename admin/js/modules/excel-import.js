@@ -643,6 +643,30 @@ export default class ExcelImportModule {
                 return await this.processManually(fileName, originalFile);
             }
             
+            // Si es un error de CORS o de red, dar mensaje más claro
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                return {
+                    success: false,
+                    error: 'Error de conexión. Verifica que la función Edge esté activa.'
+                };
+            }
+            
+            // Si es error de función no encontrada o no autorizada
+            if (error.message.includes('not found') || error.message.includes('401') || error.message.includes('404')) {
+                console.log('⚠️ Función Edge no disponible, intentando procesamiento local...');
+                
+                // Intentar procesamiento local como fallback
+                try {
+                    return await this.processExcelLocally(file, fileName);
+                } catch (localError) {
+                    console.error('Error en procesamiento local:', localError);
+                    return {
+                        success: false,
+                        error: `La función Edge no está disponible y el procesamiento local falló: ${localError.message}`
+                    };
+                }
+            }
+            
             return {
                 success: false,
                 error: 'Error al verificar el procesamiento'
@@ -655,14 +679,28 @@ export default class ExcelImportModule {
             console.log('Procesando archivo manualmente:', fileName);
             
             // Llamar directamente a la función Edge
-            const { data, error } = await this.supabase.functions.invoke('process-excel-evolcampus', {
+            const response = await this.supabase.functions.invoke('process-excel-evolcampus', {
                 body: {
                     bucket: 'excel-public',
                     fileName: fileName
                 }
             });
             
-            if (error) throw error;
+            console.log('Respuesta de la función:', response);
+            
+            // La función puede devolver error de dos formas
+            if (response.error) {
+                console.error('Error de la función:', response.error);
+                throw new Error(response.error.message || 'Error en la función Edge');
+            }
+            
+            const data = response.data;
+            
+            // Verificar si la función devolvió un error en el data
+            if (data && !data.success && data.error) {
+                console.error('Error procesando:', data.error);
+                throw new Error(data.error);
+            }
             
             if (data && data.success) {
                 // Buscar información completa del estudiante si tenemos el email
@@ -695,9 +733,11 @@ export default class ExcelImportModule {
                     details: data.details || {}
                 };
             } else {
+                // Si llegamos aquí, algo salió mal
+                console.error('Respuesta inesperada:', data);
                 return {
                     success: false,
-                    error: data?.error || data?.message || 'Error procesando el archivo'
+                    error: data?.error || data?.message || 'Error procesando el archivo - respuesta inválida'
                 };
             }
             
@@ -712,9 +752,24 @@ export default class ExcelImportModule {
                 };
             }
             
+            // Buscar errores específicos comunes
+            if (error.message.includes('No se pudo encontrar el email')) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+            
+            if (error.message.includes('Usuario no encontrado')) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+            
             return {
                 success: false,
-                error: `Error procesando archivo: ${error.message}`
+                error: error.message || 'Error desconocido procesando archivo'
             };
         }
     }
@@ -902,5 +957,209 @@ export default class ExcelImportModule {
             console.error('Error cargando historial:', error);
             this.dashboard.showNotification('error', 'Error cargando historial: ' + error.message);
         }
+    }
+
+    // Procesamiento local de Excel (cuando la función Edge no está disponible)
+    async processExcelLocally(file, fileName) {
+        try {
+            console.log('📊 Procesando Excel localmente en el navegador...');
+            
+            // Cargar SheetJS si no está cargado
+            if (!window.XLSX) {
+                console.log('Cargando librería SheetJS...');
+                await this.loadSheetJS();
+            }
+            
+            // Leer archivo
+            const arrayBuffer = await this.readFileAsArrayBuffer(file);
+            const workbook = window.XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+            
+            // Extraer información del estudiante
+            const studentInfo = await this.extractStudentInfoLocal(rawData, fileName);
+            
+            if (!studentInfo.email) {
+                throw new Error(`No se pudo identificar al estudiante. ${studentInfo.searchName ? `Nombre buscado: ${studentInfo.searchName}` : ''}`);
+            }
+            
+            // Buscar usuario
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('id, username, email, cohort')
+                .eq('email', studentInfo.email)
+                .single();
+            
+            if (userError || !user) {
+                throw new Error(`Usuario no encontrado: ${studentInfo.email}`);
+            }
+            
+            // Procesar tests
+            const testRecords = this.extractTestRecordsLocal(rawData, user.id);
+            
+            console.log(`📝 Encontrados ${testRecords.length} registros de tests`);
+            
+            // Guardar en base de datos
+            if (testRecords.length > 0) {
+                const { error: insertError } = await this.supabase
+                    .from('topic_results')
+                    .upsert(testRecords, {
+                        onConflict: 'student_id,topic_code,activity'
+                    });
+                
+                if (insertError) {
+                    throw new Error(`Error guardando datos: ${insertError.message}`);
+                }
+            }
+            
+            // Registrar en log
+            await this.supabase.from('api_sync_log').insert({
+                endpoint: 'process_excel',
+                status_code: 200,
+                records_synced: testRecords.length,
+                details: {
+                    fileName,
+                    studentEmail: studentInfo.email,
+                    recordsProcessed: testRecords.length,
+                    processedAt: new Date().toISOString(),
+                    processingMode: 'local'
+                }
+            });
+            
+            return {
+                success: true,
+                student: {
+                    ...user,
+                    email: studentInfo.email,
+                    name: user.username
+                },
+                recordsProcessed: testRecords.length
+            };
+            
+        } catch (error) {
+            console.error('Error en procesamiento local:', error);
+            throw error;
+        }
+    }
+    
+    async loadSheetJS() {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    
+    readFileAsArrayBuffer(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+    
+    async extractStudentInfoLocal(rawData, fileName) {
+        const info = { email: null, searchName: null };
+        
+        // Buscar email en las primeras filas
+        for (let i = 0; i < Math.min(20, rawData.length); i++) {
+            const row = rawData[i];
+            if (!row) continue;
+            
+            const rowText = row.join(' ').toLowerCase();
+            const emailMatch = rowText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
+            if (emailMatch) {
+                info.email = emailMatch[1];
+                return info;
+            }
+        }
+        
+        // Buscar por nombre del archivo
+        const cleanName = fileName.replace('.xlsx', '').replace('.xls', '');
+        const parts = cleanName.split('-');
+        
+        if (parts.length >= 3) {
+            info.searchName = `${parts[1]} ${parts[2]}`.trim();
+            
+            // Buscar en mapeos
+            const { data: mapping } = await this.supabase
+                .from('excel_name_mappings')
+                .select('user_email')
+                .eq('excel_name', info.searchName.toLowerCase())
+                .single();
+            
+            if (mapping) {
+                info.email = mapping.user_email;
+                return info;
+            }
+            
+            // Buscar por nombre similar
+            const { data: users } = await this.supabase
+                .from('users')
+                .select('email')
+                .ilike('username', `%${info.searchName}%`);
+            
+            if (users && users.length === 1) {
+                info.email = users[0].email;
+            }
+        }
+        
+        return info;
+    }
+    
+    extractTestRecordsLocal(rawData, studentId) {
+        const records = [];
+        let headerRowIndex = -1;
+        
+        // Buscar cabecera
+        for (let i = 0; i < rawData.length; i++) {
+            if (rawData[i] && rawData[i][0] === 'Asignatura') {
+                headerRowIndex = i;
+                break;
+            }
+        }
+        
+        if (headerRowIndex === -1) return records;
+        
+        // Mapear columnas
+        const headers = rawData[headerRowIndex];
+        const columnMap = {};
+        
+        headers.forEach((header, index) => {
+            const h = (header || '').toString().toLowerCase();
+            if (h.includes('asignatura')) columnMap.subject = index;
+            if (h.includes('tema')) columnMap.topic = index;
+            if (h.includes('actividad')) columnMap.activity = index;
+            if (h.includes('nota máxima')) columnMap.maxScore = index;
+            if (h.includes('intentos')) columnMap.attempts = index;
+            if (h.includes('nota') && !h.includes('máxima')) columnMap.score = index;
+        });
+        
+        // Procesar filas
+        for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+            const row = rawData[i];
+            if (!row || !row[columnMap.activity]) continue;
+            
+            const record = {
+                student_id: studentId,
+                topic_code: row[columnMap.topic] || `${row[columnMap.subject]}-${i}`,
+                activity: row[columnMap.activity],
+                score: parseFloat(row[columnMap.score]) || 0,
+                max_score: parseFloat(row[columnMap.maxScore]) || 100,
+                attempts: parseInt(row[columnMap.attempts]) || 1,
+                source: 'evol_excel',
+                created_at: new Date().toISOString(),
+                first_attempt: new Date().toISOString(),
+                last_attempt: new Date().toISOString()
+            };
+            
+            records.push(record);
+        }
+        
+        return records;
     }
 } 
