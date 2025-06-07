@@ -4,12 +4,18 @@ export default class ExcelImportModule {
         this.dashboard = dashboardCore;
         this.selectedFiles = [];
     }
+    getBaseFileSlug(fileName) {
+        return fileName
+            .replace(/\.xlsx?$/i, '')
+            .replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '')
+            .replace(/-\d{8}-\d{6}$/, '')
+            .toLowerCase();
+    }
 
     async render(container) {
         container.innerHTML = `
             <div class="excel-import-page">
                 <h2>📥 Importar Excel de Evolcampus</h2>
-                
                 <div class="info-box">
                     <h3>📋 Instrucciones</h3>
                     <ol>
@@ -18,7 +24,7 @@ export default class ExcelImportModule {
                         <li>Los archivos se procesarán automáticamente</li>
                         <li>Una vez procesados, los datos aparecerán en el dashboard principal</li>
                     </ol>
-                    <p><strong>Formato esperado:</strong> expediente-nombre-apellidos-fecha.xlsx</p>
+                    <p><strong>Formato esperado:</strong> expediente-nombre-apellidos-timestamp.xlsx</p>
                     <p><small>El sistema buscará el email automáticamente por el nombre del alumno</small></p>
                 </div>
 
@@ -470,9 +476,8 @@ export default class ExcelImportModule {
             fileList.appendChild(fileItem);
             
             try {
-                // Generar nombre único para el archivo
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const fileName = `${timestamp}_${file.name}`;
+                // Usar el nombre original sin modificación (sin timestamp)
+                const fileName = file.name;
                 
                 console.log(`Subiendo archivo como: ${fileName}`);
                 
@@ -906,12 +911,12 @@ export default class ExcelImportModule {
         
         fileDetails.style.display = 'block';
         
-        // Extraer el nombre base del archivo (sin timestamp y números)
-        const cleanName = fileName.replace('.xlsx', '').replace('.xls', '');
-        const nameWithoutTimestamp = cleanName.replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '');
-        const baseFileName = nameWithoutTimestamp.replace(/-\d{8}-\d{6}$/, '');
-        const nameParts = baseFileName.split('-');
-        const possibleName = nameParts.slice(1).join(' ');
+        // Usar slug base y nombre probable
+        const baseFileName = this.getBaseFileSlug(fileName);
+        const possibleName = baseFileName
+            .replace(/^expediente-/, '')
+            .split('-')
+            .join(' ');
         
         detailContent.innerHTML = `
             <div class="manual-mapping-form">
@@ -936,7 +941,7 @@ export default class ExcelImportModule {
                 
                 <div class="mapping-actions">
                     <button class="btn btn-sm btn-primary" 
-                            onclick="window.excelImportModule.saveMappingWithBase('${fileId}', '${baseFileName}', '${fileName}')"
+                            onclick="window.excelImportModule.saveMappingWithBase('${fileId}', '${fileName}')"
                             id="save-mapping-btn-${fileId}"
                             disabled>
                         💾 Guardar mapeo (se recordará para futuros archivos)
@@ -1010,6 +1015,10 @@ export default class ExcelImportModule {
             
             if (error) {
                 console.error('❌ Error cargando estudiantes:', error);
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Sin permisos para leer la tabla users</option>';
+                }
                 return;
             }
             
@@ -1332,14 +1341,8 @@ export default class ExcelImportModule {
             }
         }
         
-        // Extraer nombre base del archivo (sin timestamp y sin números del final)
-        const cleanName = fileName.replace('.xlsx', '').replace('.xls', '');
-        
-        // Quitar el timestamp del inicio (formato: 2025-06-07T05-15-55-208Z_)
-        const nameWithoutTimestamp = cleanName.replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '');
-        
-        // Quitar los números del final (fecha del informe)
-        const baseFileName = nameWithoutTimestamp.replace(/-\d{8}-\d{6}$/, '');
+        // Usar utilidad común para obtener slug base
+        const baseFileName = this.getBaseFileSlug(fileName);
         info.baseFileName = baseFileName;
         
         // Extraer partes del nombre
@@ -1481,7 +1484,7 @@ export default class ExcelImportModule {
         }
     }
 
-    async saveMappingWithBase(fileId, baseFileName, originalFileName) {
+    async saveMappingWithBase(fileId, originalFileName) {
         const select = document.getElementById(`mapping-select-${fileId}`);
         if (!select || !select.value) {
             this.dashboard.showNotification('warning', 'Por favor selecciona un estudiante');
@@ -1489,6 +1492,8 @@ export default class ExcelImportModule {
         }
         
         try {
+            // Obtener slug base del archivo
+            const baseFileName = this.getBaseFileSlug(originalFileName);
             // Guardar el mapeo usando el nombre base (sin números)
             const { error } = await this.supabase
                 .from('excel_name_mappings')
