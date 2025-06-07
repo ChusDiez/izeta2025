@@ -41,7 +41,14 @@ serve(async (req) => {
     const { bucket, fileName } = await req.json();
 
     if (!bucket || !fileName) {
-      throw new Error("Falta bucket o fileName en la petición");
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Falta bucket o fileName en la petición",
+          errorCode: "MISSING_PARAMS"
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     console.log(`📄 Procesando archivo: ${fileName} del bucket: ${bucket}`);
@@ -53,7 +60,15 @@ serve(async (req) => {
       .download(fileName);
 
     if (downloadError) {
-      throw new Error(`Error descargando archivo: ${downloadError.message}`);
+      console.error("Error descargando archivo:", downloadError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Error descargando archivo: ${downloadError.message}`,
+          errorCode: "DOWNLOAD_ERROR"
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Convertir blob a ArrayBuffer
@@ -259,7 +274,18 @@ serve(async (req) => {
       const errorMsg = searchName 
         ? `No se pudo encontrar el email del estudiante. Nombre buscado: ${searchName}`
         : "No se pudo encontrar el email del estudiante en el archivo ni extraer el nombre";
-      throw new Error(errorMsg);
+      
+      console.log(`⚠️ ${errorMsg}`);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: errorMsg,
+          errorCode: "STUDENT_NOT_FOUND",
+          searchName: searchName || null
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Buscar la fila de cabecera (donde está "Asignatura")
@@ -272,7 +298,16 @@ serve(async (req) => {
     }
 
     if (headerRowIndex === -1) {
-      throw new Error("No se encontró la cabecera de la tabla de tests");
+      console.log("⚠️ No se encontró la cabecera de la tabla de tests");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "No se encontró la cabecera de la tabla de tests. Se esperaba encontrar 'Asignatura' en la primera columna.",
+          errorCode: "HEADER_NOT_FOUND"
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Mapear columnas
@@ -300,7 +335,17 @@ serve(async (req) => {
       .single();
 
     if (userError || !user) {
-      throw new Error(`Usuario no encontrado con email: ${studentInfo.email}`);
+      console.log(`⚠️ Usuario no encontrado con email: ${studentInfo.email}`);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Usuario no encontrado con email: ${studentInfo.email}`,
+          errorCode: "USER_NOT_FOUND",
+          studentEmail: studentInfo.email
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const studentId = user.id;
@@ -357,7 +402,18 @@ serve(async (req) => {
         });
 
       if (insertError) {
-        throw new Error(`Error insertando registros: ${insertError.message}`);
+        console.error(`⚠️ Error insertando registros:`, insertError);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Error insertando registros: ${insertError.message}`,
+            errorCode: "INSERT_ERROR",
+            studentEmail: studentInfo.email,
+            recordsAttempted: testRecords.length
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
     }
 

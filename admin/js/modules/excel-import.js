@@ -123,6 +123,12 @@ export default class ExcelImportModule {
                     border-color: #dc3545;
                 }
                 
+                .file-item.skipped {
+                    background: #e2e3e5;
+                    border-color: #6c757d;
+                    opacity: 0.7;
+                }
+                
                 .file-info {
                     display: flex;
                     justify-content: space-between;
@@ -472,7 +478,15 @@ export default class ExcelImportModule {
                             `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`
                         );
                     } else {
-                        throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                        // Si hay error con información adicional
+                        const errorObj = {
+                            message: processResult.error,
+                            needsMapping: processResult.needsMapping,
+                            needsUserCreation: processResult.needsUserCreation,
+                            searchName: processResult.searchName,
+                            studentEmail: processResult.studentEmail
+                        };
+                        throw errorObj;
                     }
                 } else {
                     // Usar el flujo normal con trigger automático
@@ -494,7 +508,15 @@ export default class ExcelImportModule {
                             `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
                         );
                     } else {
-                        throw new Error(processResult.error || 'Error desconocido en el procesamiento');
+                        // Si hay error con información adicional
+                        const errorObj = {
+                            message: processResult.error,
+                            needsMapping: processResult.needsMapping,
+                            needsUserCreation: processResult.needsUserCreation,
+                            searchName: processResult.searchName,
+                            studentEmail: processResult.studentEmail
+                        };
+                        throw errorObj;
                     }
                 }
                 
@@ -507,6 +529,13 @@ export default class ExcelImportModule {
                 // Si es error de usuario no encontrado, ofrecer mapeo manual
                 if (error.message.includes('No se pudo encontrar') || error.message.includes('Usuario no encontrado')) {
                     this.offerManualMapping(fileId, file.name, error.message);
+                }
+                
+                // Si el procesamiento devolvió información adicional
+                if (error.needsMapping) {
+                    this.offerManualMapping(fileId, file.name, error.message);
+                } else if (error.needsUserCreation) {
+                    this.offerUserCreation(fileId, error.studentEmail, error.message);
                 }
                 
                 this.dashboard.showNotification('error', `Error con ${file.name}: ${error.message}`);
@@ -699,7 +728,31 @@ export default class ExcelImportModule {
             // Verificar si la función devolvió un error en el data
             if (data && !data.success && data.error) {
                 console.error('Error procesando:', data.error);
-                throw new Error(data.error);
+                
+                // Manejar errores específicos
+                if (data.errorCode === 'STUDENT_NOT_FOUND') {
+                    return {
+                        success: false,
+                        error: data.error,
+                        needsMapping: true,
+                        searchName: data.searchName
+                    };
+                } else if (data.errorCode === 'USER_NOT_FOUND') {
+                    return {
+                        success: false,
+                        error: data.error,
+                        needsUserCreation: true,
+                        studentEmail: data.studentEmail
+                    };
+                } else if (data.errorCode === 'HEADER_NOT_FOUND') {
+                    return {
+                        success: false,
+                        error: 'El archivo Excel no tiene el formato esperado. ' + data.error
+                    };
+                } else {
+                    // Otros errores
+                    throw new Error(data.error);
+                }
             }
             
             if (data && data.success) {
@@ -1161,5 +1214,48 @@ export default class ExcelImportModule {
         }
         
         return records;
+    }
+
+    offerUserCreation(fileId, studentEmail, errorMessage) {
+        const fileItem = document.getElementById(fileId);
+        if (!fileItem) return;
+        
+        const detailContent = fileItem.querySelector('.detail-content');
+        const fileDetails = fileItem.querySelector('.file-details');
+        
+        fileDetails.style.display = 'block';
+        
+        detailContent.innerHTML = `
+            <div class="user-creation-form">
+                <p class="error-message">${errorMessage}</p>
+                <p><strong>El usuario con email ${studentEmail} no existe en el sistema.</strong></p>
+                <p>Opciones:</p>
+                
+                <div class="creation-options">
+                    <button class="btn btn-sm btn-primary" onclick="window.dashboardAdmin.showPage('bulk-users')">
+                        👥 Ir a Carga Masiva para crear usuario
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="window.excelImportModule.skipFile('${fileId}')">
+                        ⏭️ Omitir este archivo
+                    </button>
+                </div>
+                
+                <div class="info-box" style="margin-top: 1rem;">
+                    <p><small>💡 Tip: Si tienes muchos usuarios nuevos, usa la Carga Masiva para importarlos todos de una vez.</small></p>
+                </div>
+            </div>
+        `;
+    }
+    
+    skipFile(fileId) {
+        const fileItem = document.getElementById(fileId);
+        if (fileItem) {
+            fileItem.className = 'file-item skipped';
+            const statusBadge = fileItem.querySelector('.status-badge');
+            if (statusBadge) {
+                statusBadge.textContent = '⏭️ Omitido';
+                statusBadge.className = 'status-badge status-skipped';
+            }
+        }
     }
 } 
