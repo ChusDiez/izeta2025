@@ -236,6 +236,46 @@ export default class ExcelImportModule {
                     margin-top: 0;
                     color: #0066cc;
                 }
+                
+                input.form-control {
+                    width: 100%;
+                    padding: 8px 12px;
+                    margin-bottom: 10px;
+                    border: 1px solid #ced4da;
+                    border-radius: 4px;
+                    font-size: 14px;
+                }
+                
+                input.form-control:focus {
+                    border-color: #80bdff;
+                    outline: 0;
+                    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+                }
+                
+                select.form-control[size] {
+                    height: 200px;
+                    overflow-y: auto;
+                }
+                
+                select.form-control option {
+                    padding: 8px;
+                }
+                
+                select.form-control option:hover {
+                    background-color: #f8f9fa;
+                }
+                
+                .mapping-actions {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 15px;
+                    flex-wrap: wrap;
+                }
+                
+                .mapping-actions .btn {
+                    flex: 1;
+                    min-width: 150px;
+                }
             </style>
         `;
 
@@ -460,10 +500,40 @@ export default class ExcelImportModule {
                 this.updateFileStatus(fileId, 'processing', '🔄 Procesando Excel...');
                 
                 // OPCIÓN: Forzar procesamiento manual siempre (descomenta si hay problemas con el trigger)
-                const FORCE_MANUAL_PROCESSING = true; // Cambia a false para usar trigger automático
+                const FORCE_MANUAL_PROCESSING = false; // Cambia a false para usar trigger automático
                 
-                if (FORCE_MANUAL_PROCESSING) {
-                    // Procesar directamente sin esperar al trigger
+                // TEMPORAL: Mientras la función Edge tiene error 500, usar procesamiento local
+                const USE_LOCAL_PROCESSING = true; // Cambiar a false cuando se arregle la Edge Function
+                
+                if (USE_LOCAL_PROCESSING) {
+                    // Procesar localmente en el navegador
+                    console.log('Usando procesamiento local (Edge Function no disponible)');
+                    const processResult = await this.processExcelLocally(file, fileName);
+                    
+                    if (processResult.success) {
+                        // Actualizar UI con éxito y detalles del estudiante
+                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
+                            student: processResult.student,
+                            recordsProcessed: processResult.recordsProcessed,
+                            details: processResult.details
+                        });
+                        
+                        this.dashboard.showNotification('success', 
+                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`
+                        );
+                    } else {
+                        // Si hay error con información adicional
+                        const errorObj = {
+                            message: processResult.error,
+                            needsMapping: processResult.needsMapping,
+                            needsUserCreation: processResult.needsUserCreation,
+                            searchName: processResult.searchName,
+                            studentEmail: processResult.studentEmail
+                        };
+                        throw errorObj;
+                    }
+                } else if (FORCE_MANUAL_PROCESSING) {
+                    // Procesar con Edge Function manualmente
                     const processResult = await this.processManually(fileName, file);
                     
                     if (processResult.success) {
@@ -836,36 +906,55 @@ export default class ExcelImportModule {
         
         fileDetails.style.display = 'block';
         
-        // Extraer el nombre del archivo
-        const nameParts = fileName.replace('.xlsx', '').replace('.xls', '').split('-');
-        const possibleName = nameParts.slice(1, 3).join(' ');
+        // Extraer el nombre base del archivo (sin timestamp y números)
+        const cleanName = fileName.replace('.xlsx', '').replace('.xls', '');
+        const nameWithoutTimestamp = cleanName.replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '');
+        const baseFileName = nameWithoutTimestamp.replace(/-\d{8}-\d{6}$/, '');
+        const nameParts = baseFileName.split('-');
+        const possibleName = nameParts.slice(1).join(' ');
         
         detailContent.innerHTML = `
             <div class="manual-mapping-form">
                 <p class="error-message">${errorMessage}</p>
-                <p><strong>¿Quieres crear un mapeo manual para este archivo?</strong></p>
+                <p><strong>🔍 Necesitamos identificar al estudiante</strong></p>
+                <p>Archivo: <code>${baseFileName}</code></p>
                 <p>Nombre detectado: <code>${possibleName}</code></p>
                 
                 <div class="mapping-input">
-                    <label>Selecciona el estudiante correcto:</label>
-                    <select id="mapping-select-${fileId}" class="form-control">
-                        <option value="">-- Selecciona un estudiante --</option>
+                    <label>Buscar estudiante por nombre:</label>
+                    <input type="text" 
+                           id="student-search-${fileId}" 
+                           class="form-control" 
+                           placeholder="Escribe para buscar..."
+                           value="${possibleName}">
+                    
+                    <label style="margin-top: 10px;">O selecciona de la lista:</label>
+                    <select id="mapping-select-${fileId}" class="form-control" size="8">
+                        <option value="">Cargando estudiantes...</option>
                     </select>
                 </div>
                 
                 <div class="mapping-actions">
-                    <button class="btn btn-sm btn-primary" onclick="window.excelImportModule.saveMapping('${fileId}', '${possibleName}')">
-                        💾 Guardar mapeo
+                    <button class="btn btn-sm btn-primary" 
+                            onclick="window.excelImportModule.saveMappingWithBase('${fileId}', '${baseFileName}', '${fileName}')"
+                            id="save-mapping-btn-${fileId}"
+                            disabled>
+                        💾 Guardar mapeo (se recordará para futuros archivos)
                     </button>
-                    <button class="btn btn-sm btn-secondary" onclick="window.excelImportModule.retryFile('${fileId}', '${fileName}')">
-                        🔄 Reintentar
+                    <button class="btn btn-sm btn-secondary" 
+                            onclick="window.excelImportModule.skipFile('${fileId}')">
+                        ⏭️ Omitir este archivo
                     </button>
+                </div>
+                
+                <div class="info-box" style="margin-top: 1rem;">
+                    <p><small>💡 Una vez que mapees este archivo, todos los futuros archivos de <strong>${possibleName}</strong> se procesarán automáticamente.</small></p>
                 </div>
             </div>
         `;
         
-        // Cargar lista de estudiantes
-        this.loadStudentsList(`mapping-select-${fileId}`);
+        // Cargar lista de estudiantes con búsqueda inteligente
+        this.loadStudentsListWithSearch(`mapping-select-${fileId}`, `student-search-${fileId}`, possibleName, fileId);
     }
     
     async loadStudentsList(selectId) {
@@ -901,6 +990,72 @@ export default class ExcelImportModule {
                 
                 select.appendChild(optgroup);
             });
+            
+        } catch (error) {
+            console.error('Error cargando estudiantes:', error);
+        }
+    }
+    
+    async loadStudentsListWithSearch(selectId, searchId, initialSearch, fileId) {
+        try {
+            // Primero cargar todos los estudiantes
+            const { data: allStudents } = await this.supabase
+                .from('users')
+                .select('id, email, username, cohort')
+                .eq('role', 'user')
+                .order('username');
+            
+            if (!allStudents) return;
+            
+            const select = document.getElementById(selectId);
+            const searchInput = document.getElementById(searchId);
+            const saveBtn = document.getElementById(`save-mapping-btn-${fileId}`);
+            
+            if (!select || !searchInput) return;
+            
+            // Función para actualizar la lista filtrada
+            const updateList = (searchTerm) => {
+                const filtered = searchTerm 
+                    ? allStudents.filter(s => 
+                        s.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        s.email.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                    : allStudents;
+                
+                select.innerHTML = '';
+                
+                if (filtered.length === 0) {
+                    select.innerHTML = '<option value="">No se encontraron coincidencias</option>';
+                    if (saveBtn) saveBtn.disabled = true;
+                } else {
+                    filtered.forEach(student => {
+                        const option = document.createElement('option');
+                        option.value = student.email;
+                        option.textContent = `${student.username} (${student.email}) - ${student.cohort}`;
+                        select.appendChild(option);
+                    });
+                    
+                    // Si hay exactamente una coincidencia, seleccionarla automáticamente
+                    if (filtered.length === 1) {
+                        select.value = filtered[0].email;
+                    }
+                    
+                    if (saveBtn) saveBtn.disabled = false;
+                }
+            };
+            
+            // Evento de búsqueda en tiempo real
+            searchInput.addEventListener('input', (e) => {
+                updateList(e.target.value);
+            });
+            
+            // Habilitar/deshabilitar botón según selección
+            select.addEventListener('change', (e) => {
+                if (saveBtn) saveBtn.disabled = !e.target.value;
+            });
+            
+            // Búsqueda inicial
+            updateList(initialSearch);
             
         } catch (error) {
             console.error('Error cargando estudiantes:', error);
@@ -1034,7 +1189,13 @@ export default class ExcelImportModule {
             const studentInfo = await this.extractStudentInfoLocal(rawData, fileName);
             
             if (!studentInfo.email) {
-                throw new Error(`No se pudo identificar al estudiante. ${studentInfo.searchName ? `Nombre buscado: ${studentInfo.searchName}` : ''}`);
+                // Devolver error con información para mapeo
+                return {
+                    success: false,
+                    error: `No se pudo identificar al estudiante. ${studentInfo.searchName ? `Nombre buscado: ${studentInfo.searchName}` : ''}`,
+                    needsMapping: true,
+                    searchName: studentInfo.searchName
+                };
             }
             
             // Buscar usuario
@@ -1045,7 +1206,13 @@ export default class ExcelImportModule {
                 .single();
             
             if (userError || !user) {
-                throw new Error(`Usuario no encontrado: ${studentInfo.email}`);
+                // Usuario no existe, ofrecer crearlo
+                return {
+                    success: false,
+                    error: `Usuario no encontrado: ${studentInfo.email}`,
+                    needsUserCreation: true,
+                    studentEmail: studentInfo.email
+                };
             }
             
             // Procesar tests
@@ -1116,7 +1283,7 @@ export default class ExcelImportModule {
     }
     
     async extractStudentInfoLocal(rawData, fileName) {
-        const info = { email: null, searchName: null };
+        const info = { email: null, searchName: null, baseFileName: null };
         
         // Buscar email en las primeras filas
         for (let i = 0; i < Math.min(20, rawData.length); i++) {
@@ -1131,22 +1298,41 @@ export default class ExcelImportModule {
             }
         }
         
-        // Buscar por nombre del archivo
+        // Extraer nombre base del archivo (sin timestamp y sin números del final)
         const cleanName = fileName.replace('.xlsx', '').replace('.xls', '');
-        const parts = cleanName.split('-');
         
-        if (parts.length >= 3) {
-            info.searchName = `${parts[1]} ${parts[2]}`.trim();
-            
-            // Buscar en mapeos
+        // Quitar el timestamp del inicio (formato: 2025-06-07T05-15-55-208Z_)
+        const nameWithoutTimestamp = cleanName.replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '');
+        
+        // Quitar los números del final (fecha del informe)
+        const baseFileName = nameWithoutTimestamp.replace(/-\d{8}-\d{6}$/, '');
+        info.baseFileName = baseFileName;
+        
+        // Extraer partes del nombre
+        const parts = baseFileName.split('-');
+        
+        if (parts.length >= 3 && parts[0] === 'expediente') {
+            // Formato: expediente-nombre-apellidos
+            info.searchName = parts.slice(1).join(' ');
+        } else if (parts.length >= 2) {
+            // Otros formatos
+            info.searchName = parts.join(' ');
+        }
+        
+        console.log('Nombre base extraído:', info.baseFileName);
+        console.log('Nombre para buscar:', info.searchName);
+        
+        if (info.searchName) {
+            // Buscar en mapeos usando el nombre base
             const { data: mapping } = await this.supabase
                 .from('excel_name_mappings')
                 .select('user_email')
-                .eq('excel_name', info.searchName.toLowerCase())
+                .eq('excel_name', info.baseFileName.toLowerCase())
                 .single();
             
             if (mapping) {
                 info.email = mapping.user_email;
+                console.log('✅ Encontrado en mapeo por nombre base:', info.email);
                 return info;
             }
             
@@ -1250,12 +1436,191 @@ export default class ExcelImportModule {
     skipFile(fileId) {
         const fileItem = document.getElementById(fileId);
         if (fileItem) {
-            fileItem.className = 'file-item skipped';
-            const statusBadge = fileItem.querySelector('.status-badge');
-            if (statusBadge) {
-                statusBadge.textContent = '⏭️ Omitido';
-                statusBadge.className = 'status-badge status-skipped';
+            this.updateFileStatus(fileId, 'skipped', '⏭️ Archivo omitido');
+            fileItem.style.opacity = '0.5';
+            
+            // Ocultar detalles
+            const fileDetails = fileItem.querySelector('.file-details');
+            if (fileDetails) {
+                fileDetails.style.display = 'none';
             }
+        }
+    }
+
+    async saveMappingWithBase(fileId, baseFileName, originalFileName) {
+        const select = document.getElementById(`mapping-select-${fileId}`);
+        if (!select || !select.value) {
+            this.dashboard.showNotification('warning', 'Por favor selecciona un estudiante');
+            return;
+        }
+        
+        try {
+            // Guardar el mapeo usando el nombre base (sin números)
+            const { error } = await this.supabase
+                .from('excel_name_mappings')
+                .insert({
+                    excel_name: baseFileName.toLowerCase(),
+                    user_email: select.value,
+                    notes: `Mapeo creado desde archivo: ${originalFileName}`
+                });
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 
+                `✅ Mapeo guardado. Los próximos archivos de este estudiante se procesarán automáticamente.`
+            );
+            
+            // Actualizar UI para mostrar éxito
+            const fileItem = document.getElementById(fileId);
+            if (fileItem) {
+                const detailContent = fileItem.querySelector('.detail-content');
+                detailContent.innerHTML = `
+                    <div class="success-message">
+                        ✅ Mapeo guardado exitosamente<br>
+                        <small>Los archivos de <strong>${baseFileName}</strong> se asociarán automáticamente a ${select.value}</small>
+                        <br><br>
+                        <button class="btn btn-sm btn-primary" 
+                                onclick="window.excelImportModule.retryFileWithMapping('${fileId}', '${originalFileName}', '${select.value}')">
+                            🔄 Procesar este archivo ahora
+                        </button>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Error guardando mapeo:', error);
+            this.dashboard.showNotification('error', 'Error al guardar el mapeo: ' + error.message);
+        }
+    }
+    
+    async retryFileWithMapping(fileId, fileName, userEmail) {
+        try {
+            // Buscar el archivo original
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput || !fileInput.files) {
+                this.dashboard.showNotification('error', 'No se pudo encontrar el archivo original');
+                return;
+            }
+            
+            // Buscar el archivo por nombre
+            let originalFile = null;
+            for (let i = 0; i < fileInput.files.length; i++) {
+                if (fileInput.files[i].name === fileName.split('_')[1]) {
+                    originalFile = fileInput.files[i];
+                    break;
+                }
+            }
+            
+            if (!originalFile) {
+                // Si no está en el input, intentar con los selectedFiles
+                originalFile = this.selectedFiles.find(f => fileName.includes(f.name));
+            }
+            
+            if (!originalFile) {
+                this.dashboard.showNotification('error', 'No se pudo encontrar el archivo original para reprocesar');
+                return;
+            }
+            
+            // Actualizar estado
+            this.updateFileStatus(fileId, 'processing', '🔄 Reprocesando con mapeo...');
+            
+            // Procesar localmente con el email ya conocido
+            const processResult = await this.processExcelLocallyWithEmail(originalFile, fileName, userEmail);
+            
+            if (processResult.success) {
+                this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente con mapeo manual', {
+                    student: processResult.student,
+                    recordsProcessed: processResult.recordsProcessed,
+                    details: processResult.details
+                });
+                
+                this.dashboard.showNotification('success', 
+                    `✅ Archivo procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
+                );
+            } else {
+                throw new Error(processResult.error || 'Error en el reprocesamiento');
+            }
+            
+        } catch (error) {
+            console.error('Error reprocesando archivo:', error);
+            this.updateFileStatus(fileId, 'error', `❌ Error: ${error.message}`);
+            this.dashboard.showNotification('error', 'Error al reprocesar: ' + error.message);
+        }
+    }
+    
+    // Método auxiliar para procesar con email conocido
+    async processExcelLocallyWithEmail(file, fileName, userEmail) {
+        try {
+            console.log('📊 Reprocesando Excel con email mapeado:', userEmail);
+            
+            // Cargar SheetJS si no está cargado
+            if (!window.XLSX) {
+                await this.loadSheetJS();
+            }
+            
+            // Leer archivo
+            const arrayBuffer = await this.readFileAsArrayBuffer(file);
+            const workbook = window.XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+            
+            // Buscar usuario directamente por email
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('id, username, email, cohort')
+                .eq('email', userEmail)
+                .single();
+            
+            if (userError || !user) {
+                throw new Error(`Usuario no encontrado: ${userEmail}`);
+            }
+            
+            // Procesar tests
+            const testRecords = this.extractTestRecordsLocal(rawData, user.id);
+            
+            console.log(`📝 Encontrados ${testRecords.length} registros de tests`);
+            
+            // Guardar en base de datos
+            if (testRecords.length > 0) {
+                const { error: insertError } = await this.supabase
+                    .from('topic_results')
+                    .upsert(testRecords, {
+                        onConflict: 'student_id,topic_code,activity'
+                    });
+                
+                if (insertError) {
+                    throw new Error(`Error guardando datos: ${insertError.message}`);
+                }
+            }
+            
+            // Registrar en log
+            await this.supabase.from('api_sync_log').insert({
+                endpoint: 'process_excel',
+                status_code: 200,
+                records_synced: testRecords.length,
+                details: {
+                    fileName,
+                    studentEmail: userEmail,
+                    recordsProcessed: testRecords.length,
+                    processedAt: new Date().toISOString(),
+                    processingMode: 'local_with_mapping'
+                }
+            });
+            
+            return {
+                success: true,
+                student: {
+                    ...user,
+                    email: userEmail,
+                    name: user.username
+                },
+                recordsProcessed: testRecords.length
+            };
+            
+        } catch (error) {
+            console.error('Error en procesamiento con email:', error);
+            throw error;
         }
     }
 } 
