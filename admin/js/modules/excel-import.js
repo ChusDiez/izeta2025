@@ -998,29 +998,70 @@ export default class ExcelImportModule {
     
     async loadStudentsListWithSearch(selectId, searchId, initialSearch, fileId) {
         try {
+            console.log('🔍 Cargando lista de estudiantes...');
+            
             // Primero cargar todos los estudiantes
-            const { data: allStudents } = await this.supabase
+            let { data: allStudents, error } = await this.supabase
                 .from('users')
-                .select('id, email, username, cohort')
+                .select('id, email, username, cohort, role')
                 .eq('role', 'user')
                 .order('username');
             
-            if (!allStudents) return;
+            console.log('📊 Estudiantes cargados:', allStudents?.length || 0);
+            
+            if (error) {
+                console.error('❌ Error cargando estudiantes:', error);
+                return;
+            }
+            
+            if (!allStudents || allStudents.length === 0) {
+                console.warn('⚠️ No se encontraron estudiantes con role="user"');
+                
+                // Intentar cargar todos los usuarios sin filtro de rol
+                console.log('🔄 Intentando cargar todos los usuarios...');
+                const { data: allUsers, error: allUsersError } = await this.supabase
+                    .from('users')
+                    .select('id, email, username, cohort, role')
+                    .order('username');
+                
+                console.log('👥 Todos los usuarios:', allUsers?.length || 0);
+                if (allUsers && allUsers.length > 0) {
+                    console.log('📋 Roles encontrados:', [...new Set(allUsers.map(u => u.role))]);
+                    // Usar todos los usuarios como fallback
+                    allStudents = allUsers;
+                } else {
+                    console.error('❌ No hay usuarios en la base de datos');
+                    return;
+                }
+            }
             
             const select = document.getElementById(selectId);
             const searchInput = document.getElementById(searchId);
             const saveBtn = document.getElementById(`save-mapping-btn-${fileId}`);
             
-            if (!select || !searchInput) return;
+            console.log('🎯 Elementos encontrados:', {
+                select: !!select,
+                searchInput: !!searchInput,
+                saveBtn: !!saveBtn
+            });
+            
+            if (!select || !searchInput) {
+                console.error('❌ No se encontraron elementos del DOM');
+                return;
+            }
             
             // Función para actualizar la lista filtrada
             const updateList = (searchTerm) => {
+                console.log('🔍 Filtrando con término:', searchTerm);
+                
                 const filtered = searchTerm 
                     ? allStudents.filter(s => 
                         s.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         s.email.toLowerCase().includes(searchTerm.toLowerCase())
                       )
                     : allStudents;
+                
+                console.log('📋 Estudiantes filtrados:', filtered.length);
                 
                 select.innerHTML = '';
                 
@@ -1031,13 +1072,16 @@ export default class ExcelImportModule {
                     filtered.forEach(student => {
                         const option = document.createElement('option');
                         option.value = student.email;
-                        option.textContent = `${student.username} (${student.email}) - ${student.cohort}`;
+                        option.textContent = `${student.username} (${student.email})${student.cohort ? ` - ${student.cohort}` : ''}`;
                         select.appendChild(option);
                     });
+                    
+                    console.log('✅ Lista actualizada con', filtered.length, 'estudiantes');
                     
                     // Si hay exactamente una coincidencia, seleccionarla automáticamente
                     if (filtered.length === 1) {
                         select.value = filtered[0].email;
+                        console.log('🎯 Auto-seleccionado:', filtered[0].email);
                     }
                     
                     if (saveBtn) saveBtn.disabled = false;
@@ -1055,10 +1099,17 @@ export default class ExcelImportModule {
             });
             
             // Búsqueda inicial
+            console.log('🚀 Iniciando búsqueda con:', initialSearch);
             updateList(initialSearch);
             
         } catch (error) {
-            console.error('Error cargando estudiantes:', error);
+            console.error('❌ Error cargando estudiantes:', error);
+            
+            // Mostrar error en el select
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.innerHTML = '<option value="">Error cargando estudiantes</option>';
+            }
         }
     }
     

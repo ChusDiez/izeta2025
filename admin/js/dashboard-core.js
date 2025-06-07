@@ -110,6 +110,7 @@ export class DashboardCore {
             'student-detail': './modules/student-detail.js',
             'evolcampus': './modules/evolcampus-sync.js',
             'excel-import': './modules/excel-import.js',
+            'name-mappings': './modules/name-mappings.js',
             'dashboard': './modules/dashboard-visualizations.js',
             'dashboard-modular': './modules/dashboard-modular.js'
         };
