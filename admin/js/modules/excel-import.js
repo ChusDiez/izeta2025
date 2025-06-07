@@ -1008,7 +1008,7 @@ export default class ExcelImportModule {
             // Primero cargar todos los estudiantes (sin filtro de rol)
             let { data: allStudents, error } = await this.supabase
                 .from('users')
-                .select('id, email, username, cohort, role')
+                .select('id, email, username, cohort')
                 .order('username');
             
             console.log('📊 Estudiantes cargados:', allStudents?.length || 0);
