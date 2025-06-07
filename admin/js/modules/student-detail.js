@@ -5,6 +5,8 @@ export default class StudentDetailModule {
         this.dashboard = dashboardCore;
         this.currentStudent = null;
         this.studentHistory = null;
+        this.currentEvolcampusData = null;
+        this.currentStudentId = null;
         // Helper genérico: ejecuta la query Supabase y lanza error salvo 'no rows'
         this.safeQuery = async (promise, logCtx) => {
             const { data, error } = await promise;
@@ -1091,6 +1093,9 @@ Un saludo,
         const contentContainer = document.getElementById('evolcampusContent');
         if (!statsContainer || !contentContainer) return;
 
+        // Guardar datos para uso posterior
+        this.currentEvolcampusData = evolcampusData;
+        
         const activities = evolcampusData.activities || [];
         const enrollment = evolcampusData.enrollment;
 
@@ -1099,76 +1104,78 @@ Un saludo,
             statsContainer.innerHTML = `
               <div class="evolcampus-stats-grid">
                 <div class="stat-card"><div class="stat-value">${enrollment.completed_percent || 0}%</div><div class="stat-label">Completado</div></div>
-                <div class="stat-card"><div class="stat-value">${enrollment.grade ?? 'N/A'}</div><div class="stat-label">Nota</div></div>
-                <div class="stat-card"><div class="stat-value">${enrollment.connections || 0}</div><div class="stat-label">Conexiones</div></div>
+                <div class="stat-card"><div class="stat-value">${enrollment.grade ?? 'N/A'}</div><div class="stat-label">Nota Media</div></div>
+                <div class="stat-card"><div class="stat-value">${activities.length}</div><div class="stat-label">Tests Totales</div></div>
                 <div class="stat-card"><div class="stat-value">${enrollment.last_connect ? new Date(enrollment.last_connect).toLocaleDateString() : 'N/A'}</div><div class="stat-label">Última conexión</div></div>
               </div>`;
         } else {
             statsContainer.innerHTML = '<div class="no-data">Sin enrollment registrado</div>';
         }
 
-        /* ─────────  B. Tabla completa de tests  ───────── */
+        /* ─────────  B. Vista mejorada para muchos tests  ───────── */
         if (activities.length === 0) {
             contentContainer.innerHTML = '<p class="no-data-message">No hay datos de actividades todavía.</p>';
             return;
         }
 
-        const rows = activities.map(a => `
-          <tr class="${a.done ? 'done' : 'pending'}">
-            <td>${a.activity}</td>
-            <td style="text-align:center;">${a.done ? '✔️' : '—'}</td>
-            <td style="text-align:center;">${a.score ?? '—'}</td>
-            <td style="text-align:center;">${a.avg_score !== null ? a.avg_score.toFixed(1) : '—'}</td>
-          </tr>`).join('');
+        // Agrupar actividades por tema
+        const groupedActivities = this.groupActivitiesByTopic(activities);
+        
+        // Crear controles de vista
+        const controls = `
+            <div class="evolcampus-controls">
+                <div class="view-toggle">
+                    <button class="active" onclick="window.studentDetailModule.changeEvolView('grouped')">Por Temas</button>
+                    <button onclick="window.studentDetailModule.changeEvolView('heatmap')">Mapa de Calor</button>
+                    <button onclick="window.studentDetailModule.changeEvolView('list')">Lista Completa</button>
+                </div>
+                <select class="filter-select" onchange="window.studentDetailModule.filterByScore(this.value)">
+                    <option value="all">Todas las notas</option>
+                    <option value="excellent">Excelentes (9-10)</option>
+                    <option value="good">Buenas (7-8.9)</option>
+                    <option value="regular">Regulares (5-6.9)</option>
+                    <option value="poor">Bajas (<5)</option>
+                </select>
+            </div>
+        `;
 
-        contentContainer.innerHTML = `
-          <table class="activity-table" style="width:100%;border-collapse:collapse;margin-bottom:1.5rem;">
-            <thead>
-              <tr>
-                <th style="width:45%;">Actividad</th>
-                <th style="width:10%;">Hecho</th>
-                <th style="width:15%;">Tu nota</th>
-                <th style="width:15%;">Media</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-          <canvas id="studentVsAvgChart" style="max-height:400px;"></canvas>
-          <style>
-            .activity-table th, .activity-table td { padding:.5rem; border-bottom:1px solid #e5e7eb; }
-            .activity-table .done    { background:#ecfdf5; }
-            .activity-table .pending { background:#fef2f2; }
-          </style>`;
+        // Vista por defecto: agrupada por temas
+        const topicsHtml = Object.entries(groupedActivities).map(([topic, tests]) => {
+            const avgScore = tests.reduce((sum, t) => sum + (t.score || 0), 0) / tests.filter(t => t.score !== null).length;
+            const completedCount = tests.filter(t => t.done).length;
+            
+            return `
+                <div class="topic-section" data-topic="${topic}">
+                    <div class="topic-header" onclick="window.studentDetailModule.toggleTopic('${topic}')">
+                        <div class="topic-title">
+                            ${topic === 'general' ? '📚 Tests Generales' : `📖 Tema ${topic}`}
+                        </div>
+                        <div class="topic-stats">
+                            <span class="topic-stat average">Promedio: ${avgScore.toFixed(1)}</span>
+                            <span class="topic-stat count">${completedCount}/${tests.length} completados</span>
+                        </div>
+                    </div>
+                    <div class="topic-tests">
+                        <div class="tests-grid">
+                            ${tests.map(test => this.renderTestCard(test)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
 
-        /* ─────────  C. Bar chart comparativo  ───────── */
-        const doneActs = activities
-            .filter(a => a.done && a.score !== null && a.avg_score !== null)
-            .slice(0, 20);   // limitar a 20 barras para legibilidad
-        if (doneActs.length === 0) return;
+        contentContainer.innerHTML = controls + `
+            <div id="evolcampusViewContainer">
+                ${topicsHtml}
+            </div>
+            <link rel="stylesheet" href="../admin/css/evolcampus-dashboard.css">
+        `;
 
-        const labels      = doneActs.map(a => a.activity);
-        const studentData = doneActs.map(a => a.score);
-        const avgData     = doneActs.map(a => a.avg_score);
-
-        import('https://cdn.jsdelivr.net/npm/chart.js').then(() => {
-            const ctx = document.getElementById('studentVsAvgChart').getContext('2d');
-            new window.Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Alumno', data: studentData, order: 1 },
-                        { label: 'Media',  data: avgData,     order: 2 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'top' } },
-                    interaction: { mode: 'index' },
-                    scales: { y: { beginAtZero: true, max: 10 } }
-                }
-            });
-        });
+        // Mostrar un resumen visual al final
+        this.addVisualSummary(activities, groupedActivities);
+        
+        // Guardar referencia global para acceso desde eventos onclick
+        window.studentDetailModule = this;
     }
     
     groupByTopic(evolcampusData) {
@@ -1250,5 +1257,246 @@ Un saludo,
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         return `${hours}h ${minutes}m`;
+    }
+    
+    // Nuevas funciones para mejorar la visualización de Evolcampus
+    groupActivitiesByTopic(activities) {
+        // Agrupar por temas
+        const topics = {};
+        
+        activities.forEach(activity => {
+            const topicMatch = activity.activity.match(/\b(T\d+)\b/i);
+            const topic = topicMatch ? topicMatch[1].toUpperCase() : 'general';
+            
+            if (!topics[topic]) topics[topic] = [];
+            topics[topic].push(activity);
+        });
+        
+        // Ordenar los temas
+        const sortedTopics = {};
+        Object.keys(topics).sort((a, b) => {
+            if (a === 'general') return 1;
+            if (b === 'general') return -1;
+            return a.localeCompare(b);
+        }).forEach(key => {
+            sortedTopics[key] = topics[key];
+        });
+        
+        return sortedTopics;
+    }
+    
+    renderTestCard(test) {
+        const scoreClass = this.getScoreClassForTest(test.score);
+        const dateStr = test.last_attempt ? new Date(test.last_attempt).toLocaleDateString('es-ES') : 'N/A';
+        
+        return `
+            <div class="test-card ${scoreClass}" data-score="${test.score || 0}">
+                <div class="test-name" title="${test.activity}">${test.activity}</div>
+                <div class="test-score">
+                    <span class="score-value">${test.score !== null ? test.score.toFixed(1) : '—'}/10</span>
+                    <span class="score-date">${dateStr}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    getScoreClassForTest(score) {
+        if (score === null || score === undefined) return '';
+        if (score >= 9) return 'excellent';
+        if (score >= 7) return 'good';
+        if (score >= 5) return 'regular';
+        return 'poor';
+    }
+    
+    toggleTopic(topic) {
+        const section = document.querySelector(`.topic-section[data-topic="${topic}"]`);
+        if (section) {
+            section.classList.toggle('expanded');
+        }
+    }
+    
+    changeEvolView(viewType) {
+        const container = document.getElementById('evolcampusViewContainer');
+        const buttons = document.querySelectorAll('.view-toggle button');
+        
+        // Actualizar botón activo
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Cambiar vista
+        switch(viewType) {
+            case 'heatmap':
+                this.showHeatmapView(container);
+                break;
+            case 'list':
+                this.showListView(container);
+                break;
+            default:
+                this.showGroupedView(container);
+        }
+    }
+    
+    filterByScore(scoreRange) {
+        const cards = document.querySelectorAll('.test-card');
+        cards.forEach(card => {
+            const score = parseFloat(card.dataset.score);
+            let show = true;
+            
+            switch(scoreRange) {
+                case 'excellent':
+                    show = score >= 9;
+                    break;
+                case 'good':
+                    show = score >= 7 && score < 9;
+                    break;
+                case 'regular':
+                    show = score >= 5 && score < 7;
+                    break;
+                case 'poor':
+                    show = score < 5;
+                    break;
+            }
+            
+            card.style.display = show ? 'block' : 'none';
+        });
+    }
+    
+    addVisualSummary(activities, groupedActivities) {
+        const container = document.getElementById('evolcampusViewContainer');
+        const summaryHtml = `
+            <div class="visual-summary">
+                <h3 class="summary-title">📊 Resumen Visual del Progreso</h3>
+                <div class="heatmap-container">
+                    <div class="topic-heatmap">
+                        ${this.generateHeatmap(groupedActivities)}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', summaryHtml);
+    }
+    
+    generateHeatmap(groupedActivities) {
+        const allTopics = Array.from({length: 45}, (_, i) => `T${i + 1}`);
+        let html = '<div class="heatmap-label">Temas</div>';
+        
+        // Cabecera con números de tema
+        allTopics.forEach(topic => {
+            html += `<div class="heatmap-cell heatmap-label">${topic.replace('T', '')}</div>`;
+        });
+        
+        // Fila de datos
+        html += '<div class="heatmap-label">Progreso</div>';
+        allTopics.forEach(topic => {
+            const tests = groupedActivities[topic] || [];
+            const completed = tests.filter(t => t.done).length;
+            const avg = tests.length > 0 ? 
+                tests.reduce((sum, t) => sum + (t.score || 0), 0) / tests.filter(t => t.score !== null).length : 0;
+            
+            let heatLevel = 0;
+            if (completed > 0) {
+                if (avg >= 9) heatLevel = 5;
+                else if (avg >= 7) heatLevel = 4;
+                else if (avg >= 5) heatLevel = 3;
+                else if (avg >= 3) heatLevel = 2;
+                else heatLevel = 1;
+            }
+            
+            html += `<div class="heatmap-cell heat-${heatLevel}" title="${topic}: ${completed} tests, promedio ${avg.toFixed(1)}">${completed || ''}</div>`;
+        });
+        
+        return html;
+    }
+    
+    showHeatmapView(container) {
+        // Implementación de vista de mapa de calor
+        // Por ahora reutilizamos el heatmap del resumen
+        const activities = this.currentEvolcampusData?.activities || [];
+        const grouped = this.groupActivitiesByTopic(activities);
+        
+        container.innerHTML = `
+            <div class="visual-summary">
+                <h3 class="summary-title">📊 Mapa de Calor - Progreso por Tema</h3>
+                <div class="heatmap-container">
+                    <div class="topic-heatmap">
+                        ${this.generateHeatmap(grouped)}
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <p style="text-align: center; color: #6b7280;">
+                        Cada celda representa un tema. El color indica el rendimiento promedio.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+    
+    showListView(container) {
+        // Vista de lista completa
+        const activities = this.currentEvolcampusData?.activities || [];
+        
+        const rows = activities.map(a => `
+            <tr class="${a.done ? 'done' : 'pending'}">
+                <td>${a.activity}</td>
+                <td style="text-align:center;">${a.done ? '✔️' : '—'}</td>
+                <td style="text-align:center;">${a.score ?? '—'}</td>
+                <td style="text-align:center;">${a.first_attempt ? new Date(a.first_attempt).toLocaleDateString() : '—'}</td>
+            </tr>
+        `).join('');
+        
+        container.innerHTML = `
+            <table class="activity-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th>Actividad</th>
+                        <th>Completado</th>
+                        <th>Nota</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <style>
+                .activity-table th, .activity-table td { 
+                    padding: 0.75rem; 
+                    border-bottom: 1px solid #e5e7eb; 
+                }
+                .activity-table .done { background: #ecfdf5; }
+                .activity-table .pending { background: #fef2f2; }
+            </style>
+        `;
+    }
+    
+    showGroupedView(container) {
+        // Volver a la vista agrupada por defecto
+        const activities = this.currentEvolcampusData?.activities || [];
+        const groupedActivities = this.groupActivitiesByTopic(activities);
+        
+        const topicsHtml = Object.entries(groupedActivities).map(([topic, tests]) => {
+            const avgScore = tests.reduce((sum, t) => sum + (t.score || 0), 0) / tests.filter(t => t.score !== null).length;
+            const completedCount = tests.filter(t => t.done).length;
+            
+            return `
+                <div class="topic-section" data-topic="${topic}">
+                    <div class="topic-header" onclick="window.studentDetailModule.toggleTopic('${topic}')">
+                        <div class="topic-title">
+                            ${topic === 'general' ? '📚 Tests Generales' : `📖 Tema ${topic}`}
+                        </div>
+                        <div class="topic-stats">
+                            <span class="topic-stat average">Promedio: ${avgScore.toFixed(1)}</span>
+                            <span class="topic-stat count">${completedCount}/${tests.length} completados</span>
+                        </div>
+                    </div>
+                    <div class="topic-tests">
+                        <div class="tests-grid">
+                            ${tests.map(test => this.renderTestCard(test)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = topicsHtml;
+        this.addVisualSummary(activities, groupedActivities);
     }
 }

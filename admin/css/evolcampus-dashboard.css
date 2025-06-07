@@ -1,0 +1,248 @@
+/* Estilos para Dashboard de Evolcampus con muchos tests */
+
+/* Contenedor principal con scroll */
+.evolcampus-content {
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+/* Agrupación por temas */
+.topic-section {
+    margin-bottom: 2rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+}
+
+.topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.topic-header:hover {
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin: -0.5rem;
+}
+
+.topic-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.topic-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.topic-stat {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.topic-stat.average {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.topic-stat.count {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+/* Tests colapsables */
+.topic-tests {
+    display: none;
+    margin-top: 1rem;
+}
+
+.topic-section.expanded .topic-tests {
+    display: block;
+}
+
+.topic-section.expanded .topic-header {
+    margin-bottom: 1.5rem;
+}
+
+/* Grid de tests */
+.tests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+}
+
+.test-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.2s;
+}
+
+.test-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.test-name {
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.test-score {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.score-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.score-date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Colores por rendimiento */
+.test-card.excellent { border-left: 4px solid #10b981; }
+.test-card.good { border-left: 4px solid #3b82f6; }
+.test-card.regular { border-left: 4px solid #f59e0b; }
+.test-card.poor { border-left: 4px solid #ef4444; }
+
+/* Vista compacta para muchos tests */
+.compact-view {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.compact-test {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.compact-test.excellent { background: #d1fae5; color: #065f46; }
+.compact-test.good { background: #dbeafe; color: #1e40af; }
+.compact-test.regular { background: #fed7aa; color: #92400e; }
+.compact-test.poor { background: #fee2e2; color: #991b1b; }
+
+/* Resumen visual */
+.visual-summary {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.summary-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.heatmap-container {
+    overflow-x: auto;
+}
+
+.topic-heatmap {
+    display: grid;
+    grid-template-columns: 120px repeat(45, 30px);
+    gap: 2px;
+    font-size: 0.75rem;
+}
+
+.heatmap-cell {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.heatmap-label {
+    padding: 0 0.5rem;
+    text-align: right;
+    font-weight: 600;
+}
+
+/* Colores del heatmap */
+.heat-0 { background: #f3f4f6; color: #9ca3af; }
+.heat-1 { background: #fee2e2; color: #dc2626; }
+.heat-2 { background: #fed7aa; color: #ea580c; }
+.heat-3 { background: #fef3c7; color: #d97706; }
+.heat-4 { background: #d1fae5; color: #059669; }
+.heat-5 { background: #a7f3d0; color: #047857; }
+
+/* Filtros y controles */
+.evolcampus-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: #f3f4f6;
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.view-toggle button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-toggle button.active {
+    background: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.filter-select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tests-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .topic-heatmap {
+        font-size: 0.625rem;
+        grid-template-columns: 80px repeat(45, 25px);
+    }
+    
+    .evolcampus-controls {
+        flex-direction: column;
+    }
+} 

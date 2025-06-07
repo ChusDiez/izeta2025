@@ -1394,54 +1394,153 @@ export default class ExcelImportModule {
     
     extractTestRecordsLocal(rawData, studentId) {
         const records = [];
-        let headerRowIndex = -1;
         
-        // Buscar cabecera
-        for (let i = 0; i < rawData.length; i++) {
-            if (rawData[i] && rawData[i][0] === 'Asignatura') {
-                headerRowIndex = i;
+        console.log('🔍 Analizando Excel de Evolcampus...');
+        console.log('📊 Total de filas:', rawData.length);
+        
+        // Mostrar las primeras filas para debugging
+        console.log('📋 Primeras 5 filas del Excel:');
+        for (let i = 0; i < Math.min(5, rawData.length); i++) {
+            console.log(`Fila ${i}:`, rawData[i]?.slice(0, 5));
+        }
+        
+        // El formato de Evolcampus es:
+        // Fila 0-2: Información del estudiante
+        // Fila 3-4: Cabeceras (vacías o con fechas)
+        // Fila 5+: Datos de tests
+        
+        let dataStartRow = -1;
+        let dateColumns = [];
+        
+        // Buscar la fila donde empiezan los datos de tests
+        for (let i = 0; i < Math.min(10, rawData.length); i++) {
+            if (!rawData[i]) continue;
+            
+            const firstCell = (rawData[i][0] || '').toString().toLowerCase();
+            
+            // Detectar si es una fila con nombre de test/tema
+            if (firstCell.includes('test') || firstCell.includes('tema') || 
+                firstCell.includes('t1') || firstCell.includes('t2') ||
+                firstCell.includes('ejercicio') || firstCell.includes('evaluación')) {
+                dataStartRow = i;
+                console.log('✅ Datos encontrados a partir de la fila:', dataStartRow);
+                
+                // Buscar columnas con fechas en la fila anterior
+                if (i > 0 && rawData[i-1]) {
+                    rawData[i-1].forEach((cell, index) => {
+                        if (index > 0 && cell) {
+                            const cellStr = cell.toString();
+                            // Detectar si parece una fecha
+                            if (cellStr.match(/\d{1,2}\/\d{1,2}\/\d{4}/) || 
+                                cellStr.match(/\d{4}-\d{2}-\d{2}/)) {
+                                dateColumns.push({
+                                    index: index,
+                                    date: cellStr
+                                });
+                            }
+                        }
+                    });
+                }
                 break;
             }
         }
         
-        if (headerRowIndex === -1) return records;
+        if (dataStartRow === -1) {
+            console.log('❌ No se encontraron datos de tests en el formato esperado');
+            return records;
+        }
         
-        // Mapear columnas
-        const headers = rawData[headerRowIndex];
-        const columnMap = {};
+        console.log('📅 Columnas de fechas encontradas:', dateColumns.length);
         
-        headers.forEach((header, index) => {
-            const h = (header || '').toString().toLowerCase();
-            if (h.includes('asignatura')) columnMap.subject = index;
-            if (h.includes('tema')) columnMap.topic = index;
-            if (h.includes('actividad')) columnMap.activity = index;
-            if (h.includes('nota máxima')) columnMap.maxScore = index;
-            if (h.includes('intentos')) columnMap.attempts = index;
-            if (h.includes('nota') && !h.includes('máxima')) columnMap.score = index;
-        });
+        // Procesar cada fila de test
+        let processedTests = 0;
+        const testsSummary = {};
         
-        // Procesar filas
-        for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+        for (let i = dataStartRow; i < rawData.length; i++) {
             const row = rawData[i];
-            if (!row || !row[columnMap.activity]) continue;
+            if (!row || !row[0]) continue;
             
-            const record = {
-                student_id: studentId,
-                topic_code: row[columnMap.topic] || `${row[columnMap.subject]}-${i}`,
-                activity: row[columnMap.activity],
-                score: parseFloat(row[columnMap.score]) || 0,
-                max_score: parseFloat(row[columnMap.maxScore]) || 100,
-                attempts: parseInt(row[columnMap.attempts]) || 1,
-                source: 'evol_excel',
-                created_at: new Date().toISOString(),
-                first_attempt: new Date().toISOString(),
-                last_attempt: new Date().toISOString()
-            };
+            const testName = row[0].toString().trim();
+            if (!testName) continue;
             
-            records.push(record);
+            // Extraer información del test
+            let topicCode = 'general';
+            let cleanTestName = testName;
+            
+            // Intentar extraer el código del tema (T1, T2, etc.)
+            const topicMatch = testName.match(/\b(T\d+)\b/i);
+            if (topicMatch) {
+                topicCode = topicMatch[1].toUpperCase();
+            }
+            
+            // Para cada columna de fecha, crear un registro si hay puntuación
+            dateColumns.forEach(dateCol => {
+                const score = row[dateCol.index];
+                if (score !== undefined && score !== null && score !== '') {
+                    const scoreValue = parseFloat(score);
+                    
+                    if (!isNaN(scoreValue)) {
+                        const record = {
+                            student_id: studentId,
+                            topic_code: topicCode,
+                            activity: cleanTestName,
+                            score: scoreValue,
+                            max_score: 10, // Asumimos que las notas son sobre 10
+                            attempts: 1,
+                            source: 'evol_excel',
+                            first_attempt: this.parseSpanishDate(dateCol.date),
+                            last_attempt: this.parseSpanishDate(dateCol.date),
+                            created_at: new Date().toISOString()
+                        };
+                        
+                        records.push(record);
+                        
+                        // Actualizar resumen
+                        if (!testsSummary[topicCode]) {
+                            testsSummary[topicCode] = {
+                                count: 0,
+                                totalScore: 0,
+                                maxScore: 0
+                            };
+                        }
+                        testsSummary[topicCode].count++;
+                        testsSummary[topicCode].totalScore += scoreValue;
+                        testsSummary[topicCode].maxScore = Math.max(testsSummary[topicCode].maxScore, scoreValue);
+                    }
+                }
+            });
+            
+            processedTests++;
+        }
+        
+        console.log(`✅ Procesados ${processedTests} tests únicos`);
+        console.log(`📊 Total de registros creados: ${records.length}`);
+        console.log('📈 Resumen por tema:', testsSummary);
+        
+        // Mostrar algunos ejemplos
+        if (records.length > 0) {
+            console.log('📝 Primeros 3 registros:');
+            records.slice(0, 3).forEach((r, i) => {
+                console.log(`  ${i+1}. ${r.activity} - Tema ${r.topic_code}: ${r.score}/${r.max_score}`);
+            });
         }
         
         return records;
+    }
+    
+    // Función auxiliar para parsear fechas en formato español
+    parseSpanishDate(dateStr) {
+        if (!dateStr) return new Date().toISOString();
+        
+        // Formato DD/MM/YYYY
+        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+            const [_, day, month, year] = match;
+            return new Date(year, month - 1, day).toISOString();
+        }
+        
+        // Si no se puede parsear, devolver fecha actual
+        return new Date().toISOString();
     }
 
     offerUserCreation(fileId, studentEmail, errorMessage) {
