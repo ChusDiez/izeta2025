@@ -3,6 +3,7 @@ export default class ExcelImportModule {
         this.supabase = supabaseClient;
         this.dashboard = dashboardCore;
         this.selectedFiles = [];
+        this.pendingFiles = new Map(); // Almacenar archivos pendientes de mapeo
     }
     
     getBaseFileSlug(fileName) {
@@ -588,9 +589,14 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             }
         }
         
-        // Limpiar
-        this.selectedFiles = [];
-        document.getElementById('fileInput').value = '';
+        // Limpiar solo si no hay archivos pendientes de mapeo
+        // Los archivos con mapeo pendiente se mantienen para reprocesamiento
+        const pendingMappingFiles = document.querySelectorAll('.file-item.error .manual-mapping-form');
+        if (pendingMappingFiles.length === 0) {
+            this.selectedFiles = [];
+            document.getElementById('fileInput').value = '';
+        }
+        
         uploadBtn.textContent = '📤 Procesar archivos seleccionados';
         uploadBtn.disabled = true;
         
@@ -667,6 +673,29 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             batches.push(rows.slice(i, i + batchSize));
         }
         
+        // Si es CSV individual y no hay usuario cacheado, verificar primero
+        if (isSingleStudent && rows.length > 0) {
+            const firstRow = rows[0];
+            const studentKey = firstRow.student_email || firstRow.student_key;
+            
+            if (studentKey && !userCache.has(studentKey)) {
+                const studentId = await this.findStudentId(firstRow.student_email, firstRow.student_key);
+                
+                if (!studentId) {
+                    // Lanzar error inmediatamente para activar mapeo manual
+                    throw {
+                        needsMapping: true,
+                        searchName: studentKey,
+                        message: `No se pudo identificar al estudiante: ${studentKey}`
+                    };
+                }
+                
+                // Cachear para todos los registros
+                userCache.set(studentKey, studentId);
+                summary.uniqueStudents.add(studentKey);
+            }
+        }
+        
         // Procesar cada lote
         for (const [batchIndex, batch] of batches.entries()) {
             this.addLog('info', `Procesando lote ${batchIndex + 1}/${batches.length} (${batch.length} registros)`);
@@ -698,15 +727,6 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
                     if (!studentId) {
                         this.addLog('warning', `⚠️ Usuario no encontrado: ${cacheKey} (${row.file_name})`);
                         summary.errors++;
-                        
-                        // Si es CSV individual, lanzar error para activar mapeo manual
-                        if (isSingleStudent) {
-                            throw {
-                                needsMapping: true,
-                                searchName: cacheKey,
-                                message: `No se pudo identificar al estudiante: ${cacheKey}`
-                            };
-                        }
                         continue;
                     }
                     
@@ -1341,6 +1361,12 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
         const fileItem = document.getElementById(fileId);
         if (!fileItem) return;
         
+        // Buscar y almacenar el archivo original
+        const originalFile = this.selectedFiles.find(f => f.name === fileName);
+        if (originalFile) {
+            this.pendingFiles.set(fileId, originalFile);
+        }
+        
         const detailContent = fileItem.querySelector('.detail-content');
         const fileDetails = fileItem.querySelector('.file-details');
         
@@ -1546,8 +1572,12 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
 
     async retryFileWithMapping(fileId, fileName, userEmail) {
         try {
-            // Buscar el archivo original en los selectedFiles
-            const originalFile = this.selectedFiles.find(f => f.name === fileName);
+            // Buscar el archivo original en pendingFiles primero, luego en selectedFiles
+            let originalFile = this.pendingFiles.get(fileId);
+            
+            if (!originalFile) {
+                originalFile = this.selectedFiles.find(f => f.name === fileName);
+            }
             
             if (!originalFile) {
                 this.dashboard.showNotification('error', 'No se pudo encontrar el archivo original para reprocesar');
@@ -1578,6 +1608,9 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
                 this.dashboard.showNotification('success', 
                     `✅ Archivo procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
                 );
+                
+                // Limpiar archivo pendiente
+                this.pendingFiles.delete(fileId);
             } else {
                 throw new Error(processResult.error || 'Error en el reprocesamiento');
             }
@@ -1785,6 +1818,9 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             if (fileDetails) {
                 fileDetails.style.display = 'none';
             }
+            
+            // Limpiar archivo pendiente
+            this.pendingFiles.delete(fileId);
         }
     }
 
