@@ -2,17 +2,9 @@
 // Parser reutilizable para archivos Excel de Evolcampus
 
 export function extractStudent(rows, fileName) {
-  // 1. Buscar email en las primeras filas
-  for (let i = 0; i < 20 && i < rows.length; i++) {
-    const rowText = (rows[i] || []).join(' ').toLowerCase();
-    const emailMatch = rowText.match(/([a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9_-]+)/);
-    if (emailMatch) {
-      console.log(`✅ Email encontrado en fila ${i}: ${emailMatch[1]}`);
-      return { email: emailMatch[1], searchName: null };
-    }
-  }
-
-  // 2. Si no hay email, extraer nombre del archivo
+  console.log(`🔍 Procesando archivo: ${fileName}`);
+  
+  // Los archivos de Evolcampus NO contienen email, solo extraer del nombre del archivo
   const baseSlug = fileName
     .replace(/\.xlsx?$/i, '')                           // quitar extensión
     .replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '') // quitar timestamp ISO
@@ -24,8 +16,14 @@ export function extractStudent(rows, fileName) {
     .replace(/[^a-z0-9áéíóúñ]+/g, ' ')
     .trim();
 
-  console.log(`⚠️ Sin email en ${fileName}, usando nombre: ${searchName}`);
-  return { email: null, searchName, baseSlug };
+  console.log(`📝 Nombre extraído del archivo: "${searchName}"`);
+  console.log(`🔗 Base slug para mapeos: "${baseSlug}"`);
+  
+  return { 
+    email: null,           // Los Excel de Evolcampus NO tienen email
+    searchName, 
+    baseSlug 
+  };
 }
 
 export function extractTests(rows, studentId, fileName) {

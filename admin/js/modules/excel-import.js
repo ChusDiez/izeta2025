@@ -36,7 +36,7 @@ export default class ExcelImportModule {
                     </svg>
                     <h3>Arrastra archivos Excel aquí</h3>
                     <p>o haz clic para seleccionar</p>
-                    <input type="file" id="fileInput" multiple accept=".xlsx,.xls" style="display: none;">
+                    <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv" style="display: none;">
                 </div>
 
                 <button class="btn btn-primary" id="uploadBtn" disabled>
@@ -389,22 +389,24 @@ export default class ExcelImportModule {
         const allFiles = Array.from(files);
         console.log('Total archivos recibidos:', allFiles.length);
         
-        // Filtrar solo archivos Excel
+        // Filtrar solo archivos Excel o CSV
         this.selectedFiles = allFiles.filter(file => {
-            const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
-            console.log(`Archivo ${file.name}: ${isExcel ? 'ES' : 'NO ES'} Excel`);
+            const isExcel = file.name.toLowerCase().endsWith('.xlsx')
+                || file.name.toLowerCase().endsWith('.xls')
+                || file.name.toLowerCase().endsWith('.csv');
+            console.log(`Archivo ${file.name}: ${isExcel ? 'ES' : 'NO ES'} Excel/CSV`);
             return isExcel;
         });
         
-        console.log('Archivos Excel válidos:', this.selectedFiles.length);
+        console.log('Archivos Excel/CSV válidos:', this.selectedFiles.length);
         
         if (allFiles.length > 0 && this.selectedFiles.length === 0) {
-            this.dashboard.showNotification('warning', 'Por favor selecciona archivos Excel (.xlsx o .xls)');
+            this.dashboard.showNotification('warning', 'Por favor selecciona archivos Excel (.xlsx, .xls) o CSV (.csv)');
             return;
         }
         
         if (this.selectedFiles.length > 0) {
-            this.dashboard.showNotification('info', `${this.selectedFiles.length} archivo(s) Excel seleccionado(s)`);
+            this.dashboard.showNotification('info', `${this.selectedFiles.length} archivo(s) seleccionado(s)`);
             this.displaySelectedFiles();
         }
         
@@ -454,6 +456,7 @@ export default class ExcelImportModule {
         fileList.innerHTML = '<h3>📊 Procesamiento de archivos:</h3>';
         
         for (const file of this.selectedFiles) {
+            const isCSV = file.name.toLowerCase().endsWith('.csv');
             // Crear elemento para este archivo con ID único
             const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const fileItem = document.createElement('div');
@@ -478,6 +481,7 @@ export default class ExcelImportModule {
             try {
                 // Usar el nombre original sin modificación (sin timestamp)
                 const fileName = file.name;
+                const isCSV = fileName.toLowerCase().endsWith('.csv');
                 
                 console.log(`Subiendo archivo como: ${fileName}`);
                 
@@ -511,6 +515,26 @@ export default class ExcelImportModule {
                 const USE_LOCAL_PROCESSING = true; // Cambiar a false cuando se arregle la Edge Function
                 
                 if (USE_LOCAL_PROCESSING) {
+                    if (isCSV) {
+                        const processResult = await this.processCsvLocally(file, fileName);
+                        if (processResult.success) {
+                            this.updateFileStatus(fileId, 'completed', '✅ CSV procesado', {
+                                student: processResult.student,
+                                recordsProcessed: processResult.recordsProcessed,
+                                details: processResult.details
+                            });
+                            this.dashboard.showNotification('success',
+                                `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros`
+                            );
+                        } else {
+                            throw {
+                              message: processResult.error,
+                              needsMapping: processResult.needsMapping,
+                              searchName: processResult.searchName
+                            };
+                        }
+                        continue; // pasa al siguiente archivo
+                    }
                     // Procesar localmente en el navegador
                     console.log('Usando procesamiento local (Edge Function no disponible)');
                     const processResult = await this.processExcelLocally(file, fileName);
@@ -1766,4 +1790,84 @@ export default class ExcelImportModule {
             throw error;
         }
     }
-} 
+    // --- CSV helpers ---
+    async loadPapaParse() {
+      return new Promise((resolve, reject) => {
+        if (window.Papa) return resolve();
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    async processCsvLocally(file, fileName) {
+      try {
+        await this.loadPapaParse();
+        const text = await file.text();
+        const parsed = window.Papa.parse(text, { header: true, skipEmptyLines: true });
+
+        if (parsed.errors.length) {
+          throw new Error('CSV malformado: ' + parsed.errors[0].message);
+        }
+
+        // Agrupar por email o slug
+        const firstRow = parsed.data[0] || {};
+        const email = firstRow.email || null;
+
+        if (!email) {
+          // Intentar mapeo por slug del nombre de archivo
+          const slug = this.getBaseFileSlug(fileName);
+          const { data: mapping } = await this.supabase
+              .from('excel_name_mappings')
+              .select('user_email')
+              .eq('excel_name', slug)
+              .single();
+          if (mapping) {
+            firstRow.email = mapping.user_email;
+          } else {
+            return { success:false, error:'No se encontró email en CSV', needsMapping:true, searchName: slug };
+          }
+        }
+
+        // Obtener user_id
+        const { data: user } = await this.supabase
+            .from('users')
+            .select('id, username, email, cohort')
+            .eq('email', firstRow.email)
+            .single();
+        if (!user) {
+          return { success:false, error:'Usuario no encontrado', needsUserCreation:true, studentEmail:firstRow.email };
+        }
+
+        // Convertir cada fila en registro topic_results
+        const records = parsed.data.map(row => ({
+          student_id: user.id,
+          topic_code: row.topic_code || 'GEN',
+          activity: row.activity,
+          score: parseFloat(row.score) || 0,
+          max_score: parseFloat(row.max_score)||10,
+          attempts: parseInt(row.attempts)||1,
+          first_attempt: row.first_attempt || new Date().toISOString(),
+          last_attempt : row.last_attempt  || new Date().toISOString(),
+          source: 'csv_bulk',
+          created_at: new Date().toISOString()
+        }));
+
+        if (records.length) {
+          await this.supabase.from('topic_results')
+              .upsert(records, { onConflict:'student_id,topic_code,activity' });
+        }
+
+        return {
+          success:true,
+          student:{...user, name:user.username},
+          recordsProcessed: records.length,
+          details:{ fileName, mode:'csv_local' }
+        };
+      } catch (err) {
+        return { success:false, error: err.message||'Error CSV' };
+      }
+    }
+}

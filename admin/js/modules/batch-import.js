@@ -462,27 +462,28 @@ export default class BatchImportModule {
                     dateNF: 'dd/mm/yyyy' 
                 });
                 
-                // Extraer estudiante
+                // Extraer estudiante (los Excel de Evolcampus NO tienen email)
                 const studentInfo = await extractStudent(rows, file.name);
                 
-                if (!studentInfo.email) {
-                    // Intentar buscar en mapeos
-                    if (studentInfo.baseSlug) {
-                        const { data: mapping } = await this.supabase
-                            .from('excel_name_mappings')
-                            .select('user_email')
-                            .eq('excel_name', studentInfo.baseSlug)
-                            .single();
-                        
-                        if (mapping) {
-                            studentInfo.email = mapping.user_email;
-                        }
+                // Buscar email en mapeos usando el baseSlug
+                if (studentInfo.baseSlug) {
+                    const { data: mapping } = await this.supabase
+                        .from('excel_name_mappings')
+                        .select('user_email')
+                        .eq('excel_name', studentInfo.baseSlug)
+                        .single();
+                    
+                    if (mapping) {
+                        studentInfo.email = mapping.user_email;
+                        console.log(`✅ Mapeo encontrado: ${studentInfo.baseSlug} → ${studentInfo.email}`);
+                    } else {
+                        console.log(`⚠️ Sin mapeo para: ${studentInfo.baseSlug}`);
                     }
                 }
                 
                 if (!studentInfo.email) {
-                    stats.missing.push(file.name);
-                    this.addResult(file.name, 'warning', 'Sin email detectado');
+                    stats.missing.push(`${file.name} (${studentInfo.searchName})`);
+                    this.addResult(file.name, 'warning', `Sin mapeo para: ${studentInfo.searchName}`);
                     continue;
                 }
                 
