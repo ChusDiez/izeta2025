@@ -600,7 +600,7 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
 
     // NUEVA FUNCIONALIDAD: Procesar archivo CSV masivo
     async processCsvFile(file, fileId) {
-        this.addLog('info', `📄 Procesando CSV masivo: ${file.name}`);
+        this.addLog('info', `📄 Procesando CSV: ${file.name}`);
         this.updateFileStatus(fileId, 'processing', '🔄 Procesando CSV...');
         
         try {
@@ -631,6 +631,12 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             this.addLog('success', `✅ CSV procesado: ${processedData.totalRecords} registros de ${processedData.uniqueStudents.size} estudiantes`);
             
         } catch (error) {
+            // Si es error de mapeo, activar mapeo manual
+            if (error.needsMapping) {
+                this.updateFileStatus(fileId, 'error', `❌ ${error.message}`);
+                this.offerManualMapping(fileId, file.name, error.message, error.searchName);
+                return; // No relanzar el error
+            }
             throw error;
         }
     }
@@ -643,6 +649,12 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             errors: 0,
             processedRecords: []
         };
+        
+        // Detectar si es un CSV de un solo estudiante o masivo
+        const uniqueStudentKeys = new Set(rows.map(r => r.student_key || r.student_email).filter(Boolean));
+        const isSingleStudent = uniqueStudentKeys.size === 1;
+        
+        this.addLog('info', `📊 Detectado: ${isSingleStudent ? 'CSV individual' : 'CSV masivo'} (${uniqueStudentKeys.size} estudiante(s))`);
         
         // Cache de usuarios para evitar consultas repetidas
         const userCache = new Map();
@@ -686,6 +698,15 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
                     if (!studentId) {
                         this.addLog('warning', `⚠️ Usuario no encontrado: ${cacheKey} (${row.file_name})`);
                         summary.errors++;
+                        
+                        // Si es CSV individual, lanzar error para activar mapeo manual
+                        if (isSingleStudent) {
+                            throw {
+                                needsMapping: true,
+                                searchName: cacheKey,
+                                message: `No se pudo identificar al estudiante: ${cacheKey}`
+                            };
+                        }
                         continue;
                     }
                     
@@ -1536,8 +1557,16 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             // Actualizar estado
             this.updateFileStatus(fileId, 'processing', '🔄 Reprocesando con mapeo...');
             
-            // Procesar localmente con el email ya conocido
-            const processResult = await this.processExcelLocallyWithEmail(originalFile, fileName, userEmail);
+            const isCSV = fileName.toLowerCase().endsWith('.csv');
+            let processResult;
+            
+            if (isCSV) {
+                // Procesar CSV con email conocido
+                processResult = await this.processCsvLocallyWithEmail(originalFile, fileName, userEmail);
+            } else {
+                // Procesar Excel con email conocido
+                processResult = await this.processExcelLocallyWithEmail(originalFile, fileName, userEmail);
+            }
             
             if (processResult.success) {
                 this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente con mapeo manual', {
@@ -1557,6 +1586,115 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             console.error('Error reprocesando archivo:', error);
             this.updateFileStatus(fileId, 'error', `❌ Error: ${error.message}`);
             this.dashboard.showNotification('error', 'Error al reprocesar: ' + error.message);
+        }
+    }
+
+    // Método auxiliar para procesar CSV con email conocido
+    async processCsvLocallyWithEmail(file, fileName, userEmail) {
+        try {
+            console.log('📊 Reprocesando CSV con email mapeado:', userEmail);
+            
+            // Buscar usuario directamente por email
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('id, username, email, cohort')
+                .eq('email', userEmail)
+                .single();
+            
+            if (userError || !user) {
+                throw new Error(`Usuario no encontrado: ${userEmail}`);
+            }
+            
+            // Cargar Papa Parse si no está cargado
+            if (!window.Papa) {
+                await this.loadPapaParse();
+            }
+            
+            // Leer y parsear CSV
+            const text = await file.text();
+            const parsed = window.Papa.parse(text, { 
+                header: true, 
+                skipEmptyLines: true,
+                dynamicTyping: true 
+            });
+            
+            if (parsed.errors.length > 0) {
+                throw new Error(`Error parseando CSV: ${parsed.errors[0].message}`);
+            }
+            
+            // Procesar registros
+            const testRecords = [];
+            let zeroScores = 0;
+            
+            for (const row of parsed.data) {
+                if (!row.activity || row.activity.trim() === '') continue;
+                
+                const score = parseFloat(row.score) || 0;
+                if (score === 0) zeroScores++;
+                
+                const record = {
+                    student_id: user.id,
+                    topic_code: row.topic_code || 'GENERAL',
+                    activity: row.activity.trim(),
+                    score: score,
+                    max_score: parseFloat(row.max_score) || 10,
+                    attempts: parseInt(row.attempts) || 1,
+                    first_attempt: this.parseDate(row.first_attempt),
+                    last_attempt: this.parseDate(row.last_attempt),
+                    source: row.source || fileName,
+                    created_at: new Date().toISOString()
+                };
+                
+                testRecords.push(record);
+            }
+            
+            console.log(`📝 Encontrados ${testRecords.length} registros de tests`);
+            
+            // Guardar en base de datos
+            if (testRecords.length > 0) {
+                const { error: insertError } = await this.supabase
+                    .from('topic_results')
+                    .upsert(testRecords, {
+                        onConflict: 'student_id,topic_code,activity'
+                    });
+                
+                if (insertError) {
+                    throw new Error(`Error guardando datos: ${insertError.message}`);
+                }
+            }
+            
+            // Actualizar resumen
+            this.updateSummary('totalRecords', testRecords.length);
+            this.updateSummary('uniqueStudents', 1);
+            this.updateSummary('zeroScores', zeroScores);
+            
+            // Registrar en log
+            await this.supabase.from('api_sync_log').insert({
+                endpoint: 'process_csv',
+                status_code: 200,
+                records_synced: testRecords.length,
+                details: {
+                    fileName,
+                    studentEmail: userEmail,
+                    recordsProcessed: testRecords.length,
+                    processedAt: new Date().toISOString(),
+                    processingMode: 'csv_with_mapping'
+                }
+            });
+            
+            return {
+                success: true,
+                student: {
+                    ...user,
+                    email: userEmail,
+                    name: user.username
+                },
+                recordsProcessed: testRecords.length
+            };
+            
+        } catch (error) {
+            console.error('Error en procesamiento CSV con email:', error);
+            throw error;
         }
     }
 
