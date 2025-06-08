@@ -59,5 +59,13 @@ package-lock.json
 # Archivos problemáticos para GitHub Pages
 cursor_integraci_n_de_datos_de_evolcamp.md
 Documentacion_API_evolCampus.pdf
-expediente-lucia-hita-lopez-03062025-224222.xlsx
+
+# Archivos Excel de ejemplo y carpetas de datos
+expediente-*.xlsx
 informes-semanales/
+*.xlsx
+# Datos sensibles
+*.csv
+data/
+temp/
+uploads/
