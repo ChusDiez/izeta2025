@@ -484,26 +484,33 @@ export default class BatchImportModule {
                 if (!studentInfo.email) {
                     stats.missing.push(`${file.name} (${studentInfo.searchName})`);
                     this.addResult(file.name, 'warning', `Sin mapeo para: ${studentInfo.searchName}`);
-                    continue;
+                    // NO hacer continue - procesar el archivo de todas formas
+                    studentInfo.email = ''; // Email vacío para CSV
                 }
                 
-                // Buscar usuario
-                let userId = userCache.get(studentInfo.email);
-                if (!userId) {
-                    const { data: user } = await this.supabase
-                        .from('users')
-                        .select('id, username')
-                        .eq('email', studentInfo.email)
-                        .single();
-                    
-                    if (!user) {
-                        stats.missing.push(`${file.name} (${studentInfo.email})`);
-                        this.addResult(file.name, 'error', `Usuario no encontrado: ${studentInfo.email}`);
-                        continue;
+                // Buscar usuario (solo si hay email)
+                let userId = null;
+                if (studentInfo.email) {
+                    userId = userCache.get(studentInfo.email);
+                    if (!userId) {
+                        const { data: user } = await this.supabase
+                            .from('users')
+                            .select('id, username')
+                            .eq('email', studentInfo.email)
+                            .single();
+                        
+                        if (!user) {
+                            stats.missing.push(`${file.name} (${studentInfo.email})`);
+                            this.addResult(file.name, 'warning', `Usuario no encontrado: ${studentInfo.email}`);
+                            userId = null; // Sin usuario, pero seguir procesando
+                        } else {
+                            userId = user.id;
+                            userCache.set(studentInfo.email, userId);
+                        }
                     }
-                    
-                    userId = user.id;
-                    userCache.set(studentInfo.email, userId);
+                } else {
+                    // Sin email, usar identificador temporal basado en el nombre del archivo
+                    userId = `temp_${studentInfo.baseSlug || studentInfo.searchName.replace(/\s+/g, '_')}`;
                 }
                 
                 // Extraer tests
@@ -517,7 +524,8 @@ export default class BatchImportModule {
                 this.processedData.push(...tests.map(t => ({
                     ...t,
                     file_name: file.name,
-                    student_email: studentInfo.email
+                    student_email: studentInfo.email || '',
+                    student_key: studentInfo.baseSlug || studentInfo.searchName
                 })));
                 
                 stats.records += tests.length;
@@ -578,7 +586,7 @@ export default class BatchImportModule {
 
     generateCSV() {
         const headers = [
-            'file_name', 'student_email', 'student_id', 'topic_code', 
+            'file_name', 'student_email', 'student_key', 'student_id', 'topic_code', 
             'activity', 'score', 'max_score', 'attempts', 
             'first_attempt', 'last_attempt', 'source'
         ];
