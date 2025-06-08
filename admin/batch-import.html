@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importación por Lotes - IZETA</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .instructions {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #0066cc;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #f0f7ff;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .drop-zone.dragover {
+            background: #e1f0ff;
+            border-color: #0052cc;
+            transform: scale(1.02);
+        }
+        
+        .btn {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #0052cc;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .progress-container {
+            margin: 30px 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            background: #0066cc;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-item.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        
+        .result-item.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .result-item.warning {
+            background: #fff3cd;
+            border-color: #ffeeba;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            margin: 0;
+            color: #0066cc;
+            font-size: 2em;
+        }
+        
+        .stat-card p {
+            margin: 5px 0 0 0;
+            color: #666;
+        }
+        
+        #fileCount {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .missing-users {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .missing-users h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .missing-users ul {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Importación por Lotes de Evolcampus</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones</h3>
+            <ol>
+                <li>Descarga todos los informes Excel de Evolcampus</li>
+                <li>Selecciona o arrastra toda la carpeta de archivos aquí</li>
+                <li>El sistema procesará todos los archivos y generará un CSV</li>
+                <li>Opcionalmente, puedes subir los datos directamente a la base de datos</li>
+            </ol>
+            <p><strong>Formato esperado:</strong> expediente-nombre-apellidos.xlsx</p>
+        </div>
+        
+        <div class="drop-zone" id="dropZone">
+            <h2>📁 Arrastra archivos Excel aquí</h2>
+            <p>o haz clic para seleccionar</p>
+            <div id="fileCount"></div>
+            <input type="file" id="fileInput" multiple accept=".xlsx,.xls" style="display: none;">
+        </div>
+        
+        <div class="actions">
+            <button class="btn btn-secondary" id="clearBtn" disabled>🗑️ Limpiar selección</button>
+            <button class="btn btn-primary" id="processBtn" disabled>⚙️ Procesar archivos</button>
+            <button class="btn btn-success" id="uploadBtn" style="display: none;">☁️ Subir a base de datos</button>
+            <button class="btn btn-warning" id="downloadCsvBtn" style="display: none;">💾 Descargar CSV</button>
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <h3>Procesando archivos...</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <p id="progressText">Preparando...</p>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <h3 id="statProcessed">0</h3>
+                <p>Archivos procesados</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statRecords">0</h3>
+                <p>Registros extraídos</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statErrors">0</h3>
+                <p>Errores</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statMissing">0</h3>
+                <p>Usuarios no encontrados</p>
+            </div>
+        </div>
+        
+        <div class="missing-users" id="missingUsers" style="display: none;">
+            <h3>⚠️ Usuarios no encontrados</h3>
+            <p>Los siguientes archivos no se pudieron asociar a ningún usuario:</p>
+            <ul id="missingUsersList"></ul>
+        </div>
+        
+        <div class="results" id="results"></div>
+    </div>
+    
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.1/package/xlsx.mjs';
+        
+        // Configuración de Supabase
+        const supabaseUrl = localStorage.getItem('supabaseUrl') || prompt('URL de Supabase:');
+        const supabaseKey = localStorage.getItem('supabaseAnonKey') || prompt('Anon Key de Supabase:');
+        
+        if (supabaseUrl && supabaseKey) {
+            localStorage.setItem('supabaseUrl', supabaseUrl);
+            localStorage.setItem('supabaseAnonKey', supabaseKey);
+        }
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Variables globales
+        let selectedFiles = [];
+        let processedData = [];
+        let csvContent = '';
+        
+        // Elementos del DOM
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const processBtn = document.getElementById('processBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+        const fileCount = document.getElementById('fileCount');
+        
+        // Event listeners
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        clearBtn.addEventListener('click', clearSelection);
+        processBtn.addEventListener('click', processFiles);
+        uploadBtn.addEventListener('click', uploadToSupabase);
+        downloadCsvBtn.addEventListener('click', downloadCSV);
+        
+        // Funciones principales
+        function handleFiles(files) {
+            selectedFiles = Array.from(files).filter(f => 
+                f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+            );
+            
+            updateUI();
+        }
+        
+        function clearSelection() {
+            selectedFiles = [];
+            processedData = [];
+            csvContent = '';
+            fileInput.value = '';
+            updateUI();
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('missingUsers').style.display = 'none';
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function updateUI() {
+            const hasFiles = selectedFiles.length > 0;
+            clearBtn.disabled = !hasFiles;
+            processBtn.disabled = !hasFiles;
+            
+            if (hasFiles) {
+                fileCount.textContent = `${selectedFiles.length} archivos Excel seleccionados`;
+            } else {
+                fileCount.textContent = '';
+            }
+            
+            uploadBtn.style.display = processedData.length > 0 ? 'inline-block' : 'none';
+            downloadCsvBtn.style.display = csvContent ? 'inline-block' : 'none';
+        }
+        
+        // Importar las funciones del parser
+        async function extractStudent(rows, fileName) {
+            // Buscar email en las primeras filas
+            for (let i = 0; i < 20 && i < rows.length; i++) {
+                const rowText = (rows[i] || []).join(' ').toLowerCase();
+                const emailMatch = rowText.match(/([a-z0-9._-]+@[a-z0-9._-]+\.[a-z0-9_-]+)/);
+                if (emailMatch) {
+                    return { email: emailMatch[1], searchName: null };
+                }
+            }
+            
+            // Si no hay email, extraer nombre del archivo
+            const baseSlug = fileName
+                .replace(/\.xlsx?$/i, '')
+                .replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '')
+                .replace(/-\d{8}-\d{6}$/, '')
+                .replace(/^expediente-/, '')
+                .toLowerCase();
+            
+            const searchName = baseSlug
+                .replace(/[^a-z0-9áéíóúñ]+/g, ' ')
+                .trim();
+            
+            return { email: null, searchName, baseSlug };
+        }
+        
+        async function extractTests(rows, studentId, fileName) {
+            const records = [];
+            
+            // Buscar donde empiezan los datos de tests
+            let dataStartRow = -1;
+            let dateColumns = [];
+            
+            for (let i = 0; i < Math.min(10, rows.length); i++) {
+                if (!rows[i] || !rows[i][0]) continue;
+                
+                const firstCell = rows[i][0].toString().toLowerCase();
+                
+                if (firstCell.includes('test') || firstCell.includes('tema') || 
+                    firstCell.match(/^t\d+/) || firstCell.includes('ejercicio')) {
+                    dataStartRow = i;
+                    
+                    // Buscar fechas en la fila anterior
+                    if (i > 0 && rows[i-1]) {
+                        rows[i-1].forEach((cell, idx) => {
+                            if (idx > 0 && cell) {
+                                const cellStr = cell.toString();
+                                if (cellStr.match(/\d{1,2}\/\d{1,2}\/\d{4}/) || 
+                                    cellStr.match(/\d{4}-\d{2}-\d{2}/)) {
+                                    dateColumns.push({ index: idx, date: cellStr });
+                                }
+                            }
+                        });
+                    }
+                    break;
+                }
+            }
+            
+            if (dataStartRow === -1) return records;
+            
+            // Procesar cada fila de test
+            for (let i = dataStartRow; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || !row[0]) continue;
+                
+                const testName = row[0].toString().trim();
+                if (!testName || testName.length < 3) continue;
+                
+                // Extraer código del tema
+                let topicCode = 'GENERAL';
+                const topicMatch = testName.match(/\b(T\d+)\b/i);
+                if (topicMatch) {
+                    topicCode = topicMatch[1].toUpperCase();
+                }
+                
+                // Para cada columna con fecha/nota
+                if (dateColumns.length > 0) {
+                    dateColumns.forEach(dateCol => {
+                        const score = row[dateCol.index];
+                        if (score !== undefined && score !== null && score !== '') {
+                            const scoreValue = parseFloat(score.toString().replace(',', '.'));
+                            
+                            if (!isNaN(scoreValue) && scoreValue >= 0) {
+                                records.push({
+                                    student_id: studentId,
+                                    topic_code: topicCode,
+                                    activity: testName,
+                                    score: scoreValue,
+                                    max_score: 10,
+                                    attempts: 1,
+                                    first_attempt: parseSpanishDate(dateCol.date),
+                                    last_attempt: parseSpanishDate(dateCol.date),
+                                    source: 'evol_excel'
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    // Sin fechas, buscar números en columnas
+                    for (let col = 1; col < row.length; col++) {
+                        const cellValue = row[col];
+                        if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
+                            const scoreValue = parseFloat(cellValue.toString().replace(',', '.'));
+                            
+                            if (!isNaN(scoreValue) && scoreValue >= 0 && scoreValue <= 10) {
+                                records.push({
+                                    student_id: studentId,
+                                    topic_code: topicCode,
+                                    activity: testName,
+                                    score: scoreValue,
+                                    max_score: 10,
+                                    attempts: 1,
+                                    first_attempt: new Date().toISOString(),
+                                    last_attempt: new Date().toISOString(),
+                                    source: 'evol_excel'
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return records;
+        }
+        
+        function parseSpanishDate(dateStr) {
+            if (!dateStr) return new Date().toISOString();
+            
+            const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (match) {
+                const [_, day, month, year] = match;
+                return new Date(year, month - 1, day).toISOString();
+            }
+            
+            const isoMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+            if (isoMatch) {
+                return new Date(dateStr).toISOString();
+            }
+            
+            return new Date().toISOString();
+        }
+        
+        async function processFiles() {
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const results = document.getElementById('results');
+            
+            progressContainer.style.display = 'block';
+            results.innerHTML = '';
+            processedData = [];
+            
+            const stats = {
+                processed: 0,
+                records: 0,
+                errors: 0,
+                missing: []
+            };
+            
+            const userCache = new Map();
+            
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const progress = Math.round(((i + 1) / selectedFiles.length) * 100);
+                
+                progressFill.style.width = `${progress}%`;
+                progressFill.textContent = `${progress}%`;
+                progressText.textContent = `Procesando: ${file.name}`;
+                
+                try {
+                    // Leer Excel
+                    const buffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(buffer, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, dateNF: 'dd/mm/yyyy' });
+                    
+                    // Extraer estudiante
+                    const studentInfo = await extractStudent(rows, file.name);
+                    
+                    if (!studentInfo.email) {
+                        stats.missing.push(file.name);
+                        addResult(file.name, 'warning', 'Sin email detectado');
+                        continue;
+                    }
+                    
+                    // Buscar usuario
+                    let userId = userCache.get(studentInfo.email);
+                    if (!userId) {
+                        const { data: user } = await supabase
+                            .from('users')
+                            .select('id, username')
+                            .eq('email', studentInfo.email)
+                            .single();
+                        
+                        if (!user) {
+                            stats.missing.push(`${file.name} (${studentInfo.email})`);
+                            addResult(file.name, 'error', `Usuario no encontrado: ${studentInfo.email}`);
+                            continue;
+                        }
+                        
+                        userId = user.id;
+                        userCache.set(studentInfo.email, userId);
+                    }
+                    
+                    // Extraer tests
+                    const tests = await extractTests(rows, userId, file.name);
+                    
+                    if (tests.length === 0) {
+                        addResult(file.name, 'warning', 'No se encontraron tests');
+                        continue;
+                    }
+                    
+                    processedData.push(...tests.map(t => ({
+                        ...t,
+                        file_name: file.name,
+                        student_email: studentInfo.email
+                    })));
+                    
+                    stats.records += tests.length;
+                    stats.processed++;
+                    
+                    addResult(file.name, 'success', `${tests.length} registros extraídos`);
+                    
+                } catch (error) {
+                    stats.errors++;
+                    addResult(file.name, 'error', error.message);
+                }
+            }
+            
+            // Generar CSV
+            if (processedData.length > 0) {
+                generateCSV();
+            }
+            
+            // Mostrar estadísticas
+            updateStats(stats);
+            updateUI();
+            
+            progressContainer.style.display = 'none';
+        }
+        
+        function addResult(fileName, status, message) {
+            const results = document.getElementById('results');
+            const item = document.createElement('div');
+            item.className = `result-item ${status}`;
+            item.innerHTML = `
+                <div>
+                    <strong>${fileName}</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9em;">${message}</p>
+                </div>
+                <span>${status === 'success' ? '✅' : status === 'error' ? '❌' : '⚠️'}</span>
+            `;
+            results.appendChild(item);
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('statProcessed').textContent = stats.processed;
+            document.getElementById('statRecords').textContent = stats.records;
+            document.getElementById('statErrors').textContent = stats.errors;
+            document.getElementById('statMissing').textContent = stats.missing.length;
+            
+            if (stats.missing.length > 0) {
+                document.getElementById('missingUsers').style.display = 'block';
+                const list = document.getElementById('missingUsersList');
+                list.innerHTML = stats.missing.map(m => `<li>${m}</li>`).join('');
+            }
+        }
+        
+        function generateCSV() {
+            const headers = [
+                'file_name', 'student_email', 'student_id', 'topic_code', 
+                'activity', 'score', 'max_score', 'attempts', 
+                'first_attempt', 'last_attempt', 'source'
+            ];
+            
+            const rows = processedData.map(row => 
+                headers.map(h => {
+                    const value = row[h];
+                    // Escapar comillas y envolver en comillas si contiene comas
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                }).join(',')
+            );
+            
+            csvContent = [headers.join(','), ...rows].join('\n');
+        }
+        
+        function downloadCSV() {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().split('T')[0];
+            link.href = URL.createObjectURL(blob);
+            link.download = `evolcampus-batch-${timestamp}.csv`;
+            link.click();
+        }
+        
+        async function uploadToSupabase() {
+            if (processedData.length === 0) return;
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Subiendo...';
+            
+            try {
+                // Preparar datos para topic_results
+                const topicResults = processedData.map(({ file_name, student_email, ...rest }) => rest);
+                
+                // Subir en lotes de 100
+                const batchSize = 100;
+                let uploaded = 0;
+                
+                for (let i = 0; i < topicResults.length; i += batchSize) {
+                    const batch = topicResults.slice(i, i + batchSize);
+                    const { error } = await supabase
+                        .from('topic_results')
+                        .upsert(batch, { 
+                            onConflict: 'student_id,topic_code,activity',
+                            ignoreDuplicates: false 
+                        });
+                    
+                    if (error) throw error;
+                    uploaded += batch.length;
+                    
+                    uploadBtn.textContent = `⏳ Subiendo... ${uploaded}/${topicResults.length}`;
+                }
+                
+                uploadBtn.textContent = '✅ Subido exitosamente';
+                setTimeout(() => {
+                    uploadBtn.textContent = '☁️ Subir a base de datos';
+                    uploadBtn.disabled = false;
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error al subir:', error);
+                alert(`Error al subir: ${error.message}`);
+                uploadBtn.textContent = '☁️ Subir a base de datos';
+                uploadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,7 +1,15 @@
 {
+  "type": "module",
+  "scripts": {
+    "process-evol": "node scripts/bulk-evol-to-csv.js",
+    "process-evol-upload": "node scripts/bulk-evol-to-csv.js --upload"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.10",
     "csv-parse": "^5.6.0",
-    "supabase": "^2.23.4"
+    "supabase": "^2.23.4",
+    "@fast-csv/format": "^4.3.5",
+    "xlsx": "^0.18.5",
+    "dotenv": "^16.3.1"
   }
 }
