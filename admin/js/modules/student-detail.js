@@ -500,50 +500,142 @@ Un saludo,
     }
     
     async loadEvolcampusData(studentId) {
-        /*  Nueva estrategia:
-            ─ Obtiene el email del alumno.
-            ─ Invoca la función edge `sync-evolvcampus-student`
-              para recibir:
-              { activities: [ {topic_code, activity, done, score, avg_score}, … ] }
-            ─ Recupera el último enrollment almacenado para stats rápidos.
+        /*  Nueva estrategia mejorada:
+            ─ Carga TODOS los tests desde topic_results (incluyendo los de nota 0)
+            ─ Agrupa por tema y actividad
+            ─ Calcula estadísticas de participación
         */
-        // 1. Email del usuario
-        const { data: userRow } = await this.supabase
-            .from('users')
-            .select('email')
-            .eq('id', studentId)
-            .single();
-
-        const studentEmail = userRow?.email;
-        if (!studentEmail) {
-            console.warn('Estudiante sin email, se omite llamada a Evolcampus:', studentId);
-            return { activities: [], enrollment: null };
-        }
-
-        // 2. Edge Function individual
-        const { data: edgeData, error: edgeErr } = await this.supabase
-            .functions
-            .invoke('sync-evolvcampus-student', { body: { studentEmail } });
-
-        if (edgeErr) {
-            console.error('Edge sync error:', edgeErr);
-        }
-
-        // 3. Último enrollment (para % completado, nota, etc.)
-        const { data: enrollmentRow } = await this.supabase
-            .from('evolcampus_enrollments')
-            .select('*')
-            .eq('student_id', studentId)
-            .order('synced_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        return {
-            activities: edgeData?.activities || [],
-            enrollment: enrollmentRow || null
-        };
-    }
+        
+        try {
+            // 1. Obtener email del usuario
+            const { data: userRow } = await this.supabase
+                .from('users')
+                .select('email')
+                .eq('id', studentId)
+                .single();
     
+            if (!userRow || !userRow.email) {
+                console.warn('Estudiante sin email:', studentId);
+                return { activities: [], enrollment: null, stats: null };
+            }
+    
+            // 2. Cargar TODOS los tests desde topic_results
+            const { data: topicResults, error } = await this.supabase
+                .from('topic_results')
+                .select('*')
+                .eq('student_id', studentId)
+                .order('last_attempt', { ascending: false });
+    
+            if (error) {
+                console.error('Error cargando topic_results:', error);
+                return { activities: [], enrollment: null, stats: null };
+            }
+    
+            // 3. Transformar datos al formato esperado por updateEvolcampusTab
+            const activities = (topicResults || []).map(result => ({
+                topic_code: result.topic_code,
+                activity: result.activity,
+                done: true, // Si existe en topic_results, está hecho
+                score: result.score,
+                max_score: result.max_score || 10,
+                avg_score: result.score, // Por simplicidad, usamos el score como avg
+                attempts: result.attempts || 1,
+                first_attempt: result.first_attempt,
+                last_attempt: result.last_attempt,
+                source: result.source
+            }));
+    
+            // 4. Calcular estadísticas
+            const stats = this.calculateEvolcampusStats(activities);
+    
+            // 5. Crear un enrollment simulado con las estadísticas
+            const enrollment = {
+                student_id: studentId,
+                completed_percent: stats.completionPercentage,
+                grade: stats.averageGrade,
+                last_connect: stats.lastActivity,
+                synced_at: new Date().toISOString(),
+                total_activities: stats.totalActivities,
+                completed_activities: stats.completedActivities,
+                zero_score_activities: stats.zeroScoreActivities
+            };
+    
+            return {
+                activities,
+                enrollment,
+                stats
+            };
+            
+        } catch (error) {
+            console.error('Error en loadEvolcampusData:', error);
+            return { activities: [], enrollment: null, stats: null };
+        }
+    }
+    // Nuevo método para calcular estadísticas
+    calculateEvolcampusStats(activities) {
+        if (!activities || activities.length === 0) {
+            return {
+                totalActivities: 0,
+                completedActivities: 0,
+                zeroScoreActivities: 0,
+                averageGrade: 0,
+                completionPercentage: 0,
+                lastActivity: null,
+                topicsWithActivity: new Set(),
+                topicsWithZeroScores: new Set()
+            };
+        }
+
+        const stats = {
+            totalActivities: activities.length,
+            completedActivities: 0,
+            zeroScoreActivities: 0,
+            totalScore: 0,
+            totalMaxScore: 0,
+            lastActivity: null,
+            topicsWithActivity: new Set(),
+            topicsWithZeroScores: new Set()
+        };
+
+        activities.forEach(activity => {
+            // Contar actividades completadas (con cualquier nota)
+            if (activity.done) {
+                stats.completedActivities++;
+            }
+
+            // Contar actividades con nota 0 (importante para detectar falta de participación)
+            if (activity.score === 0) {
+                stats.zeroScoreActivities++;
+                stats.topicsWithZeroScores.add(activity.topic_code);
+            }
+
+            // Sumar scores
+            stats.totalScore += activity.score || 0;
+            stats.totalMaxScore += activity.max_score || 10;
+
+            // Registrar tema
+            stats.topicsWithActivity.add(activity.topic_code);
+
+            // Actualizar última actividad
+            if (activity.last_attempt) {
+                const attemptDate = new Date(activity.last_attempt);
+                if (!stats.lastActivity || attemptDate > new Date(stats.lastActivity)) {
+                    stats.lastActivity = activity.last_attempt;
+                }
+            }
+        });
+
+        // Calcular promedios
+        stats.averageGrade = stats.totalMaxScore > 0 
+            ? (stats.totalScore / stats.totalMaxScore * 10).toFixed(2) 
+            : 0;
+        
+        stats.completionPercentage = stats.totalActivities > 0
+            ? Math.round((stats.completedActivities / stats.totalActivities) * 100)
+            : 0;
+
+        return stats;
+}
     async loadStudentResults(studentId) {
         const res = await this.safeQuery(
             this.supabase
@@ -1099,17 +1191,36 @@ Un saludo,
         const activities = evolcampusData.activities || [];
         const enrollment = evolcampusData.enrollment;
 
-        /* ─────────  A. Cabecera de estadísticas  ───────── */
+        /* ─────────  A. Cabecera de estadísticas mejorada  ───────── */
         if (enrollment) {
             statsContainer.innerHTML = `
-              <div class="evolcampus-stats-grid">
-                <div class="stat-card"><div class="stat-value">${enrollment.completed_percent || 0}%</div><div class="stat-label">Completado</div></div>
-                <div class="stat-card"><div class="stat-value">${enrollment.grade ?? 'N/A'}</div><div class="stat-label">Nota Media</div></div>
-                <div class="stat-card"><div class="stat-value">${activities.length}</div><div class="stat-label">Tests Totales</div></div>
-                <div class="stat-card"><div class="stat-value">${enrollment.last_connect ? new Date(enrollment.last_connect).toLocaleDateString() : 'N/A'}</div><div class="stat-label">Última conexión</div></div>
-              </div>`;
+            <div class="evolcampus-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${enrollment.completed_percent || 0}%</div>
+                    <div class="stat-label">Completado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${enrollment.grade ?? 'N/A'}</div>
+                    <div class="stat-label">Nota Media</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${activities.length}</div>
+                    <div class="stat-label">Tests Totales</div>
+                </div>
+                <div class="stat-card ${stats?.zeroScoreActivities > 0 ? 'warning' : ''}">
+                    <div class="stat-value">${stats?.zeroScoreActivities || 0}</div>
+                    <div class="stat-label">Tests con Nota 0</div>
+                </div>
+            </div>
+            ${stats?.zeroScoreActivities > 0 ? `
+                <div class="alert alert-warning" style="margin-top: 1rem;">
+                    ⚠️ Este estudiante tiene ${stats.zeroScoreActivities} tests con nota 0, 
+                    lo que podría indicar falta de participación en los temas: 
+                    ${Array.from(stats.topicsWithZeroScores).join(', ')}
+                </div>
+            ` : ''}`;
         } else {
-            statsContainer.innerHTML = '<div class="no-data">Sin enrollment registrado</div>';
+            statsContainer.innerHTML = '<div class="no-data">Sin datos de enrollment</div>';
         }
 
         /* ─────────  B. Vista mejorada para muchos tests  ───────── */
@@ -1121,6 +1232,7 @@ Un saludo,
         // Agrupar actividades por tema
         const groupedActivities = this.groupActivitiesByTopic(activities);
         
+        
         // Crear controles de vista
         const controls = `
             <div class="evolcampus-controls">
@@ -1128,6 +1240,7 @@ Un saludo,
                     <button class="active" onclick="window.studentDetailModule.changeEvolView('grouped')">Por Temas</button>
                     <button onclick="window.studentDetailModule.changeEvolView('heatmap')">Mapa de Calor</button>
                     <button onclick="window.studentDetailModule.changeEvolView('list')">Lista Completa</button>
+                    <button onclick="window.studentDetailModule.changeEvolView('zeros')">Solo Nota 0</button>
                 </div>
                 <select class="filter-select" onchange="window.studentDetailModule.filterByScore(this.value)">
                     <option value="all">Todas las notas</option>
@@ -1135,6 +1248,7 @@ Un saludo,
                     <option value="good">Buenas (7-8.9)</option>
                     <option value="regular">Regulares (5-6.9)</option>
                     <option value="poor">Bajas (<5)</option>
+                    <option value="zero">Solo ceros (0)</option>
                 </select>
             </div>
         `;
@@ -1143,16 +1257,18 @@ Un saludo,
         const topicsHtml = Object.entries(groupedActivities).map(([topic, tests]) => {
             const avgScore = tests.reduce((sum, t) => sum + (t.score || 0), 0) / tests.filter(t => t.score !== null).length;
             const completedCount = tests.filter(t => t.done).length;
+            const zeroCount = tests.filter(t => t.score === 0).length;
             
             return `
                 <div class="topic-section" data-topic="${topic}">
                     <div class="topic-header" onclick="window.studentDetailModule.toggleTopic('${topic}')">
                         <div class="topic-title">
-                            ${topic === 'general' ? '📚 Tests Generales' : `📖 Tema ${topic}`}
+                            ${topic === 'general' || topic === 'GENERAL' ? '📚 Tests Generales' : `📖 ${topic}`}
                         </div>
                         <div class="topic-stats">
                             <span class="topic-stat average">Promedio: ${avgScore.toFixed(1)}</span>
                             <span class="topic-stat count">${completedCount}/${tests.length} completados</span>
+                            ${zeroCount > 0 ? `<span class="topic-stat warning">⚠️ ${zeroCount} con nota 0</span>` : ''}
                         </div>
                     </div>
                     <div class="topic-tests">
@@ -1331,35 +1447,110 @@ Un saludo,
             case 'list':
                 this.showListView(container);
                 break;
+            case 'zeros':
+                this.showZeroScoreView(container);
+                break;
             default:
                 this.showGroupedView(container);
         }
     }
-    
-    filterByScore(scoreRange) {
-        const cards = document.querySelectorAll('.test-card');
-        cards.forEach(card => {
-            const score = parseFloat(card.dataset.score);
-            let show = true;
-            
-            switch(scoreRange) {
-                case 'excellent':
-                    show = score >= 9;
-                    break;
-                case 'good':
-                    show = score >= 7 && score < 9;
-                    break;
-                case 'regular':
-                    show = score >= 5 && score < 7;
-                    break;
-                case 'poor':
-                    show = score < 5;
-                    break;
-            }
-            
-            card.style.display = show ? 'block' : 'none';
+    // Nuevo método para mostrar solo tests con nota 0
+    showZeroScoreView(container) {
+        const activities = this.currentEvolcampusData?.activities || [];
+        const zeroScoreTests = activities.filter(a => a.score === 0);
+        
+        if (zeroScoreTests.length === 0) {
+            container.innerHTML = `
+                <div class="no-data-message">
+                    ✅ No hay tests con nota 0
+                </div>
+            `;
+            return;
+        }
+        
+        // Agrupar por tema
+        const grouped = {};
+        zeroScoreTests.forEach(test => {
+            const topic = test.topic_code || 'GENERAL';
+            if (!grouped[topic]) grouped[topic] = [];
+            grouped[topic].push(test);
         });
+        
+        container.innerHTML = `
+            <div class="zero-score-summary">
+                <h3>⚠️ Tests con Nota 0 (${zeroScoreTests.length} total)</h3>
+                <p>Estos tests pueden indicar falta de participación del estudiante.</p>
+            </div>
+            ${Object.entries(grouped).map(([topic, tests]) => `
+                <div class="topic-section warning">
+                    <h4>${topic} (${tests.length} tests)</h4>
+                    <ul>
+                        ${tests.map(test => `
+                            <li>
+                                <strong>${test.activity}</strong>
+                                <span class="test-date">- ${test.last_attempt ? new Date(test.last_attempt).toLocaleDateString('es-ES') : 'Sin fecha'}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('')}
+            
+            <style>
+                .zero-score-summary {
+                    background: #fef3c7;
+                    padding: 1.5rem;
+                    border-radius: 8px;
+                    margin-bottom: 1.5rem;
+                    border: 1px solid #fbbf24;
+                }
+                .topic-section.warning {
+                    background: #fee2e2;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                    border-left: 4px solid #dc2626;
+                }
+                .test-date {
+                    color: #6b7280;
+                    font-size: 0.875rem;
+                }
+            </style>
+        `;
     }
+        filterByScore(scoreRange) {
+            const cards = document.querySelectorAll('.test-card');
+            cards.forEach(card => {
+                const score = parseFloat(card.dataset.score);
+                let show = true;
+                
+                switch(scoreRange) {
+                    case 'excellent':
+                        show = score >= 9;
+                        break;
+                    case 'good':
+                        show = score >= 7 && score < 9;
+                        break;
+                    case 'regular':
+                        show = score >= 5 && score < 7;
+                        break;
+                    case 'poor':
+                        show = score < 5 && score > 0;
+                        break;
+                    case 'zero':
+                        show = score === 0;
+                        break;
+                }
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+            
+            // Si es filtro zero, resaltar
+            if (scoreRange === 'zero') {
+                document.querySelectorAll('.test-card[data-score="0"]').forEach(card => {
+                    card.style.border = '2px solid #dc2626';
+                });
+            }
+        }
     
     addVisualSummary(activities, groupedActivities) {
         const container = document.getElementById('evolcampusViewContainer');
