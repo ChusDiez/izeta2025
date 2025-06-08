@@ -35,31 +35,35 @@ export function extractTests(rows, studentId, fileName) {
   let dataStartRow = -1;
   let dateColumns = [];
   
-  // Buscar filas que parezcan tests (empiecen con "Test", "Tema", "T1", etc.)
-  for (let i = 0; i < Math.min(10, rows.length); i++) {
-    if (!rows[i] || !rows[i][0]) continue;
+  // Buscar la cabecera de tests (Asignatura | Tema | Actividad...)
+  for (let i = 0; i < Math.min(50, rows.length); i++) {
+    if (!rows[i]) continue;
     
-    const firstCell = rows[i][0].toString().toLowerCase();
+    const rowText = rows[i].join(' ').toLowerCase();
     
-    if (firstCell.includes('test') || firstCell.includes('tema') || 
-        firstCell.match(/^t\d+/) || firstCell.includes('ejercicio')) {
-      dataStartRow = i;
-      console.log(`✅ Tests encontrados desde fila ${i}`);
+    // Buscar cabecera típica de Evolcampus
+    if (rowText.includes('asignatura') && rowText.includes('tema') && rowText.includes('actividad')) {
+      dataStartRow = i + 1; // Los datos empiezan en la siguiente fila
+      console.log(`✅ Cabecera de tests encontrada en fila ${i}, datos desde fila ${dataStartRow}`);
       
-      // Buscar fechas en la fila anterior
-      if (i > 0 && rows[i-1]) {
-        rows[i-1].forEach((cell, idx) => {
-          if (idx > 0 && cell) {
-            const cellStr = cell.toString();
-            // Detectar fechas DD/MM/YYYY o YYYY-MM-DD
-            if (cellStr.match(/\d{1,2}\/\d{1,2}\/\d{4}/) || 
-                cellStr.match(/\d{4}-\d{2}-\d{2}/)) {
-              dateColumns.push({ index: idx, date: cellStr });
-            }
-          }
-        });
-        console.log(`📅 Encontradas ${dateColumns.length} columnas de fechas`);
-      }
+      // Analizar la cabecera para encontrar columnas importantes
+      const headers = rows[i];
+      headers.forEach((header, idx) => {
+        if (header && header.toString().toLowerCase().includes('realización')) {
+          dateColumns.push({ index: idx, date: 'fecha_realizacion' });
+        }
+      });
+      
+      console.log(`📅 Estructura detectada: ${headers.length} columnas`);
+      break;
+    }
+    
+    // Fallback: buscar filas que empiecen con nombres de asignaturas conocidas
+    const firstCell = rows[i][0] ? rows[i][0].toString().toLowerCase() : '';
+    if (firstCell.includes('jurídicas') || firstCell.includes('sociales') || 
+        firstCell.includes('técnico') || firstCell.includes('test por bloques')) {
+      dataStartRow = i;
+      console.log(`✅ Datos de tests encontrados desde fila ${i} (por asignatura)`);
       break;
     }
   }
@@ -74,67 +78,58 @@ export function extractTests(rows, studentId, fileName) {
   
   for (let i = dataStartRow; i < rows.length; i++) {
     const row = rows[i];
-    if (!row || !row[0]) continue;
+    if (!row || row.length < 3) continue;
     
-    const testName = row[0].toString().trim();
-    if (!testName || testName.length < 3) continue;
+    // Estructura esperada: Asignatura | Tema | Actividad | Nota máxima | ...
+    const asignatura = row[0] ? row[0].toString().trim() : '';
+    const tema = row[1] ? row[1].toString().trim() : '';
+    const actividad = row[2] ? row[2].toString().trim() : '';
+    const notaMaxima = row[3] ? row[3].toString().trim() : '';
     
-    // Extraer código del tema
+    // Saltar filas vacías o que no parezcan tests
+    if (!asignatura || !actividad || asignatura.length < 3) continue;
+    
+    // Extraer código del tema del campo tema
     let topicCode = 'GENERAL';
-    const topicMatch = testName.match(/\b(T\d+)\b/i);
+    const topicMatch = tema.match(/tema\s*(\d+)/i);
     if (topicMatch) {
-      topicCode = topicMatch[1].toUpperCase();
+      topicCode = `T${topicMatch[1]}`;
+    } else if (asignatura.toLowerCase().includes('jurídicas')) {
+      topicCode = 'JURIDICAS';
+    } else if (asignatura.toLowerCase().includes('sociales')) {
+      topicCode = 'SOCIALES';
+    } else if (asignatura.toLowerCase().includes('técnico')) {
+      topicCode = 'TECNICO';
     }
     
-    // Para cada columna con fecha/nota
-    if (dateColumns.length > 0) {
-      // Caso 1: Tenemos columnas de fechas identificadas
-      dateColumns.forEach(dateCol => {
-        const score = row[dateCol.index];
-        if (score !== undefined && score !== null && score !== '') {
-          const scoreValue = parseFloat(score.toString().replace(',', '.'));
-          
-          if (!isNaN(scoreValue) && scoreValue >= 0) {
-            records.push({
-              student_id: studentId,
-              topic_code: topicCode,
-              activity: testName,
-              score: scoreValue,
-              max_score: 10,
-              attempts: 1,
-              first_attempt: parseSpanishDate(dateCol.date),
-              last_attempt: parseSpanishDate(dateCol.date),
-              source: 'evol_excel',
-              created_at: new Date().toISOString()
-            });
-          }
-        }
-      });
-    } else {
-      // Caso 2: No hay fechas claras, buscar cualquier número en las columnas
-      for (let col = 1; col < row.length; col++) {
-        const cellValue = row[col];
-        if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
-          const scoreValue = parseFloat(cellValue.toString().replace(',', '.'));
-          
-          if (!isNaN(scoreValue) && scoreValue >= 0 && scoreValue <= 10) {
-            records.push({
-              student_id: studentId,
-              topic_code: topicCode,
-              activity: testName,
-              score: scoreValue,
-              max_score: 10,
-              attempts: 1,
-              first_attempt: new Date().toISOString(),
-              last_attempt: new Date().toISOString(),
-              source: 'evol_excel',
-              created_at: new Date().toISOString()
-            });
-            break; // Solo tomar la primera nota válida si no hay fechas
-          }
+    // Buscar la nota en las columnas (puede estar en diferentes posiciones)
+    let scoreValue = 0; // Por defecto 0 como vimos en la inspección
+    
+    // Intentar extraer nota de la columna de nota máxima o siguientes
+    for (let col = 3; col < Math.min(row.length, 8); col++) {
+      const cellValue = row[col];
+      if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
+        const parsed = parseFloat(cellValue.toString().replace(',', '.'));
+        if (!isNaN(parsed) && parsed >= 0) {
+          scoreValue = parsed;
+          break;
         }
       }
     }
+    
+    // Crear registro
+    records.push({
+      student_id: studentId,
+      topic_code: topicCode,
+      activity: `${tema} - ${actividad}`.trim().replace(/^-\s*/, ''),
+      score: scoreValue,
+      max_score: 10,
+      attempts: 1,
+      first_attempt: new Date().toISOString(),
+      last_attempt: new Date().toISOString(),
+      source: 'evol_excel',
+      created_at: new Date().toISOString()
+    });
     
     processedTests++;
   }
