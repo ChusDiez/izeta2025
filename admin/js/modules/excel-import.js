@@ -4,6 +4,7 @@ export default class ExcelImportModule {
         this.dashboard = dashboardCore;
         this.selectedFiles = [];
     }
+    
     getBaseFileSlug(fileName) {
         return fileName
             .replace(/\.xlsx?$/i, '')
@@ -15,17 +16,19 @@ export default class ExcelImportModule {
     async render(container) {
         container.innerHTML = `
             <div class="excel-import-page">
-                <h2>📥 Importar Excel de Evolcampus</h2>
+                <h2>📥 Importar Excel/CSV de Evolcampus</h2>
                 <div class="info-box">
                     <h3>📋 Instrucciones</h3>
                     <ol>
-                        <li>Descarga los informes individuales de cada alumno desde Evolcampus (Informes → Alumno)</li>
-                        <li>Arrastra los archivos Excel (.xlsx) a la zona de carga o haz clic para seleccionarlos</li>
-                        <li>Los archivos se procesarán automáticamente</li>
-                        <li>Una vez procesados, los datos aparecerán en el dashboard principal</li>
+                        <li><strong>Opción A - Excel individual:</strong> Sube archivos Excel (.xlsx) de estudiantes individuales</li>
+                        <li><strong>Opción B - CSV masivo:</strong> Sube el CSV generado por el script bulk con todos los estudiantes</li>
+                        <li>El sistema detectará automáticamente el tipo de archivo</li>
+                        <li>Para CSV masivo: asegúrate de que tenga las columnas correctas</li>
                     </ol>
-                    <p><strong>Formato esperado:</strong> expediente-nombre-apellidos-timestamp.xlsx</p>
-                    <p><small>El sistema buscará el email automáticamente por el nombre del alumno</small></p>
+                    <p><strong>Formato CSV esperado:</strong></p>
+                    <code style="display: block; background: #f3f4f6; padding: 10px; border-radius: 4px; font-size: 0.875rem;">
+file_name,student_email,student_key,topic_code,activity,score,max_score,attempts,first_attempt,last_attempt,source
+                    </code>
                 </div>
 
                 <div class="upload-zone" id="uploadZone">
@@ -34,16 +37,43 @@ export default class ExcelImportModule {
                         <path d="M12 5V15" stroke="#0066cc" stroke-width="2" stroke-linecap="round"/>
                         <path d="M20 16V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V16" stroke="#0066cc" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <h3>Arrastra archivos Excel aquí</h3>
-                    <p>o haz clic para seleccionar</p>
+                    <h3>Arrastra archivos aquí</h3>
+                    <p>Excel (.xlsx) o CSV (.csv)</p>
                     <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv" style="display: none;">
                 </div>
 
                 <button class="btn btn-primary" id="uploadBtn" disabled>
-                    📤 Subir archivos seleccionados
+                    📤 Procesar archivos seleccionados
                 </button>
 
                 <div class="file-list" id="fileList"></div>
+
+                <div class="processing-summary" id="processingSummary" style="display: none;">
+                    <h3>📊 Resumen del procesamiento</h3>
+                    <div class="summary-stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalRecords">0</div>
+                            <div class="stat-label">Registros totales</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="uniqueStudents">0</div>
+                            <div class="stat-label">Estudiantes únicos</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="zeroScores">0</div>
+                            <div class="stat-label">Tests con nota 0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="errors">0</div>
+                            <div class="stat-label">Errores</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="import-log" id="importLog" style="display: none;">
+                    <h3>📝 Log de importación</h3>
+                    <div class="log-content" id="logContent"></div>
+                </div>
 
                 <h3 style="margin-top: 40px;">📊 Historial de Importaciones</h3>
                 <div class="table-wrapper">
@@ -282,6 +312,60 @@ export default class ExcelImportModule {
                     flex: 1;
                     min-width: 150px;
                 }
+                
+                .processing-summary {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 30px 0;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                
+                .summary-stats {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 20px;
+                    margin-top: 20px;
+                }
+                
+                .stat-box {
+                    text-align: center;
+                    padding: 15px;
+                    background: #f9fafb;
+                    border-radius: 8px;
+                }
+                
+                .stat-value {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: #1e3a8a;
+                }
+                
+                .stat-label {
+                    font-size: 0.875rem;
+                    color: #6b7280;
+                    margin-top: 5px;
+                }
+                
+                .import-log {
+                    background: #f9fafb;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-top: 20px;
+                    max-height: 400px;
+                    overflow-y: auto;
+                }
+                
+                .log-content {
+                    font-family: monospace;
+                    font-size: 0.875rem;
+                    white-space: pre-wrap;
+                }
+                
+                .log-success { color: #10b981; }
+                .log-warning { color: #f59e0b; }
+                .log-error { color: #ef4444; }
+                .log-info { color: #3b82f6; }
             </style>
         `;
 
@@ -391,14 +475,14 @@ export default class ExcelImportModule {
         
         // Filtrar solo archivos Excel o CSV
         this.selectedFiles = allFiles.filter(file => {
-            const isExcel = file.name.toLowerCase().endsWith('.xlsx')
+            const isValid = file.name.toLowerCase().endsWith('.xlsx')
                 || file.name.toLowerCase().endsWith('.xls')
                 || file.name.toLowerCase().endsWith('.csv');
-            console.log(`Archivo ${file.name}: ${isExcel ? 'ES' : 'NO ES'} Excel/CSV`);
-            return isExcel;
+            console.log(`Archivo ${file.name}: ${isValid ? 'ES' : 'NO ES'} válido`);
+            return isValid;
         });
         
-        console.log('Archivos Excel/CSV válidos:', this.selectedFiles.length);
+        console.log('Archivos válidos:', this.selectedFiles.length);
         
         if (allFiles.length > 0 && this.selectedFiles.length === 0) {
             this.dashboard.showNotification('warning', 'Por favor selecciona archivos Excel (.xlsx, .xls) o CSV (.csv)');
@@ -428,6 +512,7 @@ export default class ExcelImportModule {
                 <div>
                     <strong>${file.name}</strong>
                     <span style="color: #666; margin-left: 10px;">${(file.size / 1024).toFixed(2)} KB</span>
+                    <span style="color: #0066cc; margin-left: 10px;">${file.name.toLowerCase().endsWith('.csv') ? 'CSV' : 'Excel'}</span>
                 </div>
                 <button class="btn btn-sm btn-danger" onclick="window.excelImportModule.removeFile(${index})">
                     Eliminar
@@ -450,13 +535,22 @@ export default class ExcelImportModule {
         const fileList = document.getElementById('fileList');
         
         uploadBtn.disabled = true;
-        uploadBtn.textContent = '⏳ Subiendo archivos...';
+        uploadBtn.textContent = '⏳ Procesando archivos...';
+        
+        // Mostrar resumen y log
+        document.getElementById('processingSummary').style.display = 'block';
+        document.getElementById('importLog').style.display = 'block';
+        
+        // Reiniciar contadores
+        this.resetSummary();
+        this.clearLog();
         
         // Limpiar lista anterior
         fileList.innerHTML = '<h3>📊 Procesamiento de archivos:</h3>';
         
         for (const file of this.selectedFiles) {
             const isCSV = file.name.toLowerCase().endsWith('.csv');
+            
             // Crear elemento para este archivo con ID único
             const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const fileItem = document.createElement('div');
@@ -465,11 +559,11 @@ export default class ExcelImportModule {
             fileItem.innerHTML = `
                 <div class="file-info">
                     <div class="file-name">
-                    <strong>${file.name}</strong>
+                        <strong>${file.name}</strong>
                         <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
                     </div>
                     <div class="processing-status">
-                        <span class="status-badge status-processing">⏳ Subiendo...</span>
+                        <span class="status-badge status-processing">⏳ Procesando...</span>
                     </div>
                 </div>
                 <div class="file-details" style="display: none;">
@@ -479,178 +573,302 @@ export default class ExcelImportModule {
             fileList.appendChild(fileItem);
             
             try {
-                // Usar el nombre original sin modificación (sin timestamp)
-                const fileName = file.name;
-                const isCSV = fileName.toLowerCase().endsWith('.csv');
-                
-                console.log(`Subiendo archivo como: ${fileName}`);
-                
-                // Verificar permisos primero
-                const { data: { user } } = await this.supabase.auth.getUser();
-                if (!user) {
-                    throw new Error('No estás autenticado. Por favor, inicia sesión de nuevo.');
-                }
-                console.log('Usuario autenticado:', user.email);
-                
-                // Actualizar estado a "subiendo"
-                this.updateFileStatus(fileId, 'uploading', '📤 Subiendo archivo...');
-                
-                // Subir archivo al bucket
-                const { data, error } = await this.supabase.storage
-                    .from('excel-public')
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-                
-                if (error) throw error;
-                
-                // Actualizar estado a "procesando"
-                this.updateFileStatus(fileId, 'processing', '🔄 Procesando Excel...');
-                
-                // OPCIÓN: Forzar procesamiento manual siempre (descomenta si hay problemas con el trigger)
-                const FORCE_MANUAL_PROCESSING = false; // Cambia a false para usar trigger automático
-                
-                // TEMPORAL: Mientras la función Edge tiene error 500, usar procesamiento local
-                const USE_LOCAL_PROCESSING = true; // Cambiar a false cuando se arregle la Edge Function
-                
-                if (USE_LOCAL_PROCESSING) {
-                    if (isCSV) {
-                        const processResult = await this.processCsvLocally(file, fileName);
-                        if (processResult.success) {
-                            this.updateFileStatus(fileId, 'completed', '✅ CSV procesado', {
-                                student: processResult.student,
-                                recordsProcessed: processResult.recordsProcessed,
-                                details: processResult.details
-                            });
-                            this.dashboard.showNotification('success',
-                                `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros`
-                            );
-                        } else {
-                            throw {
-                              message: processResult.error,
-                              needsMapping: processResult.needsMapping,
-                              searchName: processResult.searchName
-                            };
-                        }
-                        continue; // pasa al siguiente archivo
-                    }
-                    // Procesar localmente en el navegador
-                    console.log('Usando procesamiento local (Edge Function no disponible)');
-                    const processResult = await this.processExcelLocally(file, fileName);
-                    
-                    if (processResult.success) {
-                        // Actualizar UI con éxito y detalles del estudiante
-                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
-                            student: processResult.student,
-                            recordsProcessed: processResult.recordsProcessed,
-                            details: processResult.details
-                        });
-                        
-                        this.dashboard.showNotification('success', 
-                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`
-                        );
-                    } else {
-                        // Si hay error con información adicional
-                        const errorObj = {
-                            message: processResult.error,
-                            needsMapping: processResult.needsMapping,
-                            needsUserCreation: processResult.needsUserCreation,
-                            searchName: processResult.searchName,
-                            studentEmail: processResult.studentEmail
-                        };
-                        throw errorObj;
-                    }
-                } else if (FORCE_MANUAL_PROCESSING) {
-                    // Procesar con Edge Function manualmente
-                    const processResult = await this.processManually(fileName, file);
-                    
-                    if (processResult.success) {
-                        // Actualizar UI con éxito y detalles del estudiante
-                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
-                            student: processResult.student,
-                            recordsProcessed: processResult.recordsProcessed,
-                            details: processResult.details
-                        });
-                        
-                        this.dashboard.showNotification('success', 
-                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`
-                        );
-                    } else {
-                        // Si hay error con información adicional
-                        const errorObj = {
-                            message: processResult.error,
-                            needsMapping: processResult.needsMapping,
-                            needsUserCreation: processResult.needsUserCreation,
-                            searchName: processResult.searchName,
-                            studentEmail: processResult.studentEmail
-                        };
-                        throw errorObj;
-                    }
+                if (isCSV) {
+                    // Procesar CSV masivo
+                    await this.processCsvFile(file, fileId);
                 } else {
-                    // Usar el flujo normal con trigger automático
-                    // Esperar un poco para que el trigger se ejecute y procesar
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    
-                    // Verificar el resultado del procesamiento
-                    const processResult = await this.checkProcessingResult(fileName, file);
-                    
-                    if (processResult.success) {
-                        // Actualizar UI con éxito y detalles del estudiante
-                        this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
-                            student: processResult.student,
-                            recordsProcessed: processResult.recordsProcessed,
-                            details: processResult.details
-                        });
-                        
-                        this.dashboard.showNotification('success', 
-                            `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros para ${processResult.student.email}`
-                        );
-                    } else {
-                        // Si hay error con información adicional
-                        const errorObj = {
-                            message: processResult.error,
-                            needsMapping: processResult.needsMapping,
-                            needsUserCreation: processResult.needsUserCreation,
-                            searchName: processResult.searchName,
-                            studentEmail: processResult.studentEmail
-                        };
-                        throw errorObj;
-                    }
+                    // Procesar Excel individual (mantener compatibilidad)
+                    await this.processExcelFile(file, fileId);
                 }
-                
             } catch (error) {
                 console.error('Error con archivo:', error);
-                
-                // Actualizar UI con error
                 this.updateFileStatus(fileId, 'error', `❌ Error: ${error.message}`);
-                
-                // Si es error de usuario no encontrado, ofrecer mapeo manual
-                if (error.message.includes('No se pudo encontrar') || error.message.includes('Usuario no encontrado')) {
-                    this.offerManualMapping(fileId, file.name, error.message);
-                }
-                
-                // Si el procesamiento devolvió información adicional
-                if (error.needsMapping) {
-                    this.offerManualMapping(fileId, file.name, error.message);
-                } else if (error.needsUserCreation) {
-                    this.offerUserCreation(fileId, error.studentEmail, error.message);
-                }
-                
-                this.dashboard.showNotification('error', `Error con ${file.name}: ${error.message}`);
+                this.addLog('error', `Error procesando ${file.name}: ${error.message}`);
+                this.updateSummary('errors', 1);
             }
         }
         
         // Limpiar
         this.selectedFiles = [];
         document.getElementById('fileInput').value = '';
-        uploadBtn.textContent = '📤 Subir archivos seleccionados';
+        uploadBtn.textContent = '📤 Procesar archivos seleccionados';
         uploadBtn.disabled = true;
         
         // Actualizar historial después de 2 segundos
         setTimeout(() => this.loadImportSummary(), 2000);
     }
-    
+
+    // NUEVA FUNCIONALIDAD: Procesar archivo CSV masivo
+    async processCsvFile(file, fileId) {
+        this.addLog('info', `📄 Procesando CSV masivo: ${file.name}`);
+        this.updateFileStatus(fileId, 'processing', '🔄 Procesando CSV...');
+        
+        try {
+            // Cargar Papa Parse para procesar CSV
+            await this.loadPapaParse();
+            
+            const text = await file.text();
+            const parsed = window.Papa.parse(text, { 
+                header: true, 
+                skipEmptyLines: true,
+                dynamicTyping: true 
+            });
+            
+            if (parsed.errors.length > 0) {
+                throw new Error(`Error parseando CSV: ${parsed.errors[0].message}`);
+            }
+            
+            // Procesar datos del CSV
+            const processedData = await this.processBulkCsvData(parsed.data, file.name);
+            
+            // Actualizar estado final
+            this.updateFileStatus(fileId, 'completed', '✅ CSV procesado exitosamente', {
+                totalRecords: processedData.totalRecords,
+                uniqueStudents: processedData.uniqueStudents.size,
+                zeroScores: processedData.zeroScores
+            });
+            
+            this.addLog('success', `✅ CSV procesado: ${processedData.totalRecords} registros de ${processedData.uniqueStudents.size} estudiantes`);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async processBulkCsvData(rows, fileName) {
+        const summary = {
+            totalRecords: 0,
+            uniqueStudents: new Set(),
+            zeroScores: 0,
+            errors: 0,
+            processedRecords: []
+        };
+        
+        // Cache de usuarios para evitar consultas repetidas
+        const userCache = new Map();
+        
+        // Agrupar por lotes para optimizar inserciones
+        const batchSize = 100;
+        const batches = [];
+        
+        for (let i = 0; i < rows.length; i += batchSize) {
+            batches.push(rows.slice(i, i + batchSize));
+        }
+        
+        // Procesar cada lote
+        for (const [batchIndex, batch] of batches.entries()) {
+            this.addLog('info', `Procesando lote ${batchIndex + 1}/${batches.length} (${batch.length} registros)`);
+            
+            const batchRecords = [];
+            
+            for (const row of batch) {
+                try {
+                    // Validar fila
+                    if (!row.activity || row.activity.trim() === '') {
+                        continue; // Saltar filas vacías
+                    }
+                    
+                    // Buscar o cachear usuario
+                    let studentId = null;
+                    const cacheKey = row.student_email || row.student_key;
+                    
+                    if (userCache.has(cacheKey)) {
+                        studentId = userCache.get(cacheKey);
+                    } else {
+                        // Buscar usuario
+                        studentId = await this.findStudentId(row.student_email, row.student_key);
+                        if (studentId) {
+                            userCache.set(cacheKey, studentId);
+                            summary.uniqueStudents.add(cacheKey);
+                        }
+                    }
+                    
+                    if (!studentId) {
+                        this.addLog('warning', `⚠️ Usuario no encontrado: ${cacheKey} (${row.file_name})`);
+                        summary.errors++;
+                        continue;
+                    }
+                    
+                    // Contar tests con nota 0
+                    if (parseFloat(row.score) === 0) {
+                        summary.zeroScores++;
+                    }
+                    
+                    // Crear registro para topic_results
+                    const record = {
+                        student_id: studentId,
+                        topic_code: row.topic_code || 'GENERAL',
+                        activity: row.activity.trim(),
+                        score: parseFloat(row.score) || 0,
+                        max_score: parseFloat(row.max_score) || 10,
+                        attempts: parseInt(row.attempts) || 1,
+                        first_attempt: this.parseDate(row.first_attempt),
+                        last_attempt: this.parseDate(row.last_attempt),
+                        source: row.source || fileName,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    batchRecords.push(record);
+                    summary.totalRecords++;
+                    
+                } catch (error) {
+                    this.addLog('error', `Error procesando fila: ${error.message}`);
+                    summary.errors++;
+                }
+            }
+            
+            // Insertar lote en base de datos
+            if (batchRecords.length > 0) {
+                const { error } = await this.supabase
+                    .from('topic_results')
+                    .upsert(batchRecords, {
+                        onConflict: 'student_id,topic_code,activity',
+                        ignoreDuplicates: false
+                    });
+                
+                if (error) {
+                    this.addLog('error', `Error insertando lote: ${error.message}`);
+                    summary.errors += batchRecords.length;
+                } else {
+                    this.addLog('success', `✅ Lote insertado: ${batchRecords.length} registros`);
+                }
+            }
+        }
+        
+        // Actualizar resumen en la UI
+        this.updateSummary('totalRecords', summary.totalRecords);
+        this.updateSummary('uniqueStudents', summary.uniqueStudents.size);
+        this.updateSummary('zeroScores', summary.zeroScores);
+        this.updateSummary('errors', summary.errors);
+        
+        // Log final con estadísticas
+        if (summary.zeroScores > 0) {
+            this.addLog('warning', `⚠️ Se encontraron ${summary.zeroScores} tests con nota 0 (${((summary.zeroScores / summary.totalRecords) * 100).toFixed(1)}%)`);
+        }
+        
+        return summary;
+    }
+
+    async findStudentId(email, studentKey) {
+        // Primero intentar por email
+        if (email && email.trim() !== '') {
+            const { data: user } = await this.supabase
+                .from('users')
+                .select('id')
+                .eq('email', email.trim())
+                .single();
+            
+            if (user) return user.id;
+        }
+        
+        // Si no se encontró por email, buscar por student_key
+        if (studentKey) {
+            // Si student_key es un UUID, buscar por ID
+            if (studentKey.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+                const { data: user } = await this.supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', studentKey)
+                    .single();
+                
+                if (user) return user.id;
+            } else {
+                // Si no es UUID, buscar en mapeos por slug
+                const { data: mapping } = await this.supabase
+                    .from('excel_name_mappings')
+                    .select('user_email')
+                    .eq('excel_name', studentKey.toLowerCase())
+                    .single();
+                
+                if (mapping) {
+                    const { data: user } = await this.supabase
+                        .from('users')
+                        .select('id')
+                        .eq('email', mapping.user_email)
+                        .single();
+                    
+                    if (user) return user.id;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    // MANTENER COMPATIBILIDAD: Procesar Excel individual
+    async processExcelFile(file, fileId) {
+        const fileName = file.name;
+        
+        try {
+            // Usar el nombre original sin modificación
+            console.log(`Procesando archivo Excel: ${fileName}`);
+            
+            // Verificar permisos
+            const { data: { user } } = await this.supabase.auth.getUser();
+            if (!user) {
+                throw new Error('No estás autenticado. Por favor, inicia sesión de nuevo.');
+            }
+            
+            // Actualizar estado
+            this.updateFileStatus(fileId, 'uploading', '📤 Subiendo archivo...');
+            this.addLog('info', `📤 Subiendo ${fileName}...`);
+            
+            // Subir archivo al bucket
+            const { data, error } = await this.supabase.storage
+                .from('excel-public')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+            
+            if (error) throw error;
+            
+            // Actualizar estado
+            this.updateFileStatus(fileId, 'processing', '🔄 Procesando Excel...');
+            this.addLog('info', `🔄 Procesando ${fileName}...`);
+            
+            // Procesar localmente
+            const processResult = await this.processExcelLocally(file, fileName);
+            
+            if (processResult.success) {
+                // Actualizar UI con éxito
+                this.updateFileStatus(fileId, 'completed', '✅ Procesado exitosamente', {
+                    student: processResult.student,
+                    recordsProcessed: processResult.recordsProcessed,
+                    details: processResult.details
+                });
+                
+                this.addLog('success', `✅ ${fileName}: ${processResult.recordsProcessed} registros para ${processResult.student.email || 'usuario'}`);
+                
+                this.dashboard.showNotification('success', 
+                    `✅ ${file.name} procesado: ${processResult.recordsProcessed} registros`
+                );
+            } else {
+                // Si hay error con información adicional
+                const errorObj = {
+                    message: processResult.error,
+                    needsMapping: processResult.needsMapping,
+                    searchName: processResult.searchName
+                };
+                throw errorObj;
+            }
+            
+        } catch (error) {
+            console.error('Error con archivo:', error);
+            
+            // Actualizar UI con error
+            this.updateFileStatus(fileId, 'error', `❌ Error: ${error.message}`);
+            
+            // Si es error de usuario no encontrado, ofrecer mapeo manual
+            if (error.needsMapping) {
+                this.offerManualMapping(fileId, file.name, error.message, error.searchName);
+            }
+            
+            throw error;
+        }
+    }
+
+    // Métodos auxiliares de UI
     updateFileStatus(fileId, status, message, details = null) {
         const fileItem = document.getElementById(fileId);
         if (!fileItem) return;
@@ -665,268 +883,440 @@ export default class ExcelImportModule {
         statusBadge.textContent = message;
         
         // Si hay detalles, mostrarlos
-        if (details && details.student) {
+        if (details && (details.student || details.totalRecords)) {
             fileDetails.style.display = 'block';
-            detailContent.innerHTML = `
-                <div class="student-info">
-                    <strong>👤 Estudiante identificado:</strong> ${details.student.name || details.student.email}
-                    <br><small>📧 Email: ${details.student.email}</small>
-                    ${details.student.cohort ? `<br><small>🎓 Cohorte: ${details.student.cohort}</small>` : ''}
-                </div>
-                <div class="process-stats">
-                    <strong>📊 Estadísticas:</strong>
-                    <ul>
-                        <li>Registros procesados: ${details.recordsProcessed || 0}</li>
-                        <li>Fuente: Excel importado</li>
-                        <li>Fecha: ${new Date().toLocaleString('es-ES')}</li>
-                    </ul>
-                </div>
-            `;
+            
+            if (details.student) {
+                // Detalles de Excel individual
+                detailContent.innerHTML = `
+                    <div class="student-info">
+                        <strong>👤 Estudiante identificado:</strong> ${details.student.name || details.student.email}
+                        <br><small>📧 Email: ${details.student.email}</small>
+                        ${details.student.cohort ? `<br><small>🎓 Cohorte: ${details.student.cohort}</small>` : ''}
+                    </div>
+                    <div class="process-stats">
+                        <strong>📊 Estadísticas:</strong>
+                        <ul>
+                            <li>Registros procesados: ${details.recordsProcessed || 0}</li>
+                            <li>Fuente: Excel importado</li>
+                            <li>Fecha: ${new Date().toLocaleString('es-ES')}</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                // Detalles de CSV masivo
+                detailContent.innerHTML = `
+                    <div class="process-stats">
+                        <strong>📊 Estadísticas del CSV:</strong>
+                        <ul>
+                            <li>Total registros: ${details.totalRecords || 0}</li>
+                            <li>Estudiantes únicos: ${details.uniqueStudents || 0}</li>
+                            <li>Tests con nota 0: ${details.zeroScores || 0}</li>
+                            <li>Fecha: ${new Date().toLocaleString('es-ES')}</li>
+                        </ul>
+                    </div>
+                `;
+            }
         }
     }
-    
-    async checkProcessingResult(fileName, originalFile = null) {
+
+    resetSummary() {
+        document.getElementById('totalRecords').textContent = '0';
+        document.getElementById('uniqueStudents').textContent = '0';
+        document.getElementById('zeroScores').textContent = '0';
+        document.getElementById('errors').textContent = '0';
+    }
+
+    updateSummary(field, increment) {
+        const element = document.getElementById(field);
+        if (element) {
+            const current = parseInt(element.textContent) || 0;
+            element.textContent = current + increment;
+        }
+    }
+
+    clearLog() {
+        document.getElementById('logContent').innerHTML = '';
+    }
+
+    addLog(type, message) {
+        const logContent = document.getElementById('logContent');
+        const timestamp = new Date().toLocaleTimeString('es-ES');
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-${type}`;
+        logEntry.textContent = `[${timestamp}] ${message}`;
+        logContent.appendChild(logEntry);
+        
+        // Auto-scroll
+        logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    // Métodos auxiliares para parseo de datos
+    parseDate(dateStr) {
+        if (!dateStr) return new Date().toISOString();
+        
+        // Si ya es ISO, devolverlo tal cual
+        if (dateStr.includes('T')) return dateStr;
+        
+        // Parsear formato DD/MM/YYYY
+        const parts = dateStr.split(/[\/\-]/);
+        if (parts.length === 3) {
+            const [day, month, year] = parts;
+            return new Date(year, month - 1, day).toISOString();
+        }
+        
+        return new Date().toISOString();
+    }
+
+    parseSpanishDate(dateStr) {
+        if (!dateStr) return new Date().toISOString();
+        
+        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (match) {
+            const [_, day, month, year] = match;
+            return new Date(year, month - 1, day).toISOString();
+        }
+        
+        return new Date().toISOString();
+    }
+
+    // Cargar librerías externas
+    async loadPapaParse() {
+        return new Promise((resolve, reject) => {
+            if (window.Papa) return resolve();
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    async loadSheetJS() {
+        return new Promise((resolve, reject) => {
+            if (window.XLSX) return resolve();
+            const script = document.createElement('script');
+            script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    // Procesamiento local de Excel (compatible con versión anterior)
+    async processExcelLocally(file, fileName) {
         try {
-            // Buscar en el log de sincronización el resultado del procesamiento
-            let { data, error } = await this.supabase
-                .from('api_sync_log')
-                .select('*')
-                .eq('endpoint', 'process_excel')
-                .filter('details->fileName', 'eq', fileName)
-                .order('executed_at', { ascending: false })
-                .limit(1)
+            console.log('📊 Procesando Excel localmente...');
+            
+            // Cargar SheetJS
+            await this.loadSheetJS();
+            
+            // Leer archivo
+            const arrayBuffer = await this.readFileAsArrayBuffer(file);
+            const workbook = window.XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+            
+            // Extraer información del estudiante
+            const studentInfo = await this.extractStudentInfoLocal(rawData, fileName);
+            
+            if (!studentInfo.email) {
+                // Devolver error con información para mapeo
+                return {
+                    success: false,
+                    error: `No se pudo identificar al estudiante. ${studentInfo.searchName ? `Nombre buscado: ${studentInfo.searchName}` : ''}`,
+                    needsMapping: true,
+                    searchName: studentInfo.searchName
+                };
+            }
+            
+            // Buscar usuario
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('id, username, email, cohort')
+                .eq('email', studentInfo.email)
                 .single();
             
-            if (error || !data) {
-                console.log('No se encontró log inmediato, esperando...');
-                // Si no hay log todavía, esperar un poco más
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                
-                // Intentar de nuevo con búsqueda más flexible
-                const { data: retryData, error: retryError } = await this.supabase
-                    .from('api_sync_log')
-                    .select('*')
-                    .eq('endpoint', 'process_excel')
-                    .filter('details::text', 'ilike', `%${fileName}%`)
-                    .order('executed_at', { ascending: false })
-                    .limit(1)
-                    .single();
-                
-                if (retryError || !retryData) {
-                    console.log('No se encontró resultado del procesamiento automático');
-                    
-                    // Si el trigger no funcionó, llamar manualmente a la función
-                    if (originalFile) {
-                        console.log('Intentando procesar manualmente...');
-                        return await this.processManually(fileName, originalFile);
-                    }
-                    
-                    return { success: false, error: 'No se pudo verificar el resultado del procesamiento' };
-                }
-                
-                data = retryData;
-            }
-            
-            // Extraer información del log
-            const details = data.details || {};
-            
-            if (data.status_code === 200) {
-                // Buscar información del estudiante
-                const studentEmail = details.studentEmail;
-                let studentInfo = { email: studentEmail };
-                
-                if (studentEmail) {
-                    // Obtener información completa del estudiante
-                    const { data: userData } = await this.supabase
-                        .from('users')
-                        .select('id, username, email, cohort')
-                        .eq('email', studentEmail)
-                        .single();
-                    
-                    if (userData) {
-                        studentInfo = userData;
-                        studentInfo.name = userData.username;
-                    }
-                }
-                
-                return {
-                    success: true,
-                    student: studentInfo,
-                    recordsProcessed: details.recordsProcessed || data.records_synced || 0,
-                    details: details
-                };
-            } else {
+            if (userError || !user) {
+                // Usuario no existe
                 return {
                     success: false,
-                    error: details.error || 'Error en el procesamiento'
+                    error: `Usuario no encontrado: ${studentInfo.email}`,
+                    needsUserCreation: true,
+                    studentEmail: studentInfo.email
                 };
             }
             
-        } catch (error) {
-            console.error('Error verificando resultado:', error);
+            // Extraer tests
+            const testRecords = this.extractTestRecordsLocal(rawData, user.id);
             
-            // Si hay error y tenemos el archivo original, intentar procesar manualmente
-            if (originalFile) {
-                console.log('Error en verificación, intentando procesar manualmente...');
-                return await this.processManually(fileName, originalFile);
+            console.log(`📝 Encontrados ${testRecords.length} registros de tests`);
+            
+            // Contar tests con nota 0
+            const zeroCount = testRecords.filter(r => r.score === 0).length;
+            if (zeroCount > 0) {
+                this.addLog('warning', `⚠️ ${fileName}: ${zeroCount} tests con nota 0`);
+                this.updateSummary('zeroScores', zeroCount);
             }
             
-            // Si es un error de CORS o de red, dar mensaje más claro
-            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                return {
-                    success: false,
-                    error: 'Error de conexión. Verifica que la función Edge esté activa.'
-                };
-            }
-            
-            // Si es error de función no encontrada o no autorizada
-            if (error.message.includes('not found') || error.message.includes('401') || error.message.includes('404')) {
-                console.log('⚠️ Función Edge no disponible, intentando procesamiento local...');
+            // Guardar en base de datos
+            if (testRecords.length > 0) {
+                const { error: insertError } = await this.supabase
+                    .from('topic_results')
+                    .upsert(testRecords, {
+                        onConflict: 'student_id,topic_code,activity'
+                    });
                 
-                // Intentar procesamiento local como fallback
-                try {
-                    return await this.processExcelLocally(file, fileName);
-                } catch (localError) {
-                    console.error('Error en procesamiento local:', localError);
-                    return {
-                        success: false,
-                        error: `La función Edge no está disponible y el procesamiento local falló: ${localError.message}`
-                    };
+                if (insertError) {
+                    throw new Error(`Error guardando datos: ${insertError.message}`);
                 }
             }
             
-            return {
-                success: false,
-                error: 'Error al verificar el procesamiento'
-            };
-        }
-    }
-    
-    async processManually(fileName, file) {
-        try {
-            console.log('Procesando archivo manualmente:', fileName);
+            // Actualizar resumen
+            this.updateSummary('totalRecords', testRecords.length);
+            this.updateSummary('uniqueStudents', 1);
             
-            // Llamar directamente a la función Edge
-            const response = await this.supabase.functions.invoke('process-excel-evolcampus', {
-                body: {
-                    bucket: 'excel-public',
-                    fileName: fileName
+            // Registrar en log
+            await this.supabase.from('api_sync_log').insert({
+                endpoint: 'process_excel',
+                status_code: 200,
+                records_synced: testRecords.length,
+                details: {
+                    fileName,
+                    studentEmail: studentInfo.email,
+                    recordsProcessed: testRecords.length,
+                    processedAt: new Date().toISOString(),
+                    processingMode: 'local'
                 }
             });
             
-            console.log('Respuesta de la función:', response);
-            
-            // La función puede devolver error de dos formas
-            if (response.error) {
-                console.error('Error de la función:', response.error);
-                throw new Error(response.error.message || 'Error en la función Edge');
-            }
-            
-            const data = response.data;
-            
-            // Verificar si la función devolvió un error en el data
-            if (data && !data.success && data.error) {
-                console.error('Error procesando:', data.error);
-                
-                // Manejar errores específicos
-                if (data.errorCode === 'STUDENT_NOT_FOUND') {
-                    return {
-                        success: false,
-                        error: data.error,
-                        needsMapping: true,
-                        searchName: data.searchName
-                    };
-                } else if (data.errorCode === 'USER_NOT_FOUND') {
-                    return {
-                        success: false,
-                        error: data.error,
-                        needsUserCreation: true,
-                        studentEmail: data.studentEmail
-                    };
-                } else if (data.errorCode === 'HEADER_NOT_FOUND') {
-                    return {
-                        success: false,
-                        error: 'El archivo Excel no tiene el formato esperado. ' + data.error
-                    };
-                } else {
-                    // Otros errores
-                    throw new Error(data.error);
-                }
-            }
-            
-            if (data && data.success) {
-                // Buscar información completa del estudiante si tenemos el email
-                let studentInfo = data.details?.student || {};
-                if (!studentInfo.email && data.details?.studentEmail) {
-                    studentInfo.email = data.details.studentEmail;
-                }
-                
-                // Si tenemos email, buscar datos completos del usuario
-                if (studentInfo.email) {
-                    const { data: userData } = await this.supabase
-                        .from('users')
-                        .select('id, username, email, cohort')
-                        .eq('email', studentInfo.email)
-                        .single();
-                    
-                    if (userData) {
-                        studentInfo = {
-                            ...studentInfo,
-                            ...userData,
-                            name: userData.username
-                        };
-                    }
-                }
-                
-                return {
-                    success: true,
-                    student: studentInfo,
-                    recordsProcessed: data.details?.recordsProcessed || 0,
-                    details: data.details || {}
-                };
-            } else {
-                // Si llegamos aquí, algo salió mal
-                console.error('Respuesta inesperada:', data);
-                return {
-                    success: false,
-                    error: data?.error || data?.message || 'Error procesando el archivo - respuesta inválida'
-                };
-            }
+            return {
+                success: true,
+                student: {
+                    ...user,
+                    email: studentInfo.email,
+                    name: user.username
+                },
+                recordsProcessed: testRecords.length
+            };
             
         } catch (error) {
-            console.error('Error en procesamiento manual:', error);
-            
-            // Si es un error de CORS o de red, dar mensaje más claro
-            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                return {
-                    success: false,
-                    error: 'Error de conexión. Verifica que la función Edge esté activa.'
-                };
-            }
-            
-            // Buscar errores específicos comunes
-            if (error.message.includes('No se pudo encontrar el email')) {
-                return {
-                    success: false,
-                    error: error.message
-                };
-            }
-            
-            if (error.message.includes('Usuario no encontrado')) {
-                return {
-                    success: false,
-                    error: error.message
-                };
-            }
-            
-            return {
-                success: false,
-                error: error.message || 'Error desconocido procesando archivo'
-            };
+            console.error('Error en procesamiento local:', error);
+            throw error;
         }
     }
-    
-    offerManualMapping(fileId, fileName, errorMessage) {
+
+    readFileAsArrayBuffer(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    async extractStudentInfoLocal(rawData, fileName) {
+        const info = { email: null, searchName: null, baseFileName: null };
+        
+        // Buscar email en las primeras filas
+        for (let i = 0; i < Math.min(20, rawData.length); i++) {
+            const row = rawData[i];
+            if (!row) continue;
+            
+            const rowText = row.join(' ').toLowerCase();
+            const emailMatch = rowText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
+            if (emailMatch) {
+                info.email = emailMatch[1];
+                return info;
+            }
+        }
+        
+        // Usar utilidad común para obtener slug base
+        const baseFileName = this.getBaseFileSlug(fileName);
+        info.baseFileName = baseFileName;
+        
+        // Extraer partes del nombre
+        const parts = baseFileName.split('-');
+        
+        if (parts.length >= 3 && parts[0] === 'expediente') {
+            // Formato: expediente-nombre-apellidos
+            info.searchName = parts.slice(1).join(' ');
+        } else if (parts.length >= 2) {
+            // Otros formatos
+            info.searchName = parts.join(' ');
+        }
+        
+        console.log('Nombre base extraído:', info.baseFileName);
+        console.log('Nombre para buscar:', info.searchName);
+        
+        if (info.searchName) {
+            // Buscar en mapeos usando el nombre base
+            const { data: mapping } = await this.supabase
+                .from('excel_name_mappings')
+                .select('user_email')
+                .eq('excel_name', info.baseFileName.toLowerCase())
+                .single();
+            
+            if (mapping) {
+                info.email = mapping.user_email;
+                console.log('✅ Encontrado en mapeo por nombre base:', info.email);
+                return info;
+            }
+            
+            // Buscar por nombre similar
+            const { data: users } = await this.supabase
+                .from('users')
+                .select('email')
+                .ilike('username', `%${info.searchName}%`);
+            
+            if (users && users.length === 1) {
+                info.email = users[0].email;
+            }
+        }
+        
+        return info;
+    }
+
+    extractTestRecordsLocal(rawData, studentId) {
+        const records = [];
+        
+        console.log('🔍 Analizando Excel de Evolcampus...');
+        console.log('📊 Total de filas:', rawData.length);
+        
+        // Mostrar las primeras filas para debugging
+        console.log('📋 Primeras 5 filas del Excel:');
+        for (let i = 0; i < Math.min(5, rawData.length); i++) {
+            console.log(`Fila ${i}:`, rawData[i]?.slice(0, 5));
+        }
+        
+        // Buscar donde empiezan los datos de tests
+        let dataStartRow = -1;
+        let dateColumns = [];
+        
+        for (let i = 0; i < Math.min(10, rawData.length); i++) {
+            if (!rawData[i]) continue;
+            
+            const firstCell = (rawData[i][0] || '').toString().toLowerCase();
+            
+            // Detectar si es una fila con nombre de test/tema
+            if (firstCell.includes('test') || firstCell.includes('tema') || 
+                firstCell.includes('t1') || firstCell.includes('t2') ||
+                firstCell.includes('ejercicio') || firstCell.includes('evaluación')) {
+                dataStartRow = i;
+                console.log('✅ Datos encontrados a partir de la fila:', dataStartRow);
+                
+                // Buscar columnas con fechas en la fila anterior
+                if (i > 0 && rawData[i-1]) {
+                    rawData[i-1].forEach((cell, index) => {
+                        if (index > 0 && cell) {
+                            const cellStr = cell.toString();
+                            // Detectar si parece una fecha
+                            if (cellStr.match(/\d{1,2}\/\d{1,2}\/\d{4}/) || 
+                                cellStr.match(/\d{4}-\d{2}-\d{2}/)) {
+                                dateColumns.push({
+                                    index: index,
+                                    date: cellStr
+                                });
+                            }
+                        }
+                    });
+                }
+                break;
+            }
+        }
+        
+        if (dataStartRow === -1) {
+            console.log('❌ No se encontraron datos de tests en el formato esperado');
+            return records;
+        }
+        
+        console.log('📅 Columnas de fechas encontradas:', dateColumns.length);
+        
+        // Procesar cada fila de test
+        let processedTests = 0;
+        const testsSummary = {};
+        
+        for (let i = dataStartRow; i < rawData.length; i++) {
+            const row = rawData[i];
+            if (!row || !row[0]) continue;
+            
+            const testName = row[0].toString().trim();
+            if (!testName) continue;
+            
+            // Extraer información del test
+            let topicCode = 'general';
+            let cleanTestName = testName;
+            
+            // Intentar extraer el código del tema
+            const topicMatch = testName.match(/\b(T\d+)\b/i);
+            if (topicMatch) {
+                topicCode = topicMatch[1].toUpperCase();
+            } else if (testName.match(/tema\s*(\d+)/i)) {
+                topicCode = 'Tema ' + testName.match(/tema\s*(\d+)/i)[1];
+            }
+            
+            // Para cada columna de fecha, crear un registro si hay puntuación
+            dateColumns.forEach(dateCol => {
+                const score = row[dateCol.index];
+                if (score !== undefined && score !== null && score !== '') {
+                    const scoreValue = parseFloat(score);
+                    
+                    if (!isNaN(scoreValue)) {
+                        const record = {
+                            student_id: studentId,
+                            topic_code: topicCode,
+                            activity: cleanTestName,
+                            score: scoreValue,
+                            max_score: 10, // Asumimos que las notas son sobre 10
+                            attempts: 1,
+                            source: 'evol_excel',
+                            first_attempt: this.parseSpanishDate(dateCol.date),
+                            last_attempt: this.parseSpanishDate(dateCol.date),
+                            created_at: new Date().toISOString()
+                        };
+                        
+                        records.push(record);
+                        
+                        // Actualizar resumen
+                        if (!testsSummary[topicCode]) {
+                            testsSummary[topicCode] = {
+                                count: 0,
+                                totalScore: 0,
+                                maxScore: 0,
+                                zeroScores: 0
+                            };
+                        }
+                        testsSummary[topicCode].count++;
+                        testsSummary[topicCode].totalScore += scoreValue;
+                        testsSummary[topicCode].maxScore = Math.max(testsSummary[topicCode].maxScore, scoreValue);
+                        if (scoreValue === 0) {
+                            testsSummary[topicCode].zeroScores++;
+                        }
+                    }
+                }
+            });
+            
+            processedTests++;
+        }
+        
+        console.log(`✅ Procesados ${processedTests} tests únicos`);
+        console.log(`📊 Total de registros creados: ${records.length}`);
+        console.log('📈 Resumen por tema:', testsSummary);
+        
+        // Mostrar algunos ejemplos
+        if (records.length > 0) {
+            console.log('📝 Primeros 3 registros:');
+            records.slice(0, 3).forEach((r, i) => {
+                console.log(`  ${i+1}. ${r.activity} - Tema ${r.topic_code}: ${r.score}/${r.max_score}`);
+            });
+        }
+        
+        return records;
+    }
+
+    // Métodos para mapeo manual (mantener compatibilidad)
+    offerManualMapping(fileId, fileName, errorMessage, searchName) {
         const fileItem = document.getElementById(fileId);
         if (!fileItem) return;
         
@@ -937,7 +1327,7 @@ export default class ExcelImportModule {
         
         // Usar slug base y nombre probable
         const baseFileName = this.getBaseFileSlug(fileName);
-        const possibleName = baseFileName
+        const possibleName = searchName || baseFileName
             .replace(/^expediente-/, '')
             .split('-')
             .join(' ');
@@ -985,53 +1375,12 @@ export default class ExcelImportModule {
         // Cargar lista de estudiantes con búsqueda inteligente
         this.loadStudentsListWithSearch(`mapping-select-${fileId}`, `student-search-${fileId}`, possibleName, fileId);
     }
-    
-    async loadStudentsList(selectId) {
-        try {
-            const { data: allUsers } = await this.supabase
-                .from('users')
-                .select('id, email, username, cohort, is_admin')
-                .order('username');
-            
-            const select = document.getElementById(selectId);
-            if (!select || !allUsers) return;
-            
-            // Filtrar solo estudiantes (no administradores)
-            const students = allUsers.filter(user => !user.is_admin);
-            
-            // Agrupar por cohorte
-            const grouped = {};
-            students.forEach(student => {
-                const cohort = student.cohort || 'Sin cohorte';
-                if (!grouped[cohort]) grouped[cohort] = [];
-                grouped[cohort].push(student);
-            });
-            
-            // Llenar el select
-            Object.entries(grouped).forEach(([cohort, cohortStudents]) => {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = cohort;
-                
-                cohortStudents.forEach(student => {
-                    const option = document.createElement('option');
-                    option.value = student.email;
-                    option.textContent = `${student.username} (${student.email})`;
-                    optgroup.appendChild(option);
-                });
-                
-                select.appendChild(optgroup);
-            });
-            
-        } catch (error) {
-            console.error('Error cargando estudiantes:', error);
-        }
-    }
-    
+
     async loadStudentsListWithSearch(selectId, searchId, initialSearch, fileId) {
         try {
             console.log('🔍 Cargando lista de estudiantes...');
             
-            // Primero cargar todos los usuarios
+            // Cargar todos los usuarios
             let { data: allUsers, error } = await this.supabase
                 .from('users')
                 .select('id, email, username, cohort, is_admin')
@@ -1046,25 +1395,14 @@ export default class ExcelImportModule {
                 console.error('❌ Error cargando estudiantes:', error);
                 const select = document.getElementById(selectId);
                 if (select) {
-                    select.innerHTML = '<option value="">Sin permisos para leer la tabla users</option>';
+                    select.innerHTML = '<option value="">Error cargando estudiantes</option>';
                 }
-                return;
-            }
-            
-            if (!allStudents || allStudents.length === 0) {
-                console.error('❌ No hay usuarios en la base de datos');
                 return;
             }
             
             const select = document.getElementById(selectId);
             const searchInput = document.getElementById(searchId);
             const saveBtn = document.getElementById(`save-mapping-btn-${fileId}`);
-            
-            console.log('🎯 Elementos encontrados:', {
-                select: !!select,
-                searchInput: !!searchInput,
-                saveBtn: !!saveBtn
-            });
             
             if (!select || !searchInput) {
                 console.error('❌ No se encontraron elementos del DOM');
@@ -1133,484 +1471,6 @@ export default class ExcelImportModule {
             }
         }
     }
-    
-    async saveMapping(fileId, excelName) {
-        const select = document.getElementById(`mapping-select-${fileId}`);
-        if (!select || !select.value) {
-            this.dashboard.showNotification('warning', 'Por favor selecciona un estudiante');
-            return;
-        }
-        
-        try {
-            // Guardar el mapeo
-            const { error } = await this.supabase
-                .from('excel_name_mappings')
-                .insert({
-                    excel_name: excelName.toLowerCase(),
-                    user_email: select.value,
-                    notes: 'Mapeo manual desde importación'
-                });
-            
-            if (error) throw error;
-            
-            this.dashboard.showNotification('success', 'Mapeo guardado correctamente. Los próximos archivos con este nombre se procesarán automáticamente.');
-            
-            // Actualizar UI
-            const fileItem = document.getElementById(fileId);
-            if (fileItem) {
-                const detailContent = fileItem.querySelector('.detail-content');
-                detailContent.innerHTML = `
-                    <div class="success-message">
-                        ✅ Mapeo guardado exitosamente<br>
-                        <small>Los próximos archivos de "${excelName}" se asociarán automáticamente a ${select.value}</small>
-                    </div>
-                `;
-            }
-            
-        } catch (error) {
-            console.error('Error guardando mapeo:', error);
-            this.dashboard.showNotification('error', 'Error al guardar el mapeo: ' + error.message);
-        }
-    }
-    
-    async loadImportSummary() {
-        // Cargar resumen de importaciones recientes
-        try {
-            const { data: recentImports } = await this.supabase
-                .from('api_sync_log')
-                .select('*')
-                .eq('endpoint', 'process_excel')
-                .order('executed_at', { ascending: false })
-                .limit(10);
-            
-            if (recentImports && recentImports.length > 0) {
-                // Mostrar resumen
-                console.log('Importaciones recientes:', recentImports);
-            }
-        } catch (error) {
-            console.error('Error cargando resumen:', error);
-        }
-    }
-
-    async loadHistory() {
-        const historyBody = document.getElementById('historyBody');
-        historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Historial desactivado temporalmente</td></tr>';
-        return; // Salir sin hacer nada
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('excel_import_history')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(20);
-            
-            if (error) throw error;
-            
-            if (!data || data.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay importaciones previas</td></tr>';
-                return;
-            }
-            
-            historyBody.innerHTML = data.map(record => {
-                const date = new Date(record.created_at).toLocaleString('es-ES');
-                const statusClass = `status-${record.status}`;
-                const statusText = {
-                    pending: 'Pendiente',
-                    processing: 'Procesando',
-                    completed: 'Completado',
-                    error: 'Error'
-                }[record.status] || record.status;
-                
-                return `
-                    <tr>
-                        <td>${date}</td>
-                        <td>${record.file_name || '-'}</td>
-                        <td>${record.student_email || '-'}</td>
-                        <td>${record.records_imported || 0}</td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>${record.error_message || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-            
-        } catch (error) {
-            console.error('Error cargando historial:', error);
-            this.dashboard.showNotification('error', 'Error cargando historial: ' + error.message);
-        }
-    }
-
-    // Procesamiento local de Excel (cuando la función Edge no está disponible)
-    async processExcelLocally(file, fileName) {
-        try {
-            console.log('📊 Procesando Excel localmente en el navegador...');
-            
-            // Cargar SheetJS si no está cargado
-            if (!window.XLSX) {
-                console.log('Cargando librería SheetJS...');
-                await this.loadSheetJS();
-            }
-            
-            // Leer archivo
-            const arrayBuffer = await this.readFileAsArrayBuffer(file);
-            const workbook = window.XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const rawData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
-            
-            // Extraer información del estudiante
-            const studentInfo = await this.extractStudentInfoLocal(rawData, fileName);
-            
-            if (!studentInfo.email) {
-                // Devolver error con información para mapeo
-                return {
-                    success: false,
-                    error: `No se pudo identificar al estudiante. ${studentInfo.searchName ? `Nombre buscado: ${studentInfo.searchName}` : ''}`,
-                    needsMapping: true,
-                    searchName: studentInfo.searchName
-                };
-            }
-            
-            // Buscar usuario
-            const { data: user, error: userError } = await this.supabase
-                .from('users')
-                .select('id, username, email, cohort')
-                .eq('email', studentInfo.email)
-                .single();
-            
-            if (userError || !user) {
-                // Usuario no existe, ofrecer crearlo
-                return {
-                    success: false,
-                    error: `Usuario no encontrado: ${studentInfo.email}`,
-                    needsUserCreation: true,
-                    studentEmail: studentInfo.email
-                };
-            }
-            
-            // Procesar tests
-            const testRecords = this.extractTestRecordsLocal(rawData, user.id);
-            
-            console.log(`📝 Encontrados ${testRecords.length} registros de tests`);
-            
-            // Guardar en base de datos
-            if (testRecords.length > 0) {
-                const { error: insertError } = await this.supabase
-                    .from('topic_results')
-                    .upsert(testRecords, {
-                        onConflict: 'student_id,topic_code,activity'
-                    });
-                
-                if (insertError) {
-                    throw new Error(`Error guardando datos: ${insertError.message}`);
-                }
-            }
-            
-            // Registrar en log
-            await this.supabase.from('api_sync_log').insert({
-                endpoint: 'process_excel',
-                status_code: 200,
-                records_synced: testRecords.length,
-                details: {
-                    fileName,
-                    studentEmail: studentInfo.email,
-                    recordsProcessed: testRecords.length,
-                    processedAt: new Date().toISOString(),
-                    processingMode: 'local'
-                }
-            });
-            
-            return {
-                success: true,
-                student: {
-                    ...user,
-                    email: studentInfo.email,
-                    name: user.username
-                },
-                recordsProcessed: testRecords.length
-            };
-            
-        } catch (error) {
-            console.error('Error en procesamiento local:', error);
-            throw error;
-        }
-    }
-    
-    async loadSheetJS() {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    }
-    
-    readFileAsArrayBuffer(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(file);
-        });
-    }
-    
-    async extractStudentInfoLocal(rawData, fileName) {
-        const info = { email: null, searchName: null, baseFileName: null };
-        
-        // Buscar email en las primeras filas
-        for (let i = 0; i < Math.min(20, rawData.length); i++) {
-            const row = rawData[i];
-            if (!row) continue;
-            
-            const rowText = row.join(' ').toLowerCase();
-            const emailMatch = rowText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-            if (emailMatch) {
-                info.email = emailMatch[1];
-                return info;
-            }
-        }
-        
-        // Usar utilidad común para obtener slug base
-        const baseFileName = this.getBaseFileSlug(fileName);
-        info.baseFileName = baseFileName;
-        
-        // Extraer partes del nombre
-        const parts = baseFileName.split('-');
-        
-        if (parts.length >= 3 && parts[0] === 'expediente') {
-            // Formato: expediente-nombre-apellidos
-            info.searchName = parts.slice(1).join(' ');
-        } else if (parts.length >= 2) {
-            // Otros formatos
-            info.searchName = parts.join(' ');
-        }
-        
-        console.log('Nombre base extraído:', info.baseFileName);
-        console.log('Nombre para buscar:', info.searchName);
-        
-        if (info.searchName) {
-            // Buscar en mapeos usando el nombre base
-            const { data: mapping } = await this.supabase
-                .from('excel_name_mappings')
-                .select('user_email')
-                .eq('excel_name', info.baseFileName.toLowerCase())
-                .single();
-            
-            if (mapping) {
-                info.email = mapping.user_email;
-                console.log('✅ Encontrado en mapeo por nombre base:', info.email);
-                return info;
-            }
-            
-            // Buscar por nombre similar
-            const { data: users } = await this.supabase
-                .from('users')
-                .select('email')
-                .ilike('username', `%${info.searchName}%`);
-            
-            if (users && users.length === 1) {
-                info.email = users[0].email;
-            }
-        }
-        
-        return info;
-    }
-    
-    extractTestRecordsLocal(rawData, studentId) {
-        const records = [];
-        
-        console.log('🔍 Analizando Excel de Evolcampus...');
-        console.log('📊 Total de filas:', rawData.length);
-        
-        // Mostrar las primeras filas para debugging
-        console.log('📋 Primeras 5 filas del Excel:');
-        for (let i = 0; i < Math.min(5, rawData.length); i++) {
-            console.log(`Fila ${i}:`, rawData[i]?.slice(0, 5));
-        }
-        
-        // El formato de Evolcampus es:
-        // Fila 0-2: Información del estudiante
-        // Fila 3-4: Cabeceras (vacías o con fechas)
-        // Fila 5+: Datos de tests
-        
-        let dataStartRow = -1;
-        let dateColumns = [];
-        
-        // Buscar la fila donde empiezan los datos de tests
-        for (let i = 0; i < Math.min(10, rawData.length); i++) {
-            if (!rawData[i]) continue;
-            
-            const firstCell = (rawData[i][0] || '').toString().toLowerCase();
-            
-            // Detectar si es una fila con nombre de test/tema
-            if (firstCell.includes('test') || firstCell.includes('tema') || 
-                firstCell.includes('t1') || firstCell.includes('t2') ||
-                firstCell.includes('ejercicio') || firstCell.includes('evaluación')) {
-                dataStartRow = i;
-                console.log('✅ Datos encontrados a partir de la fila:', dataStartRow);
-                
-                // Buscar columnas con fechas en la fila anterior
-                if (i > 0 && rawData[i-1]) {
-                    rawData[i-1].forEach((cell, index) => {
-                        if (index > 0 && cell) {
-                            const cellStr = cell.toString();
-                            // Detectar si parece una fecha
-                            if (cellStr.match(/\d{1,2}\/\d{1,2}\/\d{4}/) || 
-                                cellStr.match(/\d{4}-\d{2}-\d{2}/)) {
-                                dateColumns.push({
-                                    index: index,
-                                    date: cellStr
-                                });
-                            }
-                        }
-                    });
-                }
-                break;
-            }
-        }
-        
-        if (dataStartRow === -1) {
-            console.log('❌ No se encontraron datos de tests en el formato esperado');
-            return records;
-        }
-        
-        console.log('📅 Columnas de fechas encontradas:', dateColumns.length);
-        
-        // Procesar cada fila de test
-        let processedTests = 0;
-        const testsSummary = {};
-        
-        for (let i = dataStartRow; i < rawData.length; i++) {
-            const row = rawData[i];
-            if (!row || !row[0]) continue;
-            
-            const testName = row[0].toString().trim();
-            if (!testName) continue;
-            
-            // Extraer información del test
-            let topicCode = 'general';
-            let cleanTestName = testName;
-            
-            // Intentar extraer el código del tema (T1, T2, etc.)
-            const topicMatch = testName.match(/\b(T\d+)\b/i);
-            if (topicMatch) {
-                topicCode = topicMatch[1].toUpperCase();
-            }
-            
-            // Para cada columna de fecha, crear un registro si hay puntuación
-            dateColumns.forEach(dateCol => {
-                const score = row[dateCol.index];
-                if (score !== undefined && score !== null && score !== '') {
-                    const scoreValue = parseFloat(score);
-                    
-                    if (!isNaN(scoreValue)) {
-                        const record = {
-                            student_id: studentId,
-                            topic_code: topicCode,
-                            activity: cleanTestName,
-                            score: scoreValue,
-                            max_score: 10, // Asumimos que las notas son sobre 10
-                            attempts: 1,
-                            source: 'evol_excel',
-                            first_attempt: this.parseSpanishDate(dateCol.date),
-                            last_attempt: this.parseSpanishDate(dateCol.date),
-                            created_at: new Date().toISOString()
-                        };
-                        
-                        records.push(record);
-                        
-                        // Actualizar resumen
-                        if (!testsSummary[topicCode]) {
-                            testsSummary[topicCode] = {
-                                count: 0,
-                                totalScore: 0,
-                                maxScore: 0
-                            };
-                        }
-                        testsSummary[topicCode].count++;
-                        testsSummary[topicCode].totalScore += scoreValue;
-                        testsSummary[topicCode].maxScore = Math.max(testsSummary[topicCode].maxScore, scoreValue);
-                    }
-                }
-            });
-            
-            processedTests++;
-        }
-        
-        console.log(`✅ Procesados ${processedTests} tests únicos`);
-        console.log(`📊 Total de registros creados: ${records.length}`);
-        console.log('📈 Resumen por tema:', testsSummary);
-        
-        // Mostrar algunos ejemplos
-        if (records.length > 0) {
-            console.log('📝 Primeros 3 registros:');
-            records.slice(0, 3).forEach((r, i) => {
-                console.log(`  ${i+1}. ${r.activity} - Tema ${r.topic_code}: ${r.score}/${r.max_score}`);
-            });
-        }
-        
-        return records;
-    }
-    
-    // Función auxiliar para parsear fechas en formato español
-    parseSpanishDate(dateStr) {
-        if (!dateStr) return new Date().toISOString();
-        
-        // Formato DD/MM/YYYY
-        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (match) {
-            const [_, day, month, year] = match;
-            return new Date(year, month - 1, day).toISOString();
-        }
-        
-        // Si no se puede parsear, devolver fecha actual
-        return new Date().toISOString();
-    }
-
-    offerUserCreation(fileId, studentEmail, errorMessage) {
-        const fileItem = document.getElementById(fileId);
-        if (!fileItem) return;
-        
-        const detailContent = fileItem.querySelector('.detail-content');
-        const fileDetails = fileItem.querySelector('.file-details');
-        
-        fileDetails.style.display = 'block';
-        
-        detailContent.innerHTML = `
-            <div class="user-creation-form">
-                <p class="error-message">${errorMessage}</p>
-                <p><strong>El usuario con email ${studentEmail} no existe en el sistema.</strong></p>
-                <p>Opciones:</p>
-                
-                <div class="creation-options">
-                    <button class="btn btn-sm btn-primary" onclick="window.dashboardAdmin.showPage('bulk-users')">
-                        👥 Ir a Carga Masiva para crear usuario
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="window.excelImportModule.skipFile('${fileId}')">
-                        ⏭️ Omitir este archivo
-                    </button>
-                </div>
-                
-                <div class="info-box" style="margin-top: 1rem;">
-                    <p><small>💡 Tip: Si tienes muchos usuarios nuevos, usa la Carga Masiva para importarlos todos de una vez.</small></p>
-                </div>
-            </div>
-        `;
-    }
-    
-    skipFile(fileId) {
-        const fileItem = document.getElementById(fileId);
-        if (fileItem) {
-            this.updateFileStatus(fileId, 'skipped', '⏭️ Archivo omitido');
-            fileItem.style.opacity = '0.5';
-            
-            // Ocultar detalles
-            const fileDetails = fileItem.querySelector('.file-details');
-            if (fileDetails) {
-                fileDetails.style.display = 'none';
-            }
-        }
-    }
 
     async saveMappingWithBase(fileId, originalFileName) {
         const select = document.getElementById(`mapping-select-${fileId}`);
@@ -1622,7 +1482,8 @@ export default class ExcelImportModule {
         try {
             // Obtener slug base del archivo
             const baseFileName = this.getBaseFileSlug(originalFileName);
-            // Guardar el mapeo usando el nombre base (sin números)
+            
+            // Guardar el mapeo usando el nombre base
             const { error } = await this.supabase
                 .from('excel_name_mappings')
                 .insert({
@@ -1636,6 +1497,8 @@ export default class ExcelImportModule {
             this.dashboard.showNotification('success', 
                 `✅ Mapeo guardado. Los próximos archivos de este estudiante se procesarán automáticamente.`
             );
+            
+            this.addLog('success', `✅ Mapeo guardado: ${baseFileName} → ${select.value}`);
             
             // Actualizar UI para mostrar éxito
             const fileItem = document.getElementById(fileId);
@@ -1659,29 +1522,11 @@ export default class ExcelImportModule {
             this.dashboard.showNotification('error', 'Error al guardar el mapeo: ' + error.message);
         }
     }
-    
+
     async retryFileWithMapping(fileId, fileName, userEmail) {
         try {
-            // Buscar el archivo original
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput || !fileInput.files) {
-                this.dashboard.showNotification('error', 'No se pudo encontrar el archivo original');
-                return;
-            }
-            
-            // Buscar el archivo por nombre
-            let originalFile = null;
-            for (let i = 0; i < fileInput.files.length; i++) {
-                if (fileInput.files[i].name === fileName.split('_')[1]) {
-                    originalFile = fileInput.files[i];
-                    break;
-                }
-            }
-            
-            if (!originalFile) {
-                // Si no está en el input, intentar con los selectedFiles
-                originalFile = this.selectedFiles.find(f => fileName.includes(f.name));
-            }
+            // Buscar el archivo original en los selectedFiles
+            const originalFile = this.selectedFiles.find(f => f.name === fileName);
             
             if (!originalFile) {
                 this.dashboard.showNotification('error', 'No se pudo encontrar el archivo original para reprocesar');
@@ -1714,7 +1559,7 @@ export default class ExcelImportModule {
             this.dashboard.showNotification('error', 'Error al reprocesar: ' + error.message);
         }
     }
-    
+
     // Método auxiliar para procesar con email conocido
     async processExcelLocallyWithEmail(file, fileName, userEmail) {
         try {
@@ -1790,84 +1635,43 @@ export default class ExcelImportModule {
             throw error;
         }
     }
-    // --- CSV helpers ---
-    async loadPapaParse() {
-      return new Promise((resolve, reject) => {
-        if (window.Papa) return resolve();
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
+
+    skipFile(fileId) {
+        const fileItem = document.getElementById(fileId);
+        if (fileItem) {
+            this.updateFileStatus(fileId, 'skipped', '⏭️ Archivo omitido');
+            fileItem.style.opacity = '0.5';
+            
+            // Ocultar detalles
+            const fileDetails = fileItem.querySelector('.file-details');
+            if (fileDetails) {
+                fileDetails.style.display = 'none';
+            }
+        }
     }
 
-    async processCsvLocally(file, fileName) {
-      try {
-        await this.loadPapaParse();
-        const text = await file.text();
-        const parsed = window.Papa.parse(text, { header: true, skipEmptyLines: true });
-
-        if (parsed.errors.length) {
-          throw new Error('CSV malformado: ' + parsed.errors[0].message);
+    async loadImportSummary() {
+        // Cargar resumen de importaciones recientes
+        try {
+            const { data: recentImports } = await this.supabase
+                .from('api_sync_log')
+                .select('*')
+                .eq('endpoint', 'process_excel')
+                .order('executed_at', { ascending: false })
+                .limit(10);
+            
+            if (recentImports && recentImports.length > 0) {
+                // Mostrar resumen
+                console.log('Importaciones recientes:', recentImports);
+            }
+        } catch (error) {
+            console.error('Error cargando resumen:', error);
         }
+    }
 
-        // Agrupar por email o slug
-        const firstRow = parsed.data[0] || {};
-        const email = firstRow.email || null;
-
-        if (!email) {
-          // Intentar mapeo por slug del nombre de archivo
-          const slug = this.getBaseFileSlug(fileName);
-          const { data: mapping } = await this.supabase
-              .from('excel_name_mappings')
-              .select('user_email')
-              .eq('excel_name', slug)
-              .single();
-          if (mapping) {
-            firstRow.email = mapping.user_email;
-          } else {
-            return { success:false, error:'No se encontró email en CSV', needsMapping:true, searchName: slug };
-          }
-        }
-
-        // Obtener user_id
-        const { data: user } = await this.supabase
-            .from('users')
-            .select('id, username, email, cohort')
-            .eq('email', firstRow.email)
-            .single();
-        if (!user) {
-          return { success:false, error:'Usuario no encontrado', needsUserCreation:true, studentEmail:firstRow.email };
-        }
-
-        // Convertir cada fila en registro topic_results
-        const records = parsed.data.map(row => ({
-          student_id: user.id,
-          topic_code: row.topic_code || 'GEN',
-          activity: row.activity,
-          score: parseFloat(row.score) || 0,
-          max_score: parseFloat(row.max_score)||10,
-          attempts: parseInt(row.attempts)||1,
-          first_attempt: row.first_attempt || new Date().toISOString(),
-          last_attempt : row.last_attempt  || new Date().toISOString(),
-          source: 'csv_bulk',
-          created_at: new Date().toISOString()
-        }));
-
-        if (records.length) {
-          await this.supabase.from('topic_results')
-              .upsert(records, { onConflict:'student_id,topic_code,activity' });
-        }
-
-        return {
-          success:true,
-          student:{...user, name:user.username},
-          recordsProcessed: records.length,
-          details:{ fileName, mode:'csv_local' }
-        };
-      } catch (err) {
-        return { success:false, error: err.message||'Error CSV' };
-      }
+    async loadHistory() {
+        const historyBody = document.getElementById('historyBody');
+        historyBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Historial desactivado temporalmente</td></tr>';
+        return;
     }
 }
