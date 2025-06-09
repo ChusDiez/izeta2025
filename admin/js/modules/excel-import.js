@@ -673,19 +673,24 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
             batches.push(rows.slice(i, i + batchSize));
         }
         
-        // Si es CSV individual y no hay usuario cacheado, verificar primero
+        // En processCsvFile, después de la línea 234 aproximadamente:
         if (isSingleStudent && rows.length > 0) {
             const firstRow = rows[0];
-            const studentKey = firstRow.student_email || firstRow.student_key;
+            let studentKey = firstRow.student_email || firstRow.student_key;
+            
+            // NUEVO: Limpiar el student_key si no es un email
+            if (studentKey && !studentKey.includes('@')) {
+                studentKey = this.getBaseFileSlug(studentKey);
+            }
             
             if (studentKey && !userCache.has(studentKey)) {
-                const studentId = await this.findStudentId(firstRow.student_email, firstRow.student_key);
+                const studentId = await this.findStudentId(firstRow.student_email, studentKey);
                 
                 if (!studentId) {
                     // Lanzar error inmediatamente para activar mapeo manual
                     throw {
                         needsMapping: true,
-                        searchName: studentKey,
+                        searchName: studentKey, // Ahora usa el nombre limpio
                         message: `No se pudo identificar al estudiante: ${studentKey}`
                     };
                 }
@@ -804,6 +809,9 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
         
         // Si no se encontró por email, buscar por student_key
         if (studentKey) {
+            // NUEVO: Limpiar el studentKey antes de buscar
+            const cleanedKey = this.getBaseFileSlug(studentKey);
+            
             // Si student_key es un UUID, buscar por ID
             if (studentKey.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
                 const { data: user } = await this.supabase
@@ -814,11 +822,11 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
                 
                 if (user) return user.id;
             } else {
-                // Si no es UUID, buscar en mapeos por slug
+                // MODIFICADO: Buscar en mapeos usando el nombre limpio
                 const { data: mapping } = await this.supabase
                     .from('excel_name_mappings')
                     .select('user_email')
-                    .eq('excel_name', studentKey.toLowerCase())
+                    .eq('excel_name', cleanedKey.toLowerCase())
                     .single();
                 
                 if (mapping) {
