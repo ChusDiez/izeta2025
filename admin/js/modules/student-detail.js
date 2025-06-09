@@ -1181,6 +1181,10 @@ Un saludo,
     }
 
     updateEvolcampusTab(evolcampusData) {
+        console.log('evolcampusData:', evolcampusData);
+        console.log('stats:', evolcampusData?.stats);
+        console.log('topicsWithZeroScores:', evolcampusData?.stats?.topicsWithZeroScores);
+        
         const statsContainer   = document.getElementById('evolcampusStats');
         const contentContainer = document.getElementById('evolcampusContent');
         if (!statsContainer || !contentContainer) return;
@@ -1191,6 +1195,20 @@ Un saludo,
         const activities = evolcampusData.activities || [];
         const enrollment = evolcampusData.enrollment;
         const stats = evolcampusData.stats;
+
+        // Antes del statsContainer.innerHTML = 
+        let zeroScoreAlert = '';
+        if (stats?.zeroScoreActivities > 0) {
+            let alertMessage = `⚠️ Este estudiante tiene ${stats.zeroScoreActivities} tests con nota 0`;
+            if (stats?.topicsWithZeroScores && stats.topicsWithZeroScores.size > 0) {
+                alertMessage += `, lo que podría indicar falta de participación en los temas: ${Array.from(stats.topicsWithZeroScores).join(', ')}`;
+            } else {
+                alertMessage += '.';
+            }
+            zeroScoreAlert = `<div class="alert alert-warning" style="margin-top: 1rem;">${alertMessage}</div>`;
+        }
+
+        // En el template simplemente:
 
         /* ─────────  A. Cabecera de estadísticas mejorada  ───────── */
         if (enrollment) {
@@ -1213,13 +1231,8 @@ Un saludo,
                     <div class="stat-label">Tests con Nota 0</div>
                 </div>
             </div>
-            ${stats?.zeroScoreActivities > 0 ? `
-                <div class="alert alert-warning" style="margin-top: 1rem;">
-                    ⚠️ Este estudiante tiene ${stats.zeroScoreActivities} tests con nota 0, 
-                    lo que podría indicar falta de participación en los temas: 
-                    ${Array.from(stats.topicsWithZeroScores).join(', ')}
-                </div>
-            ` : ''}`;
+        
+        ${zeroScoreAlert}`;
         } else {
             statsContainer.innerHTML = '<div class="no-data">Sin datos de enrollment</div>';
         }
