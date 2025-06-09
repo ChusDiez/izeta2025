@@ -101,6 +101,13 @@ export default class StudentsModule {
      * Renderizar tabla avanzada de estudiantes
      */
     renderAdvancedStudentsTable(students) {
+        // Calcular estadísticas globales
+        const activeStudents = students.filter(s => s.active !== false);
+        const avgScore = activeStudents.length > 0 ? 
+            activeStudents.reduce((sum, s) => sum + (s.weighted_average || 0), 0) / activeStudents.length : 0;
+        const avgDeviation = activeStudents.length > 0 ?
+            activeStudents.reduce((sum, s) => sum + (s.consistency_coefficient || 0), 0) / activeStudents.length : 0;
+        
         return `
             <div class="table-card">
                 <div class="table-header">
@@ -117,6 +124,29 @@ export default class StudentsModule {
                         </button>
                     </div>
                 </div>
+                
+                <!-- Panel de información sobre métricas -->
+                <div class="metrics-info-panel">
+                    <div class="metric-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Nota media global:</span>
+                            <span class="summary-value">${avgScore.toFixed(2)}/10</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Desviación media:</span>
+                            <span class="summary-value">σ = ${avgDeviation.toFixed(2)}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Nota de corte estimada:</span>
+                            <span class="summary-value">~7.5/10</span>
+                        </div>
+                    </div>
+                    <div class="metrics-legend">
+                        <button class="btn btn-sm btn-info" onclick="window.studentsModule.showMetricsHelp()">
+                            ℹ️ ¿Cómo se calculan estas métricas?
+                        </button>
+                    </div>
+                </div>
                 <div class="table-wrapper">
                     <table id="studentsTable">
                         <thead>
@@ -130,10 +160,13 @@ export default class StudentsModule {
                                 <th onclick="window.studentsModule.sortBy('cohort')">
                                     Cohorte ${this.getSortIcon('cohort')}
                                 </th>
-                                <th onclick="window.studentsModule.sortBy('weighted_average')" title="Promedio ponderado">
+                                <th onclick="window.studentsModule.sortBy('weighted_average')" title="Nota media ponderada de simulacros">
                                     Nota ${this.getSortIcon('weighted_average')}
                                 </th>
-                                <th onclick="window.studentsModule.sortBy('probability_pass')" title="Probabilidad de aprobar">
+                                <th onclick="window.studentsModule.sortBy('consistency_coefficient')" title="Desviación típica (menor = más consistente)">
+                                    σ ${this.getSortIcon('consistency_coefficient')}
+                                </th>
+                                <th onclick="window.studentsModule.sortBy('probability_pass')" title="Probabilidad de aprobar basada en nota, tendencia y consistencia">
                                     P(Aprobar) ${this.getSortIcon('probability_pass')}
                                 </th>
                                 <th>Tendencia</th>
@@ -184,8 +217,16 @@ export default class StudentsModule {
                 <td>
                     <div class="score-display">
                         <strong>${(student.weighted_average || 0).toFixed(2)}</strong>/10
-                        <div class="score-detail">
-                            σ: ${(student.consistency_coefficient || 0).toFixed(2)}
+                        <div class="score-detail" title="Media simple: ${(student.average_score || 0).toFixed(2)}">
+                            ${student.total_simulations || 0} simulacros
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="deviation-display ${this.getDeviationClass(student.consistency_coefficient)}">
+                        <strong>${(student.consistency_coefficient || 0).toFixed(2)}</strong>
+                        <div class="deviation-detail">
+                            ${this.getDeviationLabel(student.consistency_coefficient)}
                         </div>
                     </div>
                 </td>
@@ -193,7 +234,7 @@ export default class StudentsModule {
                     <div class="probability-display ${this.getProbabilityClass(student.probability_pass)}">
                         <strong>${student.probability_pass || 50}%</strong>
                         ${confidence ? `
-                            <div class="confidence-interval" title="Intervalo de confianza">
+                            <div class="confidence-interval" title="Intervalo de confianza basado en ${student.total_simulations || 0} simulacros">
                                 ±${confidence.margin.toFixed(0)}%
                             </div>
                         ` : ''}
@@ -590,6 +631,22 @@ export default class StudentsModule {
         };
         return icons[direction] || '⚪';
     }
+    
+    getDeviationClass(deviation) {
+        if (!deviation || deviation === 0) return 'excellent';
+        if (deviation < 1) return 'excellent';
+        if (deviation < 1.5) return 'good';
+        if (deviation < 2) return 'warning';
+        return 'danger';
+    }
+    
+    getDeviationLabel(deviation) {
+        if (!deviation || deviation === 0) return 'Sin datos';
+        if (deviation < 1) return 'Muy consistente';
+        if (deviation < 1.5) return 'Consistente';
+        if (deviation < 2) return 'Variable';
+        return 'Muy variable';
+    }
 
     getRiskLabel(level) {
         const labels = {
@@ -894,5 +951,96 @@ export default class StudentsModule {
             'stable': '<span style="color: #6b7280;">→</span>'
         };
         return indicators[trend] || indicators.stable;
+    }
+
+    /**
+     * Mostrar ayuda sobre las métricas
+     */
+    showMetricsHelp() {
+        const modal = document.getElementById('analysisModal');
+        const content = document.getElementById('analysisContent');
+        
+        content.innerHTML = `
+            <div class="metrics-help">
+                <h3>📊 Guía de Métricas del Sistema</h3>
+                
+                <div class="metric-explanation">
+                    <h4>📈 Nota Media Ponderada</h4>
+                    <p>Es el promedio de las notas de todos los simulacros, con mayor peso para los más recientes:</p>
+                    <ul>
+                        <li>Simulacros recientes: peso 100%</li>
+                        <li>Simulacros anteriores: peso decreciente (80%, 60%...)</li>
+                        <li>Refleja mejor el rendimiento actual del estudiante</li>
+                    </ul>
+                </div>
+                
+                <div class="metric-explanation">
+                    <h4>📊 Desviación Típica (σ)</h4>
+                    <p>Mide la consistencia del estudiante entre simulacros:</p>
+                    <ul>
+                        <li><strong>σ < 1.0:</strong> Muy consistente (excelente)</li>
+                        <li><strong>σ 1.0-1.5:</strong> Consistente (bueno)</li>
+                        <li><strong>σ 1.5-2.0:</strong> Variable (atención)</li>
+                        <li><strong>σ > 2.0:</strong> Muy variable (problema)</li>
+                    </ul>
+                    <p class="info-note">💡 Un estudiante con nota 7.5 y σ=0.5 es más fiable que uno con 7.5 y σ=2.0</p>
+                </div>
+                
+                <div class="metric-explanation">
+                    <h4>🎯 Probabilidad de Aprobar</h4>
+                    <p>Modelo predictivo basado en:</p>
+                    <ul>
+                        <li><strong>40%</strong> - Nota media ponderada</li>
+                        <li><strong>25%</strong> - Tendencia (mejorando/empeorando)</li>
+                        <li><strong>20%</strong> - Consistencia (menor σ = mejor)</li>
+                        <li><strong>15%</strong> - Participación y otros factores</li>
+                    </ul>
+                </div>
+                
+                <div class="metric-explanation">
+                    <h4>⚖️ Relación con la Nota de Corte</h4>
+                    <p>La nota de corte histórica de CNP ronda el <strong>7.5/10</strong>:</p>
+                    <ul>
+                        <li>Con nota ≥ 8.0 y σ < 1.0 → Alta probabilidad (>80%)</li>
+                        <li>Con nota 7.0-8.0 y σ < 1.5 → Probabilidad media (50-80%)</li>
+                        <li>Con nota < 7.0 o σ > 2.0 → Baja probabilidad (<50%)</li>
+                    </ul>
+                    <p class="warning-note">⚠️ La desviación alta resta probabilidad aunque la nota sea buena</p>
+                </div>
+                
+                <div class="metric-explanation">
+                    <h4>📈 Ejemplo Práctico</h4>
+                    <div class="example-grid">
+                        <div class="example">
+                            <strong>Estudiante A</strong>
+                            <ul>
+                                <li>Nota: 7.8/10</li>
+                                <li>σ: 0.8</li>
+                                <li>Tendencia: ↗</li>
+                                <li>P(Aprobar): ~75%</li>
+                            </ul>
+                        </div>
+                        <div class="example">
+                            <strong>Estudiante B</strong>
+                            <ul>
+                                <li>Nota: 8.2/10</li>
+                                <li>σ: 2.3</li>
+                                <li>Tendencia: ↘</li>
+                                <li>P(Aprobar): ~55%</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="info-note">💡 El estudiante A tiene mejor pronóstico por su consistencia y tendencia positiva</p>
+                </div>
+                
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="window.studentsModule.closeAnalysisModal()">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
     }
 }
