@@ -1120,6 +1120,104 @@ Un saludo,
         
         return ((lastAvg - firstAvg) / firstAvg * 100).toFixed(1);
     }
+    async editTest(testId, currentScore, activityName) {
+        const newScore = prompt(`Editar nota para "${activityName}"\n\nNota actual: ${currentScore}\nIngresa la nueva nota (0-10):`, currentScore);
+        
+        if (newScore === null) return;
+        
+        const score = parseFloat(newScore);
+        if (isNaN(score) || score < 0 || score > 10) {
+            this.dashboard.showNotification('error', 'La nota debe ser un número entre 0 y 10');
+            return;
+        }
+        
+        try {
+            const { error } = await this.supabase
+                .from('topic_results')
+                .update({ 
+                    score: score,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', testId);
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 'Nota actualizada correctamente');
+            
+            // Recargar datos
+            const evolcampusData = await this.loadEvolcampusData(this.currentStudentId);
+            this.updateEvolcampusTab(evolcampusData);
+            
+        } catch (error) {
+            console.error('Error actualizando nota:', error);
+            this.dashboard.showNotification('error', 'Error al actualizar la nota');
+        }
+    }
+    
+    async deleteTest(testId, activityName) {
+        if (!confirm(`¿Estás seguro de eliminar "${activityName}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+        
+        try {
+            const { error } = await this.supabase
+                .from('topic_results')
+                .delete()
+                .eq('id', testId);
+            
+            if (error) throw error;
+            
+            this.dashboard.showNotification('success', 'Actividad eliminada correctamente');
+            
+            // Recargar datos
+            const evolcampusData = await this.loadEvolcampusData(this.currentStudentId);
+            this.updateEvolcampusTab(evolcampusData);
+            
+        } catch (error) {
+            console.error('Error eliminando actividad:', error);
+            this.dashboard.showNotification('error', 'Error al eliminar la actividad');
+        }
+    }
+    
+    // Método para mostrar detalles de un tema específico
+    showTopicDetails(topic) {
+        const activities = this.currentEvolcampusData?.activities || [];
+        const topicActivities = activities.filter(a => {
+            const actTopic = this.normalizeTopicCode(a.topic_code);
+            return actTopic === topic;
+        });
+        
+        if (topicActivities.length === 0) {
+            this.dashboard.showNotification('info', `No hay actividades para ${topic}`);
+            return;
+        }
+        
+        // Cambiar a vista de lista y filtrar por este tema
+        this.changeEvolView('list');
+        // Aquí podrías implementar un filtro específico por tema
+    }
+    
+    // Normalizar código de tema
+    normalizeTopicCode(topicCode) {
+        if (!topicCode) return 'GENERAL';
+        
+        const code = topicCode.toString().toUpperCase();
+        
+        if (code.includes('TEMA')) {
+            const match = code.match(/TEMA\s*(\d+)/);
+            if (match) return `T${match[1]}`;
+        }
+        
+        if (code.match(/^\d+$/)) {
+            return `T${code}`;
+        }
+        
+        if (code.match(/^T\d+$/)) {
+            return code;
+        }
+        
+        return code;
+    }
     
     getRiskText(probability) {
         if (probability >= 80) return 'Excelente';
@@ -1391,22 +1489,42 @@ Un saludo,
     
     // Nuevas funciones para mejorar la visualización de Evolcampus
     groupActivitiesByTopic(activities) {
-        // Agrupar por temas
         const topics = {};
         
         activities.forEach(activity => {
-            const topicMatch = activity.activity.match(/\b(T\d+)\b/i);
-            const topic = topicMatch ? topicMatch[1].toUpperCase() : 'general';
+            // Usar el topic_code que viene de la base de datos
+            let topic = activity.topic_code || 'GENERAL';
+            
+            // Normalizar el formato del tema
+            if (topic.toLowerCase().includes('tema')) {
+                // "Tema 5" -> "T5"
+                const match = topic.match(/tema\s*(\d+)/i);
+                if (match) {
+                    topic = `T${match[1]}`;
+                }
+            } else if (!topic.match(/^T\d+$/)) {
+                // Si no es formato T# y no es "Tema #", dejarlo como está
+                topic = topic.toUpperCase();
+            }
             
             if (!topics[topic]) topics[topic] = [];
             topics[topic].push(activity);
         });
         
-        // Ordenar los temas
+        // Ordenar los temas de forma inteligente
         const sortedTopics = {};
         Object.keys(topics).sort((a, b) => {
-            if (a === 'general') return 1;
-            if (b === 'general') return -1;
+            // Primero los temas numerados (T1, T2, etc)
+            const aMatch = a.match(/^T(\d+)$/);
+            const bMatch = b.match(/^T(\d+)$/);
+            
+            if (aMatch && bMatch) {
+                return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+            }
+            if (aMatch) return -1;
+            if (bMatch) return 1;
+            
+            // Luego el resto alfabéticamente
             return a.localeCompare(b);
         }).forEach(key => {
             sortedTopics[key] = topics[key];
@@ -1420,8 +1538,18 @@ Un saludo,
         const dateStr = test.last_attempt ? new Date(test.last_attempt).toLocaleDateString('es-ES') : 'N/A';
         
         return `
-            <div class="test-card ${scoreClass}" data-score="${test.score || 0}">
-                <div class="test-name" title="${test.activity}">${test.activity}</div>
+            <div class="test-card ${scoreClass}" data-score="${test.score || 0}" data-test-id="${test.id || ''}">
+                <div class="test-header">
+                    <div class="test-name" title="${test.activity}">${test.activity}</div>
+                    <div class="test-actions">
+                        <button class="btn-mini" onclick="window.studentDetailModule.editTest('${test.id}', ${test.score}, '${test.activity}')" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn-mini danger" onclick="window.studentDetailModule.deleteTest('${test.id}', '${test.activity}')" title="Eliminar">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
                 <div class="test-score">
                     <span class="score-value">${test.score !== null ? test.score.toFixed(1) : '—'}/10</span>
                     <span class="score-date">${dateStr}</span>
@@ -1582,7 +1710,19 @@ Un saludo,
     }
     
     generateHeatmap(groupedActivities) {
-        const allTopics = Array.from({length: 45}, (_, i) => `T${i + 1}`);
+        // Obtener todos los temas únicos de los datos reales
+        const allTopicsFromData = Object.keys(groupedActivities)
+            .filter(t => t.match(/^T\d+$/))
+            .map(t => ({ code: t, num: parseInt(t.substring(1)) }))
+            .sort((a, b) => a.num - b.num);
+        
+        // Si no hay temas T#, usar los primeros 45
+        const maxTopic = allTopicsFromData.length > 0 
+            ? Math.max(...allTopicsFromData.map(t => t.num)) 
+            : 45;
+        
+        const allTopics = Array.from({length: maxTopic}, (_, i) => `T${i + 1}`);
+        
         let html = '<div class="heatmap-label">Temas</div>';
         
         // Cabecera con números de tema
@@ -1607,7 +1747,12 @@ Un saludo,
                 else heatLevel = 1;
             }
             
-            html += `<div class="heatmap-cell heat-${heatLevel}" title="${topic}: ${completed} tests, promedio ${avg.toFixed(1)}">${completed || ''}</div>`;
+            html += `<div class="heatmap-cell heat-${heatLevel}" 
+                          title="${topic}: ${completed} tests, promedio ${avg.toFixed(1)}"
+                          onclick="window.studentDetailModule.showTopicDetails('${topic}')"
+                          style="cursor: pointer;">
+                        ${completed || ''}
+                     </div>`;
         });
         
         return html;
