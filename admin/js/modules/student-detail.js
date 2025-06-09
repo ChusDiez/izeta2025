@@ -1935,7 +1935,13 @@ Un saludo,
     
     renderInteractiveTimeline(results) {
         if (results.length === 0) {
-            return '<div class="no-data-message">No hay simulacros registrados aún.</div>';
+            return `
+                <div class="no-data-card">
+                    <div class="no-data-icon">📊</div>
+                    <h4>No hay simulacros registrados</h4>
+                    <p>Este estudiante aún no ha participado en ningún Simulacro Recta Final.</p>
+                </div>
+            `;
         }
         
         return `
@@ -1984,13 +1990,15 @@ Un saludo,
         const prevResult = index < allResults.length - 1 ? allResults[index + 1] : null;
         const improvement = prevResult ? result.score - prevResult.score : 0;
         const percentile = this.calculatePercentile(result);
+        const date = new Date(result.submitted_at);
         
         return `
             <div class="timeline-card ${this.getCardClass(result)}" 
                  onclick="window.studentDetail.expandExamDetail('${result.id}')">
                 
-                <div class="timeline-date">
-                    ${this.formatDateShort(result.submitted_at)}
+                <div class="timeline-header">
+                    <h4>RF${result.weekly_simulations?.week_number || '?'}</h4>
+                    <span class="timeline-date">${this.formatDateShort(result.submitted_at)}</span>
                 </div>
                 
                 <div class="timeline-content">
@@ -2000,25 +2008,37 @@ Un saludo,
                         </div>
                     </div>
                     
-                    <div class="exam-details">
-                        <h4>RF${result.weekly_simulations?.week_number}</h4>
-                        <div class="quick-stats">
+                    <div class="exam-stats-grid">
+                        <div class="exam-stat">
+                            <span class="stat-label">Respuestas</span>
+                            <div class="stat-values">
+                                <span class="correct">✓ ${result.correct_answers || 0}</span>
+                                <span class="wrong">✗ ${result.wrong_answers || 0}</span>
+                                <span class="blank">○ ${result.blank_answers || 0}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="exam-stat">
+                            <span class="stat-label">Mejora</span>
                             <span class="stat ${improvement >= 0 ? 'positive' : 'negative'}">
                                 ${improvement >= 0 ? '↗' : '↘'} ${Math.abs(improvement).toFixed(1)}
                             </span>
-                            <span class="stat">P${percentile}</span>
-                            <span class="stat">${result.time_taken ? Math.round(result.time_taken/60) + 'min' : ''}</span>
                         </div>
+                        
+                        <div class="exam-stat">
+                            <span class="stat-label">Posición</span>
+                            <span class="stat">P${percentile}</span>
+                        </div>
+                        
+                        ${result.time_taken ? `
+                            <div class="exam-stat">
+                                <span class="stat-label">Tiempo</span>
+                                <span class="stat">${Math.round(result.time_taken/60)}min</span>
+                            </div>
+                        ` : ''}
                     </div>
                     
-                    <div class="exam-insights">
-                        ${this.getQuickInsights(result)}
-                    </div>
-                </div>
-                
-                <!-- Detalle expandible -->
-                <div class="timeline-detail" id="detail-${result.id}" style="display: none;">
-                    ${this.renderExamFullDetail(result)}
+                    ${result.is_saturday_live ? '<div class="saturday-badge">🔴 Sábado en directo</div>' : ''}
                 </div>
             </div>
         `;
