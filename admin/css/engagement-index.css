@@ -1,0 +1,352 @@
+/* Estilos para el widget del Índice de Compromiso Académico (ICA) */
+
+.ica-widget {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.ica-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.ica-header h3 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.25rem;
+}
+
+.ica-help {
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.ica-help:hover {
+    color: #3b82f6;
+}
+
+/* Sección principal con gauge */
+.ica-main {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.ica-gauge {
+    position: relative;
+    width: 250px;
+    height: 150px;
+    margin: 0 auto 1rem;
+}
+
+.gauge-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.gauge-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -20%);
+    text-align: center;
+}
+
+.gauge-number {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #1e293b;
+}
+
+.gauge-label {
+    display: block;
+    font-size: 1rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ica-risk {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.risk-label {
+    color: #64748b;
+}
+
+.risk-value {
+    font-weight: 600;
+}
+
+/* Componentes del índice */
+.ica-components {
+    margin-bottom: 2rem;
+}
+
+.ica-components h4 {
+    color: #475569;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.component-item {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.component-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.component-icon {
+    font-size: 1.25rem;
+}
+
+.component-name {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.component-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.component-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+.component-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* Recomendaciones */
+.ica-recommendations {
+    margin-bottom: 1.5rem;
+}
+
+.ica-recommendations h4 {
+    color: #475569;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.recommendation-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid transparent;
+}
+
+.rec-priority {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.rec-content {
+    flex: 1;
+}
+
+.rec-message {
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.rec-action {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+/* Footer */
+.ica-footer {
+    text-align: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+/* Estados de carga y error */
+.ica-widget .loading {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
+}
+
+.ica-widget .error {
+    text-align: center;
+    padding: 2rem;
+    color: #dc2626;
+    background: #fee2e2;
+    border-radius: 8px;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ica-widget {
+    animation: fadeIn 0.3s ease;
+}
+
+.component-fill {
+    animation: fillBar 1s ease;
+}
+
+@keyframes fillBar {
+    from {
+        width: 0;
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .ica-widget {
+        padding: 1rem;
+    }
+    
+    .components-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .gauge-number {
+        font-size: 2.5rem;
+    }
+    
+    .ica-gauge {
+        width: 200px;
+        height: 120px;
+    }
+}
+
+/* Variantes de colores para prioridades */
+.recommendation-item[data-priority="critical"] {
+    border-left-color: #dc2626;
+}
+
+.recommendation-item[data-priority="high"] {
+    border-left-color: #ef4444;
+}
+
+.recommendation-item[data-priority="medium"] {
+    border-left-color: #f59e0b;
+}
+
+.recommendation-item[data-priority="low"] {
+    border-left-color: #3b82f6;
+}
+
+/* Tooltips mejorados */
+.ica-help[title] {
+    position: relative;
+}
+
+.ica-help[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #1e293b;
+    color: white;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.ica-help[title]:hover::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    margin-top: 0.25rem;
+    border: 5px solid transparent;
+    border-bottom-color: #1e293b;
+    z-index: 11;
+}
+
+/* Integración con el dashboard */
+.dashboard-ica-section {
+    grid-column: span 2;
+    margin-bottom: 2rem;
+}
+
+.dashboard-ica-mini {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-ica-mini .ica-score {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.dashboard-ica-mini .ica-label {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.dashboard-ica-mini .ica-trend {
+    margin-left: auto;
+    font-size: 1.5rem;
+} 

@@ -9,10 +9,10 @@ export class EngagementIndexCalculator {
         
         // Pesos configurables para cada componente
         this.weights = {
-            platformActivity: 0.25,    // Actividad en Evolcampus
-            simulationParticipation: 0.30, // Participación en simulacros
+            platformActivity: 0.20,    // Actividad en Evolcampus (sin % completitud)
+            simulationParticipation: 0.35, // Participación en simulacros (aumentado)
             studyConsistency: 0.25,    // Regularidad de estudio
-            progressionRate: 0.20      // Velocidad de avance
+            progressionRate: 0.20      // Velocidad de avance basada en temas cubiertos
         };
         
         // Umbrales para categorización
@@ -133,7 +133,7 @@ export class EngagementIndexCalculator {
         
         const evolcampus = data.evolcampus;
         
-        // 1. Días desde última conexión (40% del peso)
+        // 1. Días desde última conexión (50% del peso)
         const daysSinceLastConnect = evolcampus.last_connect ? 
             Math.floor((Date.now() - new Date(evolcampus.last_connect)) / (24 * 60 * 60 * 1000)) : 999;
         
@@ -142,15 +142,15 @@ export class EngagementIndexCalculator {
         else if (daysSinceLastConnect > 3) activityScore = 60;
         else if (daysSinceLastConnect > 1) activityScore = 80;
         
-        // 2. Horas semanales promedio (30% del peso)
+        // 2. Horas semanales promedio (50% del peso)
         const totalHours = (evolcampus.time_connected || 0) / 3600;
         const weeklyHours = totalHours / data.weeksStudying;
         const hoursScore = Math.min(100, (weeklyHours / 25) * 100); // Óptimo: 25h/semana
         
-        // 3. Porcentaje de completitud (30% del peso)
-        const completionScore = evolcampus.completed_percent || 0;
+        // NO usar porcentaje de completitud
+        // Solo actividad y horas de conexión
         
-        return activityScore * 0.4 + hoursScore * 0.3 + completionScore * 0.3;
+        return activityScore * 0.5 + hoursScore * 0.5;
     }
 
     /**
@@ -161,11 +161,16 @@ export class EngagementIndexCalculator {
         
         if (!simulations || simulations.length === 0) return 0;
         
-        // 1. Tasa de participación (50% del peso)
+        // 1. Tasa de participación (40% del peso)
         const expectedSimulations = data.weeksStudying; // 1 por semana
         const participationRate = Math.min(100, (simulations.length / expectedSimulations) * 100);
         
-        // 2. Regularidad (30% del peso)
+        // 2. Participación en Simulacros Recta Final del sábado (30% del peso) - MÁS IMPORTANTE
+        const saturdaySimulations = simulations.filter(s => s.is_saturday_live);
+        const saturdayRate = data.weeksStudying > 0 ? 
+            Math.min(100, (saturdaySimulations.length / data.weeksStudying) * 100) : 0;
+        
+        // 3. Regularidad (20% del peso)
         let regularityScore = 100;
         if (simulations.length >= 2) {
             // Calcular días entre simulacros
@@ -185,7 +190,7 @@ export class EngagementIndexCalculator {
             else if (avgInterval > 7) regularityScore = 90;
         }
         
-        // 3. Completitud de respuestas (20% del peso)
+        // 4. Completitud de respuestas (10% del peso)
         const avgBlankRate = simulations.reduce((sum, s) => {
             const total = (s.correct_answers || 0) + (s.wrong_answers || 0) + (s.blank_answers || 0);
             return sum + ((s.blank_answers || 0) / total);
@@ -193,7 +198,15 @@ export class EngagementIndexCalculator {
         
         const completenessScore = (1 - avgBlankRate) * 100;
         
-        return participationRate * 0.5 + regularityScore * 0.3 + completenessScore * 0.2;
+        // Bonus por rendimiento en Simulacros RF (+10% si promedio > 7.5)
+        const saturdayAvgScore = saturdaySimulations.length > 0 ?
+            saturdaySimulations.reduce((sum, s) => sum + s.score, 0) / saturdaySimulations.length : 0;
+        const performanceBonus = saturdayAvgScore > 7.5 ? 10 : 0;
+        
+        const total = participationRate * 0.4 + saturdayRate * 0.3 + 
+                     regularityScore * 0.2 + completenessScore * 0.1 + performanceBonus;
+        
+        return Math.min(100, total);
     }
 
     /**
@@ -265,16 +278,16 @@ export class EngagementIndexCalculator {
      * Calcular tasa de progresión
      */
     calculateProgressionRate(data) {
-        // 1. Progresión en completitud (40%)
-        const completionProgress = data.evolcampus?.completed_percent || 0;
-        const expectedProgress = Math.min(100, (data.weeksStudying / 20) * 100); // 20 semanas totales estimadas
-        const progressScore = Math.min(100, (completionProgress / expectedProgress) * 100);
-        
-        // 2. Cobertura de temas (30%)
+        // 1. Cobertura de temas (50%) - PRINCIPAL INDICADOR
         const uniqueTopics = new Set(data.topics.map(t => t.topic_code)).size;
         const topicCoverageScore = Math.min(100, (uniqueTopics / 45) * 100); // 45 temas totales
         
-        // 3. Mejora en rendimiento (30%)
+        // 2. Volumen de actividades realizadas (25%)
+        const totalActivities = data.topics.length;
+        const expectedActivities = data.weeksStudying * 15; // ~15 tests por semana esperado
+        const activityScore = Math.min(100, (totalActivities / expectedActivities) * 100);
+        
+        // 3. Mejora en rendimiento (25%)
         let improvementScore = 50;
         if (data.simulations.length >= 3) {
             const recent = data.simulations.slice(0, 3).map(s => s.score);
@@ -291,7 +304,7 @@ export class EngagementIndexCalculator {
             else improvementScore = 20;
         }
         
-        return progressScore * 0.4 + topicCoverageScore * 0.3 + improvementScore * 0.3;
+        return topicCoverageScore * 0.5 + activityScore * 0.25 + improvementScore * 0.25;
     }
 
     /**
@@ -336,8 +349,8 @@ export class EngagementIndexCalculator {
             recommendations.push({
                 area: 'simulations',
                 priority: 'critical',
-                message: 'Participa más regularmente en los simulacros',
-                action: 'No te pierdas ningún simulacro semanal, son esenciales para tu preparación'
+                message: 'Participa más regularmente en los Simulacros Recta Final',
+                action: 'No te pierdas ningún simulacro RF del sábado, son esenciales para tu preparación'
             });
         }
         
@@ -635,10 +648,10 @@ export class EngagementIndexWidget {
 
     showHelp() {
         alert('El ICA combina 4 factores clave:\n\n' +
-              '1. Actividad en plataforma (25%)\n' +
-              '2. Participación en simulacros (30%)\n' +
-              '3. Consistencia de estudio (25%)\n' +
-              '4. Tasa de progresión (20%)\n\n' +
+              '1. Actividad en plataforma (20%): Tiempo conectado y días activos\n' +
+              '2. Participación en simulacros RF (35%): Especialmente los del sábado\n' +
+              '3. Consistencia de estudio (25%): Regularidad en tu preparación\n' +
+              '4. Tasa de progresión (20%): Cobertura de temas y mejora\n\n' +
               'Un índice superior a 70 indica buen compromiso.');
     }
 }
