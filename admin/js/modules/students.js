@@ -37,6 +37,9 @@ export default class StudentsModule {
         
         // Configurar event listeners
         this.setupEventListeners();
+        
+        // Calcular y mostrar P80 global
+        this.calculateAndDisplayGlobalP80();
     }
 
     /**
@@ -140,8 +143,8 @@ export default class StudentsModule {
                             <span class="summary-value">σ = ${avgDeviation.toFixed(2)}</span>
                         </div>
                         <div class="summary-item">
-                            <span class="summary-label">Nota de corte estimada:</span>
-                            <span class="summary-value">~7.5/10</span>
+                            <span class="summary-label">Nota de corte (P80):</span>
+                            <span class="summary-value" id="globalP80">Calculando...</span>
                         </div>
                     </div>
                     <div class="metrics-legend">
@@ -933,6 +936,49 @@ export default class StudentsModule {
         return new Date(dateString).toLocaleDateString('es-ES');
     }
 
+    calculateAndDisplayGlobalP80() {
+        try {
+            // Obtener todos los resultados
+            const allResults = this.dashboard.data.results || [];
+            
+            if (allResults.length === 0) {
+                document.getElementById('globalP80').textContent = 'Sin datos';
+                return;
+            }
+            
+            // Agrupar por simulacro y calcular P80 de cada uno
+            const simulationGroups = {};
+            allResults.forEach(result => {
+                if (!simulationGroups[result.simulation_id]) {
+                    simulationGroups[result.simulation_id] = [];
+                }
+                simulationGroups[result.simulation_id].push(result.score);
+            });
+            
+            // Calcular P80 de cada simulacro
+            const p80Values = [];
+            Object.values(simulationGroups).forEach(scores => {
+                if (scores.length > 0) {
+                    scores.sort((a, b) => a - b);
+                    const p80Index = Math.floor(scores.length * 0.8);
+                    p80Values.push(scores[p80Index] || scores[scores.length - 1]);
+                }
+            });
+            
+            // Calcular promedio de P80s
+            if (p80Values.length > 0) {
+                const avgP80 = p80Values.reduce((sum, val) => sum + val, 0) / p80Values.length;
+                document.getElementById('globalP80').textContent = `~${avgP80.toFixed(1)}/10`;
+            } else {
+                document.getElementById('globalP80').textContent = 'Sin datos';
+            }
+            
+        } catch (error) {
+            console.error('Error calculando P80 global:', error);
+            document.getElementById('globalP80').textContent = 'Error';
+        }
+    }
+
     renderStudentRow(student) {
         // Obtener división del estudiante
         const division = this.getDivision(student.current_elo || 1000);
@@ -1038,24 +1084,27 @@ export default class StudentsModule {
                 </div>
                 
                 <div class="metric-explanation">
-                    <h4>⚖️ Relación con la Nota de Corte</h4>
-                    <p>La nota de corte histórica de CNP ronda el <strong>7.5/10</strong>:</p>
+                    <h4>⚖️ Relación con la Nota de Corte (P80)</h4>
+                    <p>La nota de corte se calcula dinámicamente como el <strong>percentil 80 (P80)</strong> de cada simulacro:</p>
                     <ul>
-                        <li>Con nota ≥ 8.0 y σ < 1.0 → Alta probabilidad (>80%)</li>
-                        <li>Con nota 7.0-8.0 y σ < 1.5 → Probabilidad media (50-80%)</li>
-                        <li>Con nota < 7.0 o σ > 2.0 → Baja probabilidad (<50%)</li>
+                        <li>El P80 es la nota que deja al 80% de estudiantes por debajo</li>
+                        <li>Representa el 20% superior de cada simulacro</li>
+                        <li>Se actualiza automáticamente con cada nuevo resultado</li>
+                        <li>Cada simulacro tiene su propio P80 específico</li>
                     </ul>
-                    <p class="warning-note">⚠️ La desviación alta resta probabilidad aunque la nota sea buena</p>
+                    <p class="info-note">💡 Un estudiante debe superar consistentemente el P80 para tener alta probabilidad de aprobar</p>
                 </div>
                 
                 <div class="metric-explanation">
-                    <h4>📈 Ejemplo Práctico</h4>
+                    <h4>📈 Ejemplo Práctico con P80</h4>
                     <div class="example-grid">
                         <div class="example">
                             <strong>Estudiante A</strong>
                             <ul>
                                 <li>Nota: 7.8/10</li>
-                                <li>σ: 0.8</li>
+                                <li>P80 del simulacro: 7.5</li>
+                                <li>Posición: Por encima del P80 ✓</li>
+                                <li>σ: 0.8 (consistente)</li>
                                 <li>Tendencia: ↗</li>
                                 <li>P(Aprobar): ~75%</li>
                             </ul>
@@ -1064,13 +1113,15 @@ export default class StudentsModule {
                             <strong>Estudiante B</strong>
                             <ul>
                                 <li>Nota: 8.2/10</li>
-                                <li>σ: 2.3</li>
+                                <li>P80 del simulacro: 8.0</li>
+                                <li>Posición: Ligeramente por encima ⚡</li>
+                                <li>σ: 2.3 (muy variable)</li>
                                 <li>Tendencia: ↘</li>
                                 <li>P(Aprobar): ~55%</li>
                             </ul>
                         </div>
                     </div>
-                    <p class="info-note">💡 El estudiante A tiene mejor pronóstico por su consistencia y tendencia positiva</p>
+                    <p class="info-note">💡 El estudiante A tiene mejor pronóstico: aunque su nota es menor, supera consistentemente el P80 con poca variabilidad</p>
                 </div>
                 
                 <div class="modal-footer">

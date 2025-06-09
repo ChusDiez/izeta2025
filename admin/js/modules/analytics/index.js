@@ -1425,6 +1425,13 @@ export default class AnalyticsModule {
             
             // Cálculo de métricas
             const scores = studentResults.map(r => r.score);
+            
+            // Debug para Patricia Arredondo
+            if (student.username === 'Patricia Arredondo Martin') {
+                console.log('Patricia Arredondo - Resultados:', studentResults);
+                console.log('Patricia Arredondo - Scores:', scores);
+            }
+            
             const weighted_average = StatisticsUtils.calculateWeightedAverage(scores);
             const consistency = StatisticsUtils.calculateConsistency(studentResults);
             const stats = StatisticsUtils.calculateBasicStats(scores);
