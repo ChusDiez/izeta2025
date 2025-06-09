@@ -1000,7 +1000,6 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
         logContent.scrollTop = logContent.scrollHeight;
     }
 
-    // Métodos auxiliares para parseo de datos
     parseDate(dateStr) {
         try {
             if (!dateStr || dateStr === null || dateStr === undefined) {
