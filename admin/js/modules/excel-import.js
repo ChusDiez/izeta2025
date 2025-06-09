@@ -1004,14 +1004,33 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
     parseDate(dateStr) {
         if (!dateStr) return new Date().toISOString();
         
+        // NUEVO: Convertir a string si no lo es
+        const dateString = String(dateStr);
+        
         // Si ya es ISO, devolverlo tal cual
-        if (dateStr.includes('T')) return dateStr;
+        if (dateString.includes('T')) return dateString;
         
         // Parsear formato DD/MM/YYYY
-        const parts = dateStr.split(/[\/\-]/);
+        const parts = dateString.split(/[\/\-]/);
         if (parts.length === 3) {
             const [day, month, year] = parts;
             return new Date(year, month - 1, day).toISOString();
+        }
+        
+        // Si es un número (timestamp de Excel)
+        if (!isNaN(dateStr)) {
+            const excelDate = parseFloat(dateStr);
+            // Excel almacena fechas como días desde 1900-01-01
+            const date = new Date((excelDate - 25569) * 86400 * 1000);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString();
+            }
+        }
+        
+        // Intentar parsear como fecha estándar
+        const parsedDate = new Date(dateString);
+        if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toISOString();
         }
         
         return new Date().toISOString();
@@ -1020,10 +1039,22 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
     parseSpanishDate(dateStr) {
         if (!dateStr) return new Date().toISOString();
         
-        const match = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        // NUEVO: Convertir a string si no lo es
+        const dateString = String(dateStr);
+        
+        const match = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         if (match) {
             const [_, day, month, year] = match;
             return new Date(year, month - 1, day).toISOString();
+        }
+        
+        // Si es un número (timestamp)
+        if (!isNaN(dateStr)) {
+            const excelDate = parseFloat(dateStr);
+            const date = new Date((excelDate - 25569) * 86400 * 1000);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString();
+            }
         }
         
         return new Date().toISOString();
