@@ -463,6 +463,45 @@ Un saludo,
                 await this.syncEvolcampusForStudent(email);
             });
         }
+        
+        // Expandir/colapsar tarjetas del timeline
+        this.setupTimelineCardToggles();
+    }
+    
+    setupTimelineCardToggles() {
+        // Configurar event delegation para las tarjetas del timeline
+        // Usamos delegation porque las tarjetas se pueden recargar dinámicamente
+        document.addEventListener('click', (e) => {
+            // Buscar si el click fue en una timeline-card o dentro de ella
+            const card = e.target.closest('.timeline-card');
+            if (!card) return;
+            
+            // Ignorar clicks en botones o enlaces internos
+            if (e.target.closest('a, button')) return;
+            
+            // Toggle la clase expanded
+            card.classList.toggle('expanded');
+            
+            // Opcional: cerrar otras tarjetas expandidas (comportamiento accordion)
+            // Si prefieres que solo una esté expandida a la vez, descomenta esto:
+            /*
+            document.querySelectorAll('.timeline-card.expanded').forEach(otherCard => {
+                if (otherCard !== card) {
+                    otherCard.classList.remove('expanded');
+                }
+            });
+            */
+        });
+        
+        // Al cargar la página o renderizar nuevas tarjetas, 
+        // asegurarse de que todas empiecen colapsadas
+        this.collapseAllTimelineCards();
+    }
+    
+    collapseAllTimelineCards() {
+        document.querySelectorAll('.timeline-card').forEach(card => {
+            card.classList.remove('expanded');
+        });
     }
 
     // Métodos faltantes que necesitas implementar:
@@ -1952,6 +1991,9 @@ Un saludo,
             `;
         }
         
+        // Después de renderizar, necesitamos colapsar todas las tarjetas
+        setTimeout(() => this.collapseAllTimelineCards(), 0);
+        
         return `
             <div class="timeline-container">
                 <div class="timeline-controls">
@@ -2005,12 +2047,12 @@ Un saludo,
         const vsCorte = result.score - notaCorteP80;
         
         return `
-            <div class="timeline-card ${this.getCardClass(result)}" 
-                 onclick="window.studentDetail.expandExamDetail('${result.id}')">
+            <div class="timeline-card ${this.getCardClass(result)}">
                 
                 <div class="timeline-header">
                     <h4>RF${result.weekly_simulations?.week_number || '?'}</h4>
                     <span class="timeline-date">${this.formatDateShort(result.submitted_at)}</span>
+                    <span class="expand-indicator">▼</span>
                 </div>
                 
                 <div class="timeline-content">
