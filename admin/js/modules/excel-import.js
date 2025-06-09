@@ -1002,62 +1002,105 @@ file_name,student_email,student_key,topic_code,activity,score,max_score,attempts
 
     // Métodos auxiliares para parseo de datos
     parseDate(dateStr) {
-        if (!dateStr) return new Date().toISOString();
-        
-        // NUEVO: Convertir a string si no lo es
-        const dateString = String(dateStr);
-        
-        // Si ya es ISO, devolverlo tal cual
-        if (dateString.includes('T')) return dateString;
-        
-        // Parsear formato DD/MM/YYYY
-        const parts = dateString.split(/[\/\-]/);
-        if (parts.length === 3) {
-            const [day, month, year] = parts;
-            return new Date(year, month - 1, day).toISOString();
-        }
-        
-        // Si es un número (timestamp de Excel)
-        if (!isNaN(dateStr)) {
-            const excelDate = parseFloat(dateStr);
-            // Excel almacena fechas como días desde 1900-01-01
-            const date = new Date((excelDate - 25569) * 86400 * 1000);
-            if (!isNaN(date.getTime())) {
-                return date.toISOString();
+        try {
+            if (!dateStr || dateStr === null || dateStr === undefined) {
+                return new Date().toISOString();
             }
+            
+            // IMPORTANTE: Forzar conversión a string
+            let dateString = '';
+            if (typeof dateStr === 'object' && dateStr instanceof Date) {
+                return dateStr.toISOString();
+            } else if (typeof dateStr === 'number') {
+                // Si es un número, podría ser timestamp de Excel
+                const date = new Date((dateStr - 25569) * 86400 * 1000);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                }
+                dateString = String(dateStr);
+            } else {
+                dateString = String(dateStr);
+            }
+            
+            // Validar que ahora sí es string
+            if (typeof dateString !== 'string') {
+                console.warn('parseDate: No se pudo convertir a string:', dateStr);
+                return new Date().toISOString();
+            }
+            
+            // Si ya es ISO, devolverlo tal cual
+            if (dateString.indexOf('T') !== -1) {
+                return dateString;
+            }
+            
+            // Parsear formato DD/MM/YYYY o DD-MM-YYYY
+            const parts = dateString.split(/[\/\-]/);
+            if (parts.length === 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const year = parseInt(parts[2], 10);
+                
+                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                    const date = new Date(year, month - 1, day);
+                    if (!isNaN(date.getTime())) {
+                        return date.toISOString();
+                    }
+                }
+            }
+            
+            // Intentar parsear como fecha estándar
+            const parsedDate = new Date(dateString);
+            if (!isNaN(parsedDate.getTime())) {
+                return parsedDate.toISOString();
+            }
+            
+            return new Date().toISOString();
+            
+        } catch (error) {
+            console.error('Error en parseDate:', error, 'valor original:', dateStr);
+            return new Date().toISOString();
         }
-        
-        // Intentar parsear como fecha estándar
-        const parsedDate = new Date(dateString);
-        if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toISOString();
-        }
-        
-        return new Date().toISOString();
     }
 
     parseSpanishDate(dateStr) {
-        if (!dateStr) return new Date().toISOString();
-        
-        // NUEVO: Convertir a string si no lo es
-        const dateString = String(dateStr);
-        
-        const match = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (match) {
-            const [_, day, month, year] = match;
-            return new Date(year, month - 1, day).toISOString();
-        }
-        
-        // Si es un número (timestamp)
-        if (!isNaN(dateStr)) {
-            const excelDate = parseFloat(dateStr);
-            const date = new Date((excelDate - 25569) * 86400 * 1000);
-            if (!isNaN(date.getTime())) {
-                return date.toISOString();
+        try {
+            if (!dateStr || dateStr === null || dateStr === undefined) {
+                return new Date().toISOString();
             }
+            
+            // Forzar conversión a string de forma segura
+            let dateString = '';
+            if (typeof dateStr === 'object' && dateStr instanceof Date) {
+                return dateStr.toISOString();
+            } else if (typeof dateStr === 'number') {
+                const date = new Date((dateStr - 25569) * 86400 * 1000);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                }
+                dateString = String(dateStr);
+            } else {
+                dateString = String(dateStr);
+            }
+            
+            // Buscar formato DD/MM/YYYY
+            const match = dateString.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (match) {
+                const day = parseInt(match[1], 10);
+                const month = parseInt(match[2], 10);
+                const year = parseInt(match[3], 10);
+                
+                const date = new Date(year, month - 1, day);
+                if (!isNaN(date.getTime())) {
+                    return date.toISOString();
+                }
+            }
+            
+            return new Date().toISOString();
+            
+        } catch (error) {
+            console.error('Error en parseSpanishDate:', error, 'valor original:', dateStr);
+            return new Date().toISOString();
         }
-        
-        return new Date().toISOString();
     }
 
     // Cargar librerías externas
