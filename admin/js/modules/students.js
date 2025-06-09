@@ -18,13 +18,16 @@ export default class StudentsModule {
         // Solo calcular métricas básicas necesarias para la tabla
         await this.calculateComprehensiveMetrics(students);
         
+        // Aplicar ordenamiento si hay columna seleccionada
+        const sortedStudents = this.applySorting(students);
+        
         container.innerHTML = `
             <div class="students-page">
                 <!-- Acciones masivas -->
                 ${this.renderBulkActions()}
                 
                 <!-- Tabla principal de estudiantes -->
-                ${this.renderAdvancedStudentsTable(students)}
+                ${this.renderAdvancedStudentsTable(sortedStudents)}
                 
                 <!-- Modales -->
                 ${this.renderNotesModal()}
@@ -601,6 +604,43 @@ export default class StudentsModule {
         }
         
         this.dashboard.refreshCurrentPage();
+    }
+
+    applySorting(students) {
+        // Si no hay columna de ordenamiento, retornar el array original
+        if (!this.sortColumn) {
+            return students;
+        }
+        
+        // Clonar el array para no modificar el original
+        const sorted = [...students];
+        
+        // Ordenar según la columna seleccionada
+        sorted.sort((a, b) => {
+            let aValue = a[this.sortColumn];
+            let bValue = b[this.sortColumn];
+            
+            // Manejar valores nulos o undefined
+            if (aValue == null) aValue = 0;
+            if (bValue == null) bValue = 0;
+            
+            // Para strings (como username, cohort), convertir a minúsculas
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+            
+            // Comparación básica
+            if (aValue < bValue) {
+                return this.sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return this.sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+        
+        return sorted;
     }
 
     // Métodos de formato y visualización

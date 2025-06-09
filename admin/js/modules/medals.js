@@ -408,6 +408,10 @@ calculateMedalStats(medals) {
         try {
             this.dashboard.showNotification('info', 'Verificando medallas pendientes...');
             
+            // Primero, obtener los tipos de medallas válidos desde la base de datos
+            const validMedalTypes = await this.getValidMedalTypes();
+            console.log('Tipos de medallas válidos:', validMedalTypes);
+            
             const results = this.dashboard.data.results;
             const students = this.dashboard.data.students;
             const simulations = this.dashboard.data.simulations;
@@ -419,10 +423,10 @@ calculateMedalStats(medals) {
                 const studentResults = results.filter(r => r.user_id === student.id);
                 const existingMedals = await this.getUserMedals(student.id);
                 
-                // Verificar cada tipo de medalla
+                // Verificar cada tipo de medalla (solo los válidos)
                 // 1. Primera posición
                 for (const result of studentResults) {
-                    if (result.position === 1 && !this.hasMedal(existingMedals, 'first_place', result.simulation_id)) {
+                    if (validMedalTypes.includes('first_place') && result.position === 1 && !this.hasMedal(existingMedals, 'first_place', result.simulation_id)) {
                         const sim = simulations.find(s => s.id === result.simulation_id);
                         newMedals.push({
                             user_id: student.id,
@@ -433,7 +437,7 @@ calculateMedalStats(medals) {
                     }
                     
                     // Top 3
-                    if (result.position <= 3 && !this.hasMedal(existingMedals, 'top_3', result.simulation_id)) {
+                    if (validMedalTypes.includes('top_3') && result.position <= 3 && !this.hasMedal(existingMedals, 'top_3', result.simulation_id)) {
                         const sim = simulations.find(s => s.id === result.simulation_id);
                         newMedals.push({
                             user_id: student.id,
@@ -444,7 +448,7 @@ calculateMedalStats(medals) {
                     }
                     
                     // Puntuación perfecta
-                    if (result.score === 10 && !this.hasMedal(existingMedals, 'perfect_score', result.simulation_id)) {
+                    if (validMedalTypes.includes('perfect_score') && result.score === 10 && !this.hasMedal(existingMedals, 'perfect_score', result.simulation_id)) {
                         const sim = simulations.find(s => s.id === result.simulation_id);
                         newMedals.push({
                             user_id: student.id,
@@ -456,7 +460,7 @@ calculateMedalStats(medals) {
                 }
                 
                 // 2. Rachas
-                if (student.current_streak >= 5 && !this.hasMedal(existingMedals, 'streak_5')) {
+                if (validMedalTypes.includes('streak_5') && student.current_streak >= 5 && !this.hasMedal(existingMedals, 'streak_5')) {
                     newMedals.push({
                         user_id: student.id,
                         medal_type: 'streak_5',
@@ -465,7 +469,7 @@ calculateMedalStats(medals) {
                     });
                 }
                 
-                if (student.current_streak >= 10 && !this.hasMedal(existingMedals, 'streak_10')) {
+                if (validMedalTypes.includes('streak_10') && student.current_streak >= 10 && !this.hasMedal(existingMedals, 'streak_10')) {
                     newMedals.push({
                         user_id: student.id,
                         medal_type: 'streak_10',
@@ -481,7 +485,7 @@ calculateMedalStats(medals) {
                     
                     for (let i = 0; i < sorted.length - 1; i++) {
                         const improvement = sorted[i].score - sorted[i + 1].score;
-                        if (improvement >= 2 && !this.hasMedal(existingMedals, 'comeback', sorted[i].simulation_id)) {
+                        if (validMedalTypes.includes('comeback') && improvement >= 2 && !this.hasMedal(existingMedals, 'comeback', sorted[i].simulation_id)) {
                             const sim = simulations.find(s => s.id === sorted[i].simulation_id);
                             newMedals.push({
                                 user_id: student.id,
@@ -498,19 +502,29 @@ calculateMedalStats(medals) {
                 }
             }
             
-            // Insertar nuevas medallas
-            if (newMedals.length > 0) {
+            // Filtrar solo las medallas con tipos válidos
+            const validMedals = newMedals.filter(medal => 
+                validMedalTypes.includes(medal.medal_type)
+            );
+            
+            const invalidCount = newMedals.length - validMedals.length;
+            if (invalidCount > 0) {
+                console.warn(`Se ignoraron ${invalidCount} medallas con tipos no válidos`);
+            }
+            
+            // Insertar nuevas medallas válidas
+            if (validMedals.length > 0) {
                 const { error } = await this.supabase
                     .from('user_medals')
-                    .insert(newMedals);
+                    .insert(validMedals);
                 
                 if (error) throw error;
                 
                 this.dashboard.showNotification('success', 
-                    `${newMedals.length} nuevas medallas otorgadas`);
+                    `${validMedals.length} nuevas medallas otorgadas`);
                 
                 // Crear alertas para las medallas
-                await this.createMedalAlerts(newMedals);
+                await this.createMedalAlerts(validMedals);
                 
                 // Recargar página
                 await this.dashboard.refreshCurrentPage();
@@ -590,5 +604,35 @@ calculateMedalStats(medals) {
 
     formatDate(dateString) {
         return new Date(dateString).toLocaleDateString('es-ES');
+    }
+
+    async getValidMedalTypes() {
+        try {
+            // Intentar obtener una medalla de cada tipo para ver cuáles son válidos
+            const testTypes = ['first_place', 'top_3', 'perfect_score', 'streak_5', 'streak_10', 'early_bird', 'comeback', 'consistency'];
+            const validTypes = [];
+            
+            // Obtener cualquier medalla existente para ver qué tipos son válidos
+            const { data: existingMedals } = await this.supabase
+                .from('user_medals')
+                .select('medal_type')
+                .limit(100);
+            
+            if (existingMedals && existingMedals.length > 0) {
+                // Si hay medallas existentes, usar esos tipos como referencia
+                const uniqueTypes = [...new Set(existingMedals.map(m => m.medal_type))];
+                console.log('Tipos encontrados en la base de datos:', uniqueTypes);
+                return uniqueTypes;
+            }
+            
+            // Si no hay medallas, intentar con los tipos básicos más comunes
+            // Estos son los tipos más probables de estar en el constraint
+            return ['first_place', 'top_3', 'perfect_score'];
+            
+        } catch (error) {
+            console.error('Error obteniendo tipos de medallas válidos:', error);
+            // Por defecto, usar solo los tipos más básicos
+            return ['first_place', 'top_3', 'perfect_score'];
+        }
     }
 }
