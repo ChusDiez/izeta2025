@@ -421,7 +421,7 @@
     flex-wrap: nowrap; /* Mantener en una línea horizontal */
     gap: 1.5rem;
     padding: 1.5rem;
-    max-height: 400px; /* Altura reducida pero funcional */
+    max-height: 280px; /* más compacto */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
     background: #f8fafc;
@@ -475,6 +475,23 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     z-index: 10;
+}
+
+/* ----------  MODO COLAPSADO / EXPANDIDO  ---------- */
+/* Por defecto se muestra sólo el anillo + cabecera.
+   Al añadir la clase .expanded se revelan todos los detalles. */
+
+.timeline-card:not(.expanded) {
+    /* ancho más angosto en estado colapsado */
+    flex: 0 0 220px;
+    max-width: 220px;
+    padding-bottom: 1rem;          /* menos aire */
+}
+
+/* Ocultar todo excepto el anillo de nota */
+.timeline-card:not(.expanded) .timeline-content > :not(.score-visual),
+.timeline-card:not(.expanded) .timeline-detail {
+    display: none;
 }
 
 .timeline-card.excellent {
