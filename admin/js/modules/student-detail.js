@@ -2599,4 +2599,69 @@ Un saludo,
             this.dashboard.showNotification('success', '✅ Acción marcada como completada');
         }
     }
+
+    getMiniHeatmap(analytics) {
+        if (!analytics.worstTopics || analytics.worstTopics.length === 0) {
+            return '<div class="mini-heatmap">Sin datos de temas</div>';
+        }
+        
+        const maxScore = 10;
+        const topics = analytics.worstTopics.slice(0, 8); // Mostrar máximo 8 temas
+        
+        const cells = topics.map(topic => {
+            const percentage = (topic.avgScore / maxScore) * 100;
+            const color = percentage >= 70 ? '#10b981' : 
+                         percentage >= 50 ? '#f59e0b' : 
+                         percentage >= 30 ? '#ef4444' : '#991b1b';
+            
+            return `
+                <div class="heatmap-cell" 
+                     style="background-color: ${color}; opacity: ${0.3 + (percentage / 100) * 0.7}"
+                     title="${topic.topic}: ${topic.avgScore.toFixed(1)}/10">
+                    <span class="cell-label">${topic.topic.replace('T', '')}</span>
+                    <span class="cell-value">${topic.avgScore.toFixed(1)}</span>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="mini-heatmap">
+                <div class="heatmap-grid">
+                    ${cells}
+                </div>
+                <style>
+                    .mini-heatmap { margin: 10px 0; }
+                    .heatmap-grid { 
+                        display: grid; 
+                        grid-template-columns: repeat(4, 1fr); 
+                        gap: 4px;
+                        max-width: 200px;
+                    }
+                    .heatmap-cell {
+                        aspect-ratio: 1;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 4px;
+                        font-size: 10px;
+                        cursor: pointer;
+                        transition: transform 0.2s;
+                    }
+                    .heatmap-cell:hover {
+                        transform: scale(1.1);
+                    }
+                    .cell-label {
+                        font-weight: bold;
+                        color: white;
+                    }
+                    .cell-value {
+                        color: white;
+                        opacity: 0.8;
+                        font-size: 9px;
+                    }
+                </style>
+            </div>
+        `;
+    }
 }

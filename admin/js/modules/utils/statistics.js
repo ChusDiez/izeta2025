@@ -264,29 +264,103 @@ export class CNPStatistics {
 
     /**
      * Calcular probabilidad de aprobar basada en históricos CNP
+     * Modelo mejorado con más factores predictivos
      */
-    static calculatePassProbability(avgScore, consistency, trend, simulations) {
-        // Modelo simplificado basado en datos históricos
-        let baseProbability = 50;
+    static calculatePassProbability(avgScore, consistency, trend, simulations, additionalFactors = {}) {
+        // Sistema de pesos dinámicos basado en la cantidad de datos
+        const dataReliability = Math.min(1, simulations / 10);
         
-        // Factor de puntuación media (peso 40%)
-        const scoreFactor = (avgScore / this.config.historicalCutoff) * 40;
+        // 1. Factor de puntuación media (peso base 35%)
+        const scoreWeight = 35 + (dataReliability * 5); // Hasta 40% con más datos
+        const scoreFactor = (avgScore / this.config.historicalCutoff) * scoreWeight;
         
-        // Factor de consistencia (peso 20%)
-        const consistencyFactor = consistency < 1.5 ? 20 : 
-                                consistency < 2.5 ? 10 : 0;
+        // 2. Factor de consistencia mejorado (peso 15%)
+        let consistencyFactor = 0;
+        if (consistency < 1.0) {
+            consistencyFactor = 15; // Muy consistente
+        } else if (consistency < 1.5) {
+            consistencyFactor = 12;
+        } else if (consistency < 2.0) {
+            consistencyFactor = 8;
+        } else if (consistency < 2.5) {
+            consistencyFactor = 4;
+        } else {
+            consistencyFactor = -5; // Penalización por alta inconsistencia
+        }
         
-        // Factor de tendencia (peso 20%)
-        const trendFactor = trend > 0 ? 20 : 
-                           trend < -0.1 ? -10 : 10;
+        // 3. Factor de tendencia con análisis de momentum (peso 20%)
+        let trendFactor = 0;
+        if (trend > 0.1) {
+            trendFactor = 20; // Tendencia fuertemente positiva
+        } else if (trend > 0.05) {
+            trendFactor = 15;
+        } else if (trend > 0) {
+            trendFactor = 10;
+        } else if (trend > -0.05) {
+            trendFactor = 5; // Estable
+        } else if (trend > -0.1) {
+            trendFactor = -5; // Ligera caída
+        } else {
+            trendFactor = -10; // Caída pronunciada
+        }
         
-        // Factor de experiencia (peso 20%)
-        const experienceFactor = Math.min(20, (simulations / 10) * 20);
+        // 4. Factor de experiencia con rendimientos decrecientes (peso 15%)
+        const experienceBase = Math.sqrt(simulations); // Rendimientos decrecientes
+        const experienceFactor = Math.min(15, experienceBase * 3);
         
-        baseProbability = scoreFactor + consistencyFactor + trendFactor + experienceFactor;
+        // 5. Factores adicionales (peso 15%)
+        let additionalScore = 0;
         
-        // Ajustar a rango 0-100
-        return Math.max(0, Math.min(100, Math.round(baseProbability)));
+        // Distancia al corte histórico
+        const distanceToHistorical = avgScore - this.config.historicalCutoff;
+        if (distanceToHistorical > 1) {
+            additionalScore += 8;
+        } else if (distanceToHistorical > 0.5) {
+            additionalScore += 5;
+        } else if (distanceToHistorical > 0) {
+            additionalScore += 3;
+        } else if (distanceToHistorical > -0.5) {
+            additionalScore += 0;
+        } else {
+            additionalScore -= 5;
+        }
+        
+        // Análisis de últimos resultados (si están disponibles)
+        if (additionalFactors.recentScores && additionalFactors.recentScores.length >= 3) {
+            const recentAvg = additionalFactors.recentScores.slice(0, 3).reduce((a, b) => a + b) / 3;
+            if (recentAvg > avgScore + 0.5) {
+                additionalScore += 5; // Mejora reciente significativa
+            } else if (recentAvg < avgScore - 0.5) {
+                additionalScore -= 3; // Empeoramiento reciente
+            }
+        }
+        
+        // Factor de tiempo (si está disponible)
+        if (additionalFactors.avgTimeRatio) {
+            if (additionalFactors.avgTimeRatio < 0.8) {
+                additionalScore -= 3; // Posible precipitación
+            } else if (additionalFactors.avgTimeRatio > 1.2) {
+                additionalScore -= 2; // Posible lentitud excesiva
+            } else {
+                additionalScore += 2; // Tiempo óptimo
+            }
+        }
+        
+        // Cálculo final con normalización
+        let probability = scoreFactor + consistencyFactor + trendFactor + 
+                         experienceFactor + additionalScore;
+        
+        // Aplicar función sigmoidea suave para evitar extremos
+        probability = 100 / (1 + Math.exp(-0.05 * (probability - 50)));
+        
+        // Ajuste final basado en número de simulacros
+        if (simulations < 3) {
+            // Con pocos datos, tender hacia el centro
+            probability = probability * 0.7 + 50 * 0.3;
+        }
+        
+        // Asegurar rango 0-100
+        return Math.max(0, Math.min(100, Math.round(probability)));
     }
 
     /**
@@ -336,6 +410,327 @@ export class CNPStatistics {
         const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
         
         return 0.5 * (1 + sign * y);
+    }
+
+    /**
+     * Modelo predictivo avanzado usando múltiples indicadores
+     * Retorna predicción detallada con intervalos de confianza
+     */
+    static calculateAdvancedPrediction(studentData, allResults) {
+        const prediction = {
+            probability: 50,
+            confidence: 'low',
+            confidenceInterval: { lower: 30, upper: 70 },
+            keyFactors: [],
+            recommendations: [],
+            projectedScore: 0,
+            riskLevel: 'medium'
+        };
+
+        // Validar datos mínimos
+        if (!studentData || !allResults || allResults.length < 3) {
+            prediction.keyFactors.push('Datos insuficientes para predicción precisa');
+            return prediction;
+        }
+
+        // 1. Análisis de tendencia temporal con pesos exponenciales
+        const scores = allResults.map(r => r.score);
+        const timeWeights = scores.map((_, i) => Math.exp(-i * 0.1));
+        const weightedAvg = scores.reduce((sum, score, i) => 
+            sum + score * timeWeights[i], 0) / timeWeights.reduce((a, b) => a + b);
+
+        // 2. Análisis de volatilidad y patrones
+        const volatility = StatisticsUtils.calculateCoefficientOfVariation(scores);
+        const trend = StatisticsUtils.calculateTrend(scores);
+        const consistency = StatisticsUtils.calculateConsistency(allResults);
+
+        // 3. Análisis de patrones de respuesta
+        const responsePatterns = this.analyzeResponsePatterns(allResults);
+        
+        // 4. Factor de tiempo y precipitación
+        const timeAnalysis = this.analyzeTimePatterns(allResults);
+        
+        // 5. Análisis por bloques temáticos
+        const topicAnalysis = this.analyzeTopicPerformance(allResults);
+
+        // 6. Calcular probabilidad base
+        const additionalFactors = {
+            recentScores: scores.slice(0, 5),
+            avgTimeRatio: timeAnalysis.avgRatio,
+            responsePatterns: responsePatterns,
+            topicStrengths: topicAnalysis
+        };
+
+        prediction.probability = this.calculatePassProbability(
+            weightedAvg,
+            consistency,
+            trend,
+            allResults.length,
+            additionalFactors
+        );
+
+        // 7. Calcular intervalo de confianza
+        const confidenceMargin = Math.max(5, 30 - (allResults.length * 2));
+        prediction.confidenceInterval = {
+            lower: Math.max(0, prediction.probability - confidenceMargin),
+            upper: Math.min(100, prediction.probability + confidenceMargin)
+        };
+
+        // 8. Determinar nivel de confianza
+        if (allResults.length >= 10 && volatility < 15) {
+            prediction.confidence = 'high';
+        } else if (allResults.length >= 5 && volatility < 25) {
+            prediction.confidence = 'medium';
+        } else {
+            prediction.confidence = 'low';
+        }
+
+        // 9. Proyectar puntuación esperada
+        prediction.projectedScore = this.projectExamScore(
+            weightedAvg, 
+            trend, 
+            consistency,
+            responsePatterns
+        );
+
+        // 10. Identificar factores clave
+        if (trend > 0.1) {
+            prediction.keyFactors.push('Tendencia de mejora sostenida');
+        } else if (trend < -0.1) {
+            prediction.keyFactors.push('Tendencia negativa preocupante');
+        }
+
+        if (consistency < 1.5) {
+            prediction.keyFactors.push('Alto nivel de consistencia');
+        } else if (consistency > 2.5) {
+            prediction.keyFactors.push('Resultados muy variables');
+        }
+
+        if (responsePatterns.blankRate > 0.15) {
+            prediction.keyFactors.push('Alto porcentaje de preguntas sin responder');
+        }
+
+        if (timeAnalysis.rushingTendency) {
+            prediction.keyFactors.push('Tendencia a precipitarse en los exámenes');
+        }
+
+        // 11. Generar recomendaciones específicas
+        prediction.recommendations = this.generatePredictiveRecommendations(
+            prediction,
+            responsePatterns,
+            topicAnalysis,
+            timeAnalysis
+        );
+
+        // 12. Calcular nivel de riesgo
+        if (prediction.probability < 30) {
+            prediction.riskLevel = 'critical';
+        } else if (prediction.probability < 50) {
+            prediction.riskLevel = 'high';
+        } else if (prediction.probability < 70) {
+            prediction.riskLevel = 'medium';
+        } else {
+            prediction.riskLevel = 'low';
+        }
+
+        return prediction;
+    }
+
+    /**
+     * Analizar patrones de respuesta
+     */
+    static analyzeResponsePatterns(results) {
+        const patterns = {
+            blankRate: 0,
+            errorRate: 0,
+            correctRate: 0,
+            avgQuestionsAttempted: 0,
+            rushingIndicator: false
+        };
+
+        if (results.length === 0) return patterns;
+
+        const validResults = results.filter(r => 
+            r.correct_answers !== undefined && 
+            r.wrong_answers !== undefined
+        );
+
+        if (validResults.length > 0) {
+            const totals = validResults.reduce((acc, r) => {
+                const total = (r.correct_answers || 0) + (r.wrong_answers || 0) + (r.blank_answers || 0);
+                acc.correct += r.correct_answers || 0;
+                acc.wrong += r.wrong_answers || 0;
+                acc.blank += r.blank_answers || 0;
+                acc.total += total;
+                return acc;
+            }, { correct: 0, wrong: 0, blank: 0, total: 0 });
+
+            if (totals.total > 0) {
+                patterns.blankRate = totals.blank / totals.total;
+                patterns.errorRate = totals.wrong / totals.total;
+                patterns.correctRate = totals.correct / totals.total;
+                patterns.avgQuestionsAttempted = (totals.correct + totals.wrong) / validResults.length;
+            }
+        }
+
+        // Detectar precipitación
+        const timeData = results.filter(r => r.time_taken);
+        if (timeData.length >= 3) {
+            const avgTime = timeData.reduce((sum, r) => sum + r.time_taken, 0) / timeData.length;
+            const rushCount = timeData.filter(r => r.time_taken < avgTime * 0.8).length;
+            patterns.rushingIndicator = rushCount > timeData.length * 0.3;
+        }
+
+        return patterns;
+    }
+
+    /**
+     * Analizar patrones de tiempo
+     */
+    static analyzeTimePatterns(results) {
+        const analysis = {
+            avgTime: 0,
+            avgRatio: 1,
+            rushingTendency: false,
+            optimalTime: 90 // minutos
+        };
+
+        const timeData = results.filter(r => r.time_taken);
+        if (timeData.length === 0) return analysis;
+
+        analysis.avgTime = timeData.reduce((sum, r) => sum + r.time_taken, 0) / timeData.length;
+        analysis.avgRatio = analysis.avgTime / analysis.optimalTime;
+
+        // Detectar tendencia a precipitarse
+        const rushResults = timeData.filter(r => r.time_taken < analysis.optimalTime * 0.8);
+        analysis.rushingTendency = rushResults.length > timeData.length * 0.4;
+
+        return analysis;
+    }
+
+    /**
+     * Analizar rendimiento por temas
+     */
+    static analyzeTopicPerformance(results) {
+        const topicMap = new Map();
+
+        // Agrupar por bloques temáticos CNP
+        results.forEach(r => {
+            if (r.topic_code) {
+                const topicNum = parseInt(r.topic_code.replace(/\D/g, ''));
+                let block = 'general';
+                
+                if (topicNum >= 1 && topicNum <= 26) {
+                    block = 'juridico';
+                } else if (topicNum >= 27 && topicNum <= 37) {
+                    block = 'sociales';
+                } else if (topicNum >= 38 && topicNum <= 45) {
+                    block = 'tecnico';
+                }
+
+                if (!topicMap.has(block)) {
+                    topicMap.set(block, { scores: [], count: 0 });
+                }
+                
+                topicMap.get(block).scores.push(r.score);
+                topicMap.get(block).count++;
+            }
+        });
+
+        const analysis = {};
+        topicMap.forEach((data, block) => {
+            if (data.scores.length > 0) {
+                analysis[block] = {
+                    avg: data.scores.reduce((a, b) => a + b) / data.scores.length,
+                    count: data.count,
+                    weight: this.config.topicWeights[block] || 0.1
+                };
+            }
+        });
+
+        return analysis;
+    }
+
+    /**
+     * Proyectar puntuación esperada en el examen
+     */
+    static projectExamScore(weightedAvg, trend, consistency, patterns) {
+        let projectedScore = weightedAvg;
+
+        // Ajustar por tendencia
+        projectedScore += trend * 2; // Proyectar 2 simulacros más
+
+        // Ajustar por consistencia
+        if (consistency > 2) {
+            // Alta variabilidad, usar percentil 40
+            projectedScore *= 0.9;
+        }
+
+        // Ajustar por patrones de respuesta
+        if (patterns.blankRate > 0.15) {
+            // Muchas sin responder, potencial de mejora
+            projectedScore *= 0.95;
+        }
+
+        // Ajustar por factor de estrés del examen real
+        projectedScore *= 0.97; // 3% de penalización por estrés
+
+        return Math.max(0, Math.min(10, parseFloat(projectedScore.toFixed(2))));
+    }
+
+    /**
+     * Generar recomendaciones predictivas específicas
+     */
+    static generatePredictiveRecommendations(prediction, patterns, topicAnalysis, timeAnalysis) {
+        const recommendations = [];
+
+        // Recomendaciones basadas en probabilidad
+        if (prediction.probability < 30) {
+            recommendations.push({
+                priority: 'critical',
+                area: 'general',
+                text: 'Necesita intervención inmediata y plan de estudio intensivo'
+            });
+        }
+
+        // Recomendaciones basadas en patrones
+        if (patterns.blankRate > 0.15) {
+            recommendations.push({
+                priority: 'high',
+                area: 'estrategia',
+                text: 'Practicar gestión del tiempo para responder todas las preguntas'
+            });
+        }
+
+        if (patterns.errorRate > 0.35) {
+            recommendations.push({
+                priority: 'high',
+                area: 'conocimiento',
+                text: 'Reforzar conceptos fundamentales para reducir errores'
+            });
+        }
+
+        // Recomendaciones basadas en tiempo
+        if (timeAnalysis.rushingTendency) {
+            recommendations.push({
+                priority: 'medium',
+                area: 'tiempo',
+                text: 'Practicar ritmo constante, evitar precipitación'
+            });
+        }
+
+        // Recomendaciones por bloques temáticos
+        Object.entries(topicAnalysis).forEach(([block, data]) => {
+            if (data.avg < 6 && data.weight > 0.1) {
+                recommendations.push({
+                    priority: 'high',
+                    area: block,
+                    text: `Reforzar bloque ${block} (promedio: ${data.avg.toFixed(1)})`
+                });
+            }
+        });
+
+        return recommendations.slice(0, 5); // Máximo 5 recomendaciones
     }
 }
 

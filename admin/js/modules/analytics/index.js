@@ -642,423 +642,426 @@ export default class AnalyticsModule {
     }
 
     /**
- * Renderizar análisis de temas
- */
-renderTopicAnalysis(topicAnalysis) {
-    const container = document.getElementById('topicAnalysisContainer');
-    if (!container || !topicAnalysis) return;
-    
-    // Crear o actualizar sección
-    let section = container.querySelector('.topic-analysis-section');
-    if (!section) {
-        section = document.createElement('div');
-        section.className = 'topic-analysis-section card';
-        container.appendChild(section);
-    }
-    
-    // Usar el método renderTopicAnalysisSection de esta clase, no de topicInsights
-    section.innerHTML = this.renderTopicAnalysisSection(topicAnalysis);
-    
-    // Re-configurar event listeners para la sección de temas
-    this.setupTopicEventListeners();
-}
-
-/**
- * Renderizar sección de análisis de temas
- */
-renderTopicAnalysisSection(topicAnalysis) {
-    return `
-        <h3>🎯 Análisis de Temas Problemáticos por Simulacro</h3>
+     * Renderizar análisis de temas
+     */
+    renderTopicAnalysis(topicAnalysis) {
+        const container = document.getElementById('topicAnalysisContainer');
+        if (!container || !topicAnalysis) return;
         
-        <!-- Panel superior con métricas y filtros -->
-        <div class="topic-analysis-header">
-            <!-- Métricas principales en cards visuales -->
-            <div class="topic-metrics-row">
-                <div class="topic-metric-card">
-                    <div class="metric-icon-large">📚</div>
-                    <div class="metric-content">
-                        <div class="metric-value">${Object.keys(topicAnalysis.globalTrends || {}).length}</div>
-                        <div class="metric-label">Temas Únicos Detectados</div>
-                        <div class="metric-trend">En todos los simulacros</div>
+        // Crear o actualizar sección
+        let section = container.querySelector('.topic-analysis-section');
+        if (!section) {
+            section = document.createElement('div');
+            section.className = 'topic-analysis-section card';
+            container.appendChild(section);
+        }
+        
+        // Usar el método renderTopicAnalysisSection de esta clase, no de topicInsights
+        section.innerHTML = this.renderTopicAnalysisSection(topicAnalysis);
+        
+        // Re-configurar event listeners para la sección de temas
+        this.setupTopicEventListeners();
+    }
+
+    /**
+     * Renderizar sección de análisis de temas
+     */
+    renderTopicAnalysisSection(topicAnalysis) {
+        return `
+            <h3>🎯 Análisis de Temas Problemáticos por Simulacro</h3>
+            
+            <!-- Panel superior con métricas y filtros -->
+            <div class="topic-analysis-header">
+                <!-- Métricas principales en cards visuales -->
+                <div class="topic-metrics-row">
+                    <div class="topic-metric-card">
+                        <div class="metric-icon-large">📚</div>
+                        <div class="metric-content">
+                            <div class="metric-value">${Object.keys(topicAnalysis.globalTrends || {}).length}</div>
+                            <div class="metric-label">Temas Únicos Detectados</div>
+                            <div class="metric-trend">En todos los simulacros</div>
+                        </div>
+                    </div>
+                    
+                    <div class="topic-metric-card critical">
+                        <div class="metric-icon-large">⚠️</div>
+                        <div class="metric-content">
+                            <div class="metric-value">${
+                                Object.values(topicAnalysis.globalTrends || {})
+                                    .filter(t => t.avgPercentage >= 30).length
+                            }</div>
+                            <div class="metric-label">Temas Críticos</div>
+                            <div class="metric-trend">≥30% estudiantes afectados</div>
+                        </div>
+                    </div>
+                    
+                    <div class="topic-metric-card impact">
+                        <div class="metric-icon-large">📉</div>
+                        <div class="metric-content">
+                            <div class="metric-value">${
+                                topicAnalysis.correlations?.averageImpact?.toFixed(2) || 'N/A'
+                            }<span class="metric-unit">pts</span></div>
+                            <div class="metric-label">Impacto Promedio</div>
+                            <div class="metric-trend">Reducción en nota media</div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="topic-metric-card critical">
-                    <div class="metric-icon-large">⚠️</div>
-                    <div class="metric-content">
-                        <div class="metric-value">${
-                            Object.values(topicAnalysis.globalTrends || {})
-                                .filter(t => t.avgPercentage >= 30).length
-                        }</div>
-                        <div class="metric-label">Temas Críticos</div>
-                        <div class="metric-trend">≥30% estudiantes afectados</div>
+                <!-- Filtros mejorados -->
+                <div class="topic-filters-enhanced">
+                    <div class="filter-card">
+                        <label>🎓 Cohorte</label>
+                        <select id="topicCohortFilter" class="filter-select">
+                            <option value="all">Todas las cohortes</option>
+                            <option value="20h">20h - Base</option>
+                            <option value="36h">36h - Intensivo</option>
+                            <option value="48h">48h - Élite</option>
+                        </select>
                     </div>
-                </div>
-                
-                <div class="topic-metric-card impact">
-                    <div class="metric-icon-large">📉</div>
-                    <div class="metric-content">
-                        <div class="metric-value">${
-                            topicAnalysis.correlations?.averageImpact?.toFixed(2) || 'N/A'
-                        }<span class="metric-unit">pts</span></div>
-                        <div class="metric-label">Impacto Promedio</div>
-                        <div class="metric-trend">Reducción en nota media</div>
+                    <div class="filter-card">
+                        <label>📅 Período</label>
+                        <select id="topicPeriodFilter" class="filter-select">
+                            <option value="all">Histórico completo</option>
+                            <option value="last5">Últimos 5 simulacros</option>
+                            <option value="last3">Últimos 3 simulacros</option>
+                            <option value="current">Simulacro actual</option>
+                        </select>
+                    </div>
+                    <div class="filter-card">
+                        <label>🎯 Umbral</label>
+                        <select id="topicThresholdFilter" class="filter-select">
+                            <option value="20">≥20% estudiantes</option>
+                            <option value="30" selected>≥30% estudiantes</option>
+                            <option value="40">≥40% estudiantes</option>
+                            <option value="50">≥50% estudiantes</option>
+                        </select>
                     </div>
                 </div>
             </div>
             
-            <!-- Filtros mejorados -->
-            <div class="topic-filters-enhanced">
-                <div class="filter-card">
-                    <label>🎓 Cohorte</label>
-                    <select id="topicCohortFilter" class="filter-select">
-                        <option value="all">Todas las cohortes</option>
-                        <option value="20h">20h - Base</option>
-                        <option value="36h">36h - Intensivo</option>
-                        <option value="48h">48h - Élite</option>
-                    </select>
-                </div>
-                <div class="filter-card">
-                    <label>📅 Período</label>
-                    <select id="topicPeriodFilter" class="filter-select">
-                        <option value="all">Histórico completo</option>
-                        <option value="last5">Últimos 5 simulacros</option>
-                        <option value="last3">Últimos 3 simulacros</option>
-                        <option value="current">Simulacro actual</option>
-                    </select>
-                </div>
-                <div class="filter-card">
-                    <label>🎯 Umbral</label>
-                    <select id="topicThresholdFilter" class="filter-select">
-                        <option value="20">≥20% estudiantes</option>
-                        <option value="30" selected>≥30% estudiantes</option>
-                        <option value="40">≥40% estudiantes</option>
-                        <option value="50">≥50% estudiantes</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Panel de correlaciones mejorado -->
-        ${topicAnalysis.correlations && topicAnalysis.correlations.topImpactTopics?.length > 0 ? `
-            <div class="correlation-analysis-panel">
-                <div class="panel-header">
-                    <h4>📊 Análisis de Impacto: Temas vs. Rendimiento</h4>
-                    <span class="panel-subtitle">Cómo afecta cada tema a las notas medias</span>
-                </div>
-                <div class="correlation-visual-chart">
-                    ${this.renderCorrelationChart(topicAnalysis.correlations.topImpactTopics)}
-                </div>
-            </div>
-        ` : ''}
-        
-        <!-- Grid de simulacros en diseño horizontal -->
-        <div class="simulations-timeline">
-            <h4>📅 Evolución Temporal de Temas Problemáticos</h4>
-            <div class="timeline-container">
-                ${Object.values(topicAnalysis.bySimulation || {})
-                    .sort((a, b) => b.weekNumber - a.weekNumber)
-                    .slice(0, 6)
-                    .map(sim => this.renderSimulationTopicCard(sim))
-                    .join('')}
-            </div>
-        </div>
-        
-        <!-- Insights mejorados con iconos y diseño -->
-        ${(topicAnalysis.insights || []).length > 0 ? `
-            <div class="insights-panel">
-                <h4>💡 Insights y Recomendaciones Clave</h4>
-                <div class="insights-grid">
-                    ${topicAnalysis.insights.slice(0, 4).map(insight => this.renderTopicInsight(insight)).join('')}
-                </div>
-            </div>
-        ` : ''}
-        
-        <!-- Top temas problemáticos global -->
-        ${this.renderGlobalTopicsRanking(topicAnalysis.globalTrends)}
-        
-        <!-- Modal para drill-down -->
-        ${this.renderTopicDrillDownModal()}
-    `;
-}
-
-/**
- * Renderizar gráfico de correlaciones
- */
-renderCorrelationChart(topImpactTopics) {
-    if (!topImpactTopics || topImpactTopics.length === 0) {
-        return '<p class="no-data-message">No hay datos suficientes para mostrar correlaciones</p>';
-    }
-    
-    const maxImpact = Math.max(...topImpactTopics.map(t => Math.abs(t.scoreImpact)));
-    
-    return `
-        <div class="correlation-chart-enhanced">
-            ${topImpactTopics.slice(0, 8).map((topic, index) => `
-                <div class="correlation-row">
-                    <div class="topic-info">
-                        <span class="topic-rank">#${index + 1}</span>
-                        <span class="topic-name">${topic.topic}</span>
+            <!-- Panel de correlaciones mejorado -->
+            ${topicAnalysis.correlations && topicAnalysis.correlations.topImpactTopics?.length > 0 ? `
+                <div class="correlation-analysis-panel">
+                    <div class="panel-header">
+                        <h4>📊 Análisis de Impacto: Temas vs. Rendimiento</h4>
+                        <span class="panel-subtitle">Cómo afecta cada tema a las notas medias</span>
                     </div>
-                    
-                    <div class="impact-visualization">
-                        <div class="score-bars">
-                            <div class="score-bar without-topic" style="width: ${(topic.avgScoreWithoutTopic/10)*100}%">
-                                <span class="score-label">${topic.avgScoreWithoutTopic.toFixed(2)}</span>
+                    <div class="correlation-visual-chart">
+                        ${this.renderCorrelationChart(topicAnalysis.correlations.topImpactTopics)}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <!-- Grid de simulacros en diseño horizontal -->
+            <div class="simulations-timeline">
+                <h4>📅 Evolución Temporal de Temas Problemáticos</h4>
+                <div class="timeline-container">
+                    ${Object.values(topicAnalysis.bySimulation || {})
+                        .sort((a, b) => b.weekNumber - a.weekNumber)
+                        .slice(0, 6)
+                        .map(sim => this.renderSimulationTopicCard(sim))
+                        .join('')}
+                </div>
+            </div>
+            
+            <!-- Insights mejorados con iconos y diseño -->
+            ${(topicAnalysis.insights || []).length > 0 ? `
+                <div class="insights-panel">
+                    <h4>💡 Insights y Recomendaciones Clave</h4>
+                    <div class="insights-grid">
+                        ${topicAnalysis.insights.slice(0, 4).map(insight => this.renderTopicInsight(insight)).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <!-- Top temas problemáticos global -->
+            ${this.renderGlobalTopicsRanking(topicAnalysis.globalTrends)}
+            
+            <!-- Modal para drill-down -->
+            ${this.renderTopicDrillDownModal()}
+        `;
+    }
+
+    /**
+     * Renderizar gráfico de correlaciones
+     */
+    renderCorrelationChart(topImpactTopics) {
+        if (!topImpactTopics || topImpactTopics.length === 0) {
+            return '<p class="no-data-message">No hay datos suficientes para mostrar correlaciones</p>';
+        }
+        
+        const maxImpact = Math.max(...topImpactTopics.map(t => Math.abs(t.scoreImpact)));
+        
+        return `
+            <div class="correlation-chart-enhanced">
+                ${topImpactTopics.slice(0, 8).map((topic, index) => `
+                    <div class="correlation-row">
+                        <div class="topic-info">
+                            <span class="topic-rank">#${index + 1}</span>
+                            <span class="topic-name">${topic.topic}</span>
+                        </div>
+                        
+                        <div class="impact-visualization">
+                            <div class="score-bars">
+                                <div class="score-bar without-topic" style="width: ${(topic.avgScoreWithoutTopic/10)*100}%">
+                                    <span class="score-label">${topic.avgScoreWithoutTopic.toFixed(2)}</span>
+                                </div>
+                                <div class="score-bar with-topic" style="width: ${(topic.avgScoreWithTopic/10)*100}%">
+                                    <span class="score-label">${topic.avgScoreWithTopic.toFixed(2)}</span>
+                                </div>
                             </div>
-                            <div class="score-bar with-topic" style="width: ${(topic.avgScoreWithTopic/10)*100}%">
-                                <span class="score-label">${topic.avgScoreWithTopic.toFixed(2)}</span>
+                            
+                            <div class="impact-indicator">
+                                <div class="impact-bar" style="width: ${(Math.abs(topic.scoreImpact)/maxImpact)*100}%">
+                                    <span class="impact-value">-${topic.scoreImpact.toFixed(2)} pts</span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="impact-indicator">
-                            <div class="impact-bar" style="width: ${(Math.abs(topic.scoreImpact)/maxImpact)*100}%">
-                                <span class="impact-value">-${topic.scoreImpact.toFixed(2)} pts</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="affected-students">
-                        <div class="student-icon">👥</div>
-                        <span>${topic.studentsAffected}</span>
-                    </div>
-                </div>
-            `).join('')}
-            
-            <div class="chart-legend">
-                <div class="legend-item">
-                    <div class="legend-color without-topic"></div>
-                    <span>Sin dificultad en el tema</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color with-topic"></div>
-                    <span>Con dificultad en el tema</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color impact"></div>
-                    <span>Impacto negativo</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-/**
- * Renderizar card de simulacro con drill-down
- */
-renderSimulationTopicCard(simData) {
-    const criticalCount = simData.topProblematicTopics?.filter(t => t.percentage >= 30).length || 0;
-    const totalTopics = simData.topProblematicTopics?.length || 0;
-    
-    return `
-        <div class="simulation-card-enhanced" data-simulation-id="${simData.simulation?.id || ''}">
-            <div class="card-header">
-                <div class="simulation-badge">RF${simData.weekNumber || '?'}</div>
-                <div class="simulation-date">${this.formatSimulationDate(simData.simulation?.start_date)}</div>
-            </div>
-            
-            <div class="card-stats">
-                <div class="stat">
-                    <span class="stat-value">${simData.totalParticipants || 0}</span>
-                    <span class="stat-label">Participantes</span>
-                </div>
-                <div class="stat ${criticalCount > 0 ? 'critical' : ''}">
-                    <span class="stat-value">${criticalCount}</span>
-                    <span class="stat-label">Temas críticos</span>
-                </div>
-            </div>
-            
-            <div class="topics-preview">
-                ${simData.topProblematicTopics && simData.topProblematicTopics.length > 0 ? `
-                    <div class="top-topics-list">
-                        ${simData.topProblematicTopics.slice(0, 3).map((topic, index) => `
-                            <div class="topic-pill ${topic.percentage >= 30 ? 'critical' : ''}"
-                                 onclick="window.analyticsModule.topicInsights.showTopicDrillDown('${simData.simulation?.id || ''}', '${topic.topic}')">
-                                <span class="pill-rank">${index + 1}</span>
-                                <span class="pill-name">${this.truncateText(topic.topic, 20)}</span>
-                                <span class="pill-percentage">${topic.percentage.toFixed(0)}%</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    ${totalTopics > 3 ? `
-                        <div class="more-topics">+${totalTopics - 3} más</div>
-                    ` : ''}
-                ` : '<p class="no-topics">Sin temas problemáticos</p>'}
-            </div>
-            
-            <button class="view-details-btn" 
-                    onclick="window.analyticsModule.showSimulationDetails('${simData.simulation?.id || ''}')">
-                Ver detalles →
-            </button>
-        </div>
-    `;
-}
-/**
- * Renderizar modal de drill-down
- */
-renderTopicDrillDownModal() {
-    return `
-        <div id="topicDrillDownModal" class="modal" style="display: none;">
-            <div class="modal-content modal-large">
-                <div class="modal-header">
-                    <h3 id="drillDownTitle">Estudiantes que marcaron este tema</h3>
-                    <button class="btn-icon" onclick="window.analyticsModule.closeDrillDownModal()">✖️</button>
-                </div>
-                <div class="modal-body" id="drillDownContent">
-                    <!-- Se llenará dinámicamente -->
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="window.analyticsModule.exportTopicStudents()">
-                        📊 Exportar lista
-                    </button>
-                    <button class="btn btn-primary" onclick="window.analyticsModule.createTopicIntervention()">
-                        📧 Crear intervención grupal
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-/**
- * Renderizar insight de tema mejorado
- */
-renderTopicInsight(insight) {
-    const icons = {
-        critical: '🚨',
-        warning: '⚠️',
-        info: 'ℹ️',
-        success: '✅'
-    };
-    
-    const colors = {
-        critical: '#dc2626',
-        warning: '#f59e0b',
-        info: '#3b82f6',
-        success: '#10b981'
-    };
-    
-    return `
-        <div class="insight-card-enhanced ${insight.type}">
-            <div class="insight-icon" style="background-color: ${colors[insight.type]}20; color: ${colors[insight.type]}">
-                ${icons[insight.type]}
-            </div>
-            <div class="insight-content">
-                <h5 class="insight-title">${insight.title}</h5>
-                <p class="insight-message">${insight.message}</p>
-                ${insight.action ? `
-                    <div class="insight-action">
-                        <span class="action-icon">→</span>
-                        ${insight.action}
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-/**
- * Renderizar ranking global de temas
- */
-renderGlobalTopicsRanking(globalTrends) {
-    if (!globalTrends || Object.keys(globalTrends).length === 0) {
-        return '';
-    }
-    
-    const sortedTopics = Object.values(globalTrends)
-        .sort((a, b) => b.totalMentions - a.totalMentions)
-        .slice(0, 10);
-    
-    return `
-        <div class="global-topics-ranking">
-            <h4>🏆 Top 10 Temas Más Problemáticos (Global)</h4>
-            <div class="ranking-grid">
-                ${sortedTopics.map((topic, index) => `
-                    <div class="ranking-item ${topic.trend}">
-                        <div class="rank-number">${index + 1}</div>
-                        <div class="topic-details">
-                            <div class="topic-name">${topic.topic}</div>
-                            <div class="topic-stats">
-                                <span class="mentions">${topic.totalMentions} menciones</span>
-                                <span class="avg-percentage">${topic.avgPercentage.toFixed(1)}% promedio</span>
-                            </div>
-                        </div>
-                        <div class="trend-indicator ${topic.trend}">
-                            ${topic.trend === 'increasing' ? '📈' : topic.trend === 'decreasing' ? '📉' : '➡️'}
+                        <div class="affected-students">
+                            <div class="student-icon">👥</div>
+                            <span>${topic.studentsAffected}</span>
                         </div>
                     </div>
                 `).join('')}
+                
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color without-topic"></div>
+                        <span>Sin dificultad en el tema</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color with-topic"></div>
+                        <span>Con dificultad en el tema</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color impact"></div>
+                        <span>Impacto negativo</span>
+                    </div>
+                </div>
             </div>
-        </div>
-    `;
-}
+        `;
+    }
 
-// Métodos auxiliares
-formatSimulationDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
+    /**
+     * Renderizar card de simulacro con drill-down
+     */
+    renderSimulationTopicCard(simData) {
+        const criticalCount = simData.topProblematicTopics?.filter(t => t.percentage >= 30).length || 0;
+        const totalTopics = simData.topProblematicTopics?.length || 0;
+        
+        return `
+            <div class="simulation-card-enhanced" data-simulation-id="${simData.simulation?.id || ''}">
+                <div class="card-header">
+                    <div class="simulation-badge">RF${simData.weekNumber || '?'}</div>
+                    <div class="simulation-date">${this.formatSimulationDate(simData.simulation?.start_date)}</div>
+                </div>
+                
+                <div class="card-stats">
+                    <div class="stat">
+                        <span class="stat-value">${simData.totalParticipants || 0}</span>
+                        <span class="stat-label">Participantes</span>
+                    </div>
+                    <div class="stat ${criticalCount > 0 ? 'critical' : ''}">
+                        <span class="stat-value">${criticalCount}</span>
+                        <span class="stat-label">Temas críticos</span>
+                    </div>
+                </div>
+                
+                <div class="topics-preview">
+                    ${simData.topProblematicTopics && simData.topProblematicTopics.length > 0 ? `
+                        <div class="top-topics-list">
+                            ${simData.topProblematicTopics.slice(0, 3).map((topic, index) => `
+                                <div class="topic-pill ${topic.percentage >= 30 ? 'critical' : ''}"
+                                     onclick="window.analyticsModule.topicInsights.showTopicDrillDown('${simData.simulation?.id || ''}', '${topic.topic}')">
+                                    <span class="pill-rank">${index + 1}</span>
+                                    <span class="pill-name">${this.truncateText(topic.topic, 20)}</span>
+                                    <span class="pill-percentage">${topic.percentage.toFixed(0)}%</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${totalTopics > 3 ? `
+                            <div class="more-topics">+${totalTopics - 3} más</div>
+                        ` : ''}
+                    ` : '<p class="no-topics">Sin temas problemáticos</p>'}
+                </div>
+                
+                <button class="view-details-btn" 
+                        onclick="window.analyticsModule.showSimulationDetails('${simData.simulation?.id || ''}')">
+                    Ver detalles →
+                </button>
+            </div>
+        `;
+    }
 
-truncateText(text, maxLength) {
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-}
+    /**
+     * Renderizar modal de drill-down
+     */
+    renderTopicDrillDownModal() {
+        return `
+            <div id="topicDrillDownModal" class="modal" style="display: none;">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h3 id="drillDownTitle">Estudiantes que marcaron este tema</h3>
+                        <button class="btn-icon" onclick="window.analyticsModule.closeDrillDownModal()">✖️</button>
+                    </div>
+                    <div class="modal-body" id="drillDownContent">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="window.analyticsModule.exportTopicStudents()">
+                            📊 Exportar lista
+                        </button>
+                        <button class="btn btn-primary" onclick="window.analyticsModule.createTopicIntervention()">
+                            📧 Crear intervención grupal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
-showSimulationDetails(simulationId) {
-    // Implementar según necesites
-    console.log('Ver detalles del simulacro:', simulationId);
-}
-/**
- * Configurar event listeners para análisis de temas
- */
-setupTopicEventListeners() {
-    // Filtros
-    const filters = ['topicCohortFilter', 'topicPeriodFilter', 'topicThresholdFilter'];
-    filters.forEach(filterId => {
-        const element = document.getElementById(filterId);
-        if (element) {
-            const handler = () => this.filterTopicAnalysis();
-            element.addEventListener('change', handler);
-            this.listeners.push({ element, event: 'change', handler });
-        }
-    });
-    
-    // Click handlers para drill-down
-    document.querySelectorAll('.topic-item.clickable').forEach(item => {
-        const handler = () => {
-            const simulationId = item.dataset.simulationId;
-            const topic = item.dataset.topic;
-            if (simulationId && topic) {
-                this.topicInsights.showTopicDrillDown(simulationId, topic);
-            }
+    /**
+     * Renderizar insight de tema mejorado
+     */
+    renderTopicInsight(insight) {
+        const icons = {
+            critical: '🚨',
+            warning: '⚠️',
+            info: 'ℹ️',
+            success: '✅'
         };
-        item.addEventListener('click', handler);
-        this.listeners.push({ element: item, event: 'click', handler });
-    });
-}
-
-/**
- * Métodos adicionales para manejo de temas
- */
-filterTopicAnalysis() {
-    this.topicInsights.filterTopicAnalysis();
-}
-
-closeDrillDownModal() {
-    const modal = document.getElementById('topicDrillDownModal');
-    if (modal) modal.style.display = 'none';
-}
-
-async exportTopicStudents() {
-    if (this.topicInsights.currentDrillDownData) {
-        await this.topicInsights.exportTopicStudents();
+        
+        const colors = {
+            critical: '#dc2626',
+            warning: '#f59e0b',
+            info: '#3b82f6',
+            success: '#10b981'
+        };
+        
+        return `
+            <div class="insight-card-enhanced ${insight.type}">
+                <div class="insight-icon" style="background-color: ${colors[insight.type]}20; color: ${colors[insight.type]}">
+                    ${icons[insight.type]}
+                </div>
+                <div class="insight-content">
+                    <h5 class="insight-title">${insight.title}</h5>
+                    <p class="insight-message">${insight.message}</p>
+                    ${insight.action ? `
+                        <div class="insight-action">
+                            <span class="action-icon">→</span>
+                            ${insight.action}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
     }
-}
 
-async createTopicIntervention() {
-    if (this.topicInsights.currentDrillDownData) {
-        await this.topicInsights.createTopicIntervention();
+    /**
+     * Renderizar ranking global de temas
+     */
+    renderGlobalTopicsRanking(globalTrends) {
+        if (!globalTrends || Object.keys(globalTrends).length === 0) {
+            return '';
+        }
+        
+        const sortedTopics = Object.values(globalTrends)
+            .sort((a, b) => b.totalMentions - a.totalMentions)
+            .slice(0, 10);
+        
+        return `
+            <div class="global-topics-ranking">
+                <h4>🏆 Top 10 Temas Más Problemáticos (Global)</h4>
+                <div class="ranking-grid">
+                    ${sortedTopics.map((topic, index) => `
+                        <div class="ranking-item ${topic.trend}">
+                            <div class="rank-number">${index + 1}</div>
+                            <div class="topic-details">
+                                <div class="topic-name">${topic.topic}</div>
+                                <div class="topic-stats">
+                                    <span class="mentions">${topic.totalMentions} menciones</span>
+                                    <span class="avg-percentage">${topic.avgPercentage.toFixed(1)}% promedio</span>
+                                </div>
+                            </div>
+                            <div class="trend-indicator ${topic.trend}">
+                                ${topic.trend === 'increasing' ? '📈' : topic.trend === 'decreasing' ? '📉' : '➡️'}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
     }
-}
+
+    // Métodos auxiliares
+    formatSimulationDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    }
+
+    truncateText(text, maxLength) {
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
+    showSimulationDetails(simulationId) {
+        // Implementar según necesites
+        console.log('Ver detalles del simulacro:', simulationId);
+    }
+
+    /**
+     * Configurar event listeners para análisis de temas
+     */
+    setupTopicEventListeners() {
+        // Filtros
+        const filters = ['topicCohortFilter', 'topicPeriodFilter', 'topicThresholdFilter'];
+        filters.forEach(filterId => {
+            const element = document.getElementById(filterId);
+            if (element) {
+                const handler = () => this.filterTopicAnalysis();
+                element.addEventListener('change', handler);
+                this.listeners.push({ element, event: 'change', handler });
+            }
+        });
+        
+        // Click handlers para drill-down
+        document.querySelectorAll('.topic-item.clickable').forEach(item => {
+            const handler = () => {
+                const simulationId = item.dataset.simulationId;
+                const topic = item.dataset.topic;
+                if (simulationId && topic) {
+                    this.topicInsights.showTopicDrillDown(simulationId, topic);
+                }
+            };
+            item.addEventListener('click', handler);
+            this.listeners.push({ element: item, event: 'click', handler });
+        });
+    }
+
+    /**
+     * Métodos adicionales para manejo de temas
+     */
+    filterTopicAnalysis() {
+        this.topicInsights.filterTopicAnalysis();
+    }
+
+    closeDrillDownModal() {
+        const modal = document.getElementById('topicDrillDownModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async exportTopicStudents() {
+        if (this.topicInsights.currentDrillDownData) {
+            await this.topicInsights.exportTopicStudents();
+        }
+    }
+
+    async createTopicIntervention() {
+        if (this.topicInsights.currentDrillDownData) {
+            await this.topicInsights.createTopicIntervention();
+        }
+    }
 
     /**
      * Renderizar insights
@@ -1431,13 +1434,13 @@ async createTopicIntervention() {
             // Análisis de riesgo
             const riskAnalysis = this.analyzeIndividualRisk(student, studentResults, responsePatterns);
             
-            // Calcular probabilidad
-            const probability_pass = CNPStatistics.calculatePassProbability(
-                stats.mean,
-                consistency,
-                trendAnalysis.slope,
-                student.total_simulations
+            // Calcular probabilidad usando el modelo avanzado
+            const advancedPrediction = CNPStatistics.calculateAdvancedPrediction(
+                student,
+                studentResults
             );
+            
+            const probability_pass = advancedPrediction.probability;
             
             // Generar recomendaciones
             const recommendations = this.generatePersonalizedRecommendations(
@@ -1455,16 +1458,20 @@ async createTopicIntervention() {
                 probability_pass,
                 trendAnalysis,
                 responsePatterns,
-                risk_level: riskAnalysis.level,
-                calculated_risk_level: riskAnalysis.level,
-                recommendations,
+                risk_level: advancedPrediction.riskLevel || riskAnalysis.level,
+                calculated_risk_level: advancedPrediction.riskLevel || riskAnalysis.level,
+                recommendations: [...advancedPrediction.recommendations, ...recommendations].slice(0, 5),
                 best_score: stats.max,
                 worst_score: stats.min,
                 average_score: stats.mean,
+                projected_score: advancedPrediction.projectedScore,
                 probability_details: {
                     confidence: {
-                        margin: Math.max(5, 20 - (studentResults.length * 2))
-                    }
+                        margin: Math.max(5, 20 - (studentResults.length * 2)),
+                        level: advancedPrediction.confidence,
+                        interval: advancedPrediction.confidenceInterval
+                    },
+                    keyFactors: advancedPrediction.keyFactors
                 }
             };
             
