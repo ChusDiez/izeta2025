@@ -25,6 +25,14 @@ export default class StudentDetailModule {
             // Mostrar loading
             container.innerHTML = this.getLoadingTemplate();
             
+            // Cargar todos los resultados de exámenes para calcular percentiles y P80
+            const { data: allResults } = await this.supabase
+                .from('user_results')
+                .select('simulation_id, user_id, score')
+                .order('score', { ascending: true });
+            
+            this.allExamResults = allResults || [];
+            
             // Cargar datos del estudiante
             const { student, results, analytics, eloHistory, medals, alerts, evolcampusData } = await this.loadStudentData(studentId);
             this.currentStudent = student;
@@ -1989,8 +1997,12 @@ Un saludo,
     renderTimelineCard(result, index, allResults) {
         const prevResult = index < allResults.length - 1 ? allResults[index + 1] : null;
         const improvement = prevResult ? result.score - prevResult.score : 0;
-        const percentile = this.calculatePercentile(result);
-        const date = new Date(result.submitted_at);
+        
+        // Calcular percentil real y nota de corte P80 para este simulacro
+        const simulationStats = this.calculateSimulationStats(result.simulation_id);
+        const percentile = simulationStats.percentiles[result.user_id] || this.calculatePercentile(result);
+        const notaCorteP80 = simulationStats.p80 || 7.5;
+        const vsCorte = result.score - notaCorteP80;
         
         return `
             <div class="timeline-card ${this.getCardClass(result)}" 
@@ -2005,6 +2017,12 @@ Un saludo,
                     <div class="score-visual">
                         <div class="score-ring" style="--score: ${result.score * 10}">
                             <span class="score-value">${result.score.toFixed(1)}</span>
+                        </div>
+                        <div class="percentile-info">
+                            <span class="percentile-badge">P${percentile}</span>
+                            <span class="cutoff-info ${vsCorte >= 0 ? 'above' : 'below'}">
+                                ${vsCorte >= 0 ? '✓' : '✗'} P80: ${notaCorteP80.toFixed(1)}
+                            </span>
                         </div>
                     </div>
                     
@@ -2026,8 +2044,10 @@ Un saludo,
                         </div>
                         
                         <div class="exam-stat">
-                            <span class="stat-label">Posición</span>
-                            <span class="stat">P${percentile}</span>
+                            <span class="stat-label">Vs. Corte</span>
+                            <span class="stat ${vsCorte >= 0 ? 'positive' : 'negative'}">
+                                ${vsCorte >= 0 ? '+' : ''}${vsCorte.toFixed(1)}
+                            </span>
                         </div>
                         
                         ${result.time_taken ? `
@@ -2603,10 +2623,14 @@ Un saludo,
         const timeDiff = (exam2.time_taken || 0) - (exam1.time_taken || 0);
         const blankDiff = (exam2.blank_answers || 0) - (exam1.blank_answers || 0);
         
-        // Calcular percentiles relativos a la nota de corte (7.5)
-        const notaCorte = 7.5;
-        const percentil1 = this.calculatePercentileVsCorte(exam1.score, notaCorte);
-        const percentil2 = this.calculatePercentileVsCorte(exam2.score, notaCorte);
+        // Obtener estadísticas y P80 de cada simulacro
+        const stats1 = this.calculateSimulationStats(exam1.simulation_id);
+        const stats2 = this.calculateSimulationStats(exam2.simulation_id);
+        
+        const notaCorte1 = stats1.p80;
+        const notaCorte2 = stats2.p80;
+        const percentil1 = stats1.percentiles[exam1.user_id] || this.calculatePercentile(exam1);
+        const percentil2 = stats2.percentiles[exam2.user_id] || this.calculatePercentile(exam2);
         
         resultDiv.innerHTML = `
             <div class="exam-comparison">
@@ -2631,20 +2655,20 @@ Un saludo,
                     </div>
                     
                     <div class="comparison-metric">
-                        <div class="metric-header">Vs. Nota de Corte (7.5)</div>
+                        <div class="metric-header">Vs. Nota de Corte (P80)</div>
                         <div class="metric-values">
                             <div class="value-box">
-                                <span class="${exam1.score >= notaCorte ? 'above-cutoff' : 'below-cutoff'}">
-                                    ${exam1.score >= notaCorte ? '+' : ''}${(exam1.score - notaCorte).toFixed(1)}
+                                <span class="${exam1.score >= notaCorte1 ? 'above-cutoff' : 'below-cutoff'}">
+                                    ${exam1.score >= notaCorte1 ? '+' : ''}${(exam1.score - notaCorte1).toFixed(1)}
                                 </span>
-                                <small>P${percentil1}</small>
+                                <small>P${percentil1} | Corte: ${notaCorte1.toFixed(1)}</small>
                             </div>
                             <div class="trend-indicator">→</div>
                             <div class="value-box">
-                                <span class="${exam2.score >= notaCorte ? 'above-cutoff' : 'below-cutoff'}">
-                                    ${exam2.score >= notaCorte ? '+' : ''}${(exam2.score - notaCorte).toFixed(1)}
+                                <span class="${exam2.score >= notaCorte2 ? 'above-cutoff' : 'below-cutoff'}">
+                                    ${exam2.score >= notaCorte2 ? '+' : ''}${(exam2.score - notaCorte2).toFixed(1)}
                                 </span>
-                                <small>P${percentil2}</small>
+                                <small>P${percentil2} | Corte: ${notaCorte2.toFixed(1)}</small>
                             </div>
                         </div>
                     </div>
@@ -2750,6 +2774,54 @@ Un saludo,
         const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
         
         return sign * y;
+    }
+
+    calculateSimulationStats(simulationId) {
+        // Cache para evitar recalcular constantemente
+        if (!this.simulationStatsCache) {
+            this.simulationStatsCache = {};
+        }
+        
+        if (this.simulationStatsCache[simulationId]) {
+            return this.simulationStatsCache[simulationId];
+        }
+        
+        // Obtener todos los resultados de este simulacro desde allExamResults
+        const simulationResults = this.allExamResults?.filter(r => 
+            r.simulation_id === simulationId
+        ) || [];
+        
+        if (simulationResults.length === 0) {
+            return { p80: 7.5, percentiles: {} };
+        }
+        
+        // Ordenar por puntuación
+        const sortedScores = simulationResults
+            .map(r => ({ user_id: r.user_id, score: r.score }))
+            .sort((a, b) => a.score - b.score);
+        
+        // Calcular P80 (percentil 80)
+        const p80Index = Math.floor(sortedScores.length * 0.8);
+        const p80 = sortedScores[p80Index]?.score || 7.5;
+        
+        // Calcular percentil de cada estudiante
+        const percentiles = {};
+        sortedScores.forEach((result, index) => {
+            const percentile = Math.round((index + 1) / sortedScores.length * 100);
+            percentiles[result.user_id] = percentile;
+        });
+        
+        // Guardar en caché
+        this.simulationStatsCache[simulationId] = {
+            p80: p80,
+            percentiles: percentiles,
+            totalStudents: sortedScores.length,
+            mean: sortedScores.reduce((sum, r) => sum + r.score, 0) / sortedScores.length,
+            min: sortedScores[0]?.score,
+            max: sortedScores[sortedScores.length - 1]?.score
+        };
+        
+        return this.simulationStatsCache[simulationId];
     }
     
     filterByTopic(topic) {

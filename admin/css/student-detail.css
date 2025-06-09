@@ -495,6 +495,7 @@
 /* Score visual con anillo */
 .score-visual {
     position: relative;
+    text-align: center;
 }
 
 .score-ring {
@@ -528,6 +529,40 @@
     font-weight: 700;
     color: #1e293b;
     z-index: 1;
+}
+
+.percentile-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.percentile-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 12px;
+}
+
+.cutoff-info {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.cutoff-info.above {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.cutoff-info.below {
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .exam-stats-grid {
