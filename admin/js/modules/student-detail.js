@@ -50,99 +50,94 @@ export default class StudentDetailModule {
     renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts, evolcampusData) {
         return `
             <div class="student-detail-page">
-                <!-- Header con información principal -->
-                <div class="student-header">
-                    <button class="btn btn-secondary" onclick="window.dashboardAdmin.showPage('students')">
-                        ← Volver a estudiantes
-                    </button>
-                    
-                    <div class="student-info-header">
-                        <h1>${student.username}</h1>
-                        <div class="student-meta">
-                            <span class="badge badge-info">${student.cohort}</span>
-                            <span class="student-email">${student.email}</span>
-                            <span class="student-slug">Código: ${student.slug}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="quick-actions">
-                        <button class="btn btn-primary" onclick="window.studentDetail.openEmailModal()">
-                            ✉️ Enviar Email
-                        </button>
-                        <button class="btn btn-secondary" onclick="window.studentDetail.exportStudentReport()">
-                            📄 Exportar Informe
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Panel de métricas principales -->
-                <div class="metrics-panel">
-                    ${this.renderMetricsCards(student, analytics)}
-                </div>
-                
-                <!-- Alerta de riesgo si es necesario -->
-                ${this.renderRiskAlert(student, analytics)}
-                
-                <!-- Tabs de contenido -->
-                <div class="student-tabs">
-                    <div class="tab-headers">
-                        <button class="tab-header active" data-tab="evolution">
-                            📈 Evolución
-                        </button>
-                        <button class="tab-header" data-tab="results">
-                            📊 Resultados Detallados
-                        </button>
-                        <button class="tab-header" data-tab="analysis">
-                            🔍 Análisis Profundo
-                        </button>
-                        <button class="tab-header" data-tab="communication">
-                            💬 Comunicación
-                        </button>
-                        <button class="tab-header" data-tab="evolcampus">
-                            📚 Evolcampus
+                <!-- Header compacto con acciones -->
+                <div class="student-header-compact">
+                    <div class="header-nav">
+                        <button class="btn btn-ghost" onclick="window.dashboardAdmin.showPage('students')">
+                            ← Volver
                         </button>
                     </div>
                     
-                    <div class="tab-content">
-                        <!-- Tab de Evolución -->
-                        <div class="tab-pane active" id="evolution-tab">
-                            <div class="charts-grid">
-                                <div class="chart-container">
-                                    <h3>Evolución de Puntuaciones</h3>
-                                    <canvas id="scoreEvolutionChart"></canvas>
-                                </div>
-                                <div class="chart-container">
-                                    <h3>Progresión ELO</h3>
-                                    <canvas id="eloProgressionChart"></canvas>
-                                </div>
-                            </div>
-                            
-                            <div class="insights-section">
-                                <h3>💡 Insights Detectados</h3>
-                                ${this.renderInsights(analytics)}
+                    <div class="header-main">
+                        <div class="student-identity">
+                            <h1>${student.username}</h1>
+                            <div class="student-tags">
+                                <span class="tag tag-cohort">${student.cohort}</span>
+                                <span class="tag tag-email">${student.email}</span>
+                                <span class="tag tag-code">ID: ${student.slug}</span>
                             </div>
                         </div>
                         
-                        <!-- Tab de Resultados -->
-                        <div class="tab-pane" id="results-tab">
-                            ${this.renderResultsTable(results)}
-                        </div>
-                        
-                        <!-- Tab de Análisis -->
-                        <div class="tab-pane" id="analysis-tab">
-                            ${this.renderDetailedAnalysis(student, analytics, results)}
-                        </div>
-                        
-                        <!-- Tab de Comunicación -->
-                        <div class="tab-pane" id="communication-tab">
-                            ${this.renderCommunicationHistory(student)}
-                        </div>
-                        
-                        <!-- Tab de Evolcampus -->
-                        <div class="tab-pane" id="evolcampus-tab">
-                            ${this.renderEvolcampusProgress(student)}
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="window.studentDetail.openEmailModal()">
+                                <span class="btn-icon">✉️</span>
+                                Contactar
+                            </button>
+                            <button class="btn btn-secondary" onclick="window.studentDetail.exportStudentReport()">
+                                <span class="btn-icon">📊</span>
+                                Exportar
+                            </button>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Vista principal continua - Patient Chart Style -->
+                <div class="student-journey">
+                    <!-- 1. Resumen ejecutivo visual -->
+                    <section class="journey-section executive-summary">
+                        <h2 class="section-title">
+                            <span class="section-icon">📊</span>
+                            Resumen del Estudiante
+                        </h2>
+                        <div class="summary-grid">
+                            ${this.renderVisualSummary(student, analytics)}
+                        </div>
+                    </section>
+                    
+                    <!-- 2. Timeline interactivo de exámenes -->
+                    <section class="journey-section exam-timeline">
+                        <h2 class="section-title">
+                            <span class="section-icon">📈</span>
+                            Historial de Simulacros
+                        </h2>
+                        ${this.renderInteractiveTimeline(results)}
+                    </section>
+                    
+                    <!-- 3. Análisis de patrones -->
+                    <section class="journey-section patterns-analysis">
+                        <h2 class="section-title">
+                            <span class="section-icon">🔍</span>
+                            Patrones Detectados
+                        </h2>
+                        ${this.renderPatternsGrid(analytics, results)}
+                    </section>
+                    
+                    <!-- 4. Evolcampus Progress integrado -->
+                    <section class="journey-section evolcampus-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📚</span>
+                            Progreso por Temas (Evolcampus)
+                        </h2>
+                        ${this.renderEvolcampusIntegrated(evolcampusData)}
+                    </section>
+                    
+                    <!-- 5. Recomendaciones personalizadas -->
+                    <section class="journey-section recommendations">
+                        <h2 class="section-title">
+                            <span class="section-icon">💡</span>
+                            Plan de Acción Personalizado
+                        </h2>
+                        ${this.renderActionPlan(student, analytics)}
+                    </section>
+                    
+                    <!-- 6. Historial de comunicación -->
+                    <section class="journey-section communication-history">
+                        <h2 class="section-title">
+                            <span class="section-icon">💬</span>
+                            Historial de Comunicación
+                        </h2>
+                        ${this.renderCommunicationHistory(student)}
+                    </section>
                 </div>
                 
                 <!-- Modal de Email -->
@@ -635,7 +630,7 @@ Un saludo,
             : 0;
 
         return stats;
-}
+    }
     async loadStudentResults(studentId) {
         const res = await this.safeQuery(
             this.supabase
@@ -1848,5 +1843,760 @@ Un saludo,
         
         container.innerHTML = topicsHtml;
         this.addVisualSummary(activities, groupedActivities);
+    }
+
+    // ==================== NUEVOS MÉTODOS PARA EL DASHBOARD UNIFICADO ====================
+    
+    renderVisualSummary(student, analytics) {
+        return `
+            <div class="metric-visualization">
+                <!-- Gauge de probabilidad de aprobar -->
+                <div class="probability-gauge-container">
+                    <div class="gauge-wrapper">
+                        <svg viewBox="0 0 200 120" class="probability-gauge">
+                            <defs>
+                                <linearGradient id="gaugeGradient">
+                                    <stop offset="0%" style="stop-color:#DC2626"/>
+                                    <stop offset="30%" style="stop-color:#F59E0B"/>
+                                    <stop offset="60%" style="stop-color:#FCD34D"/>
+                                    <stop offset="100%" style="stop-color:#10B981"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Arco de fondo -->
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" 
+                                  stroke="#E5E7EB" 
+                                  stroke-width="15" 
+                                  fill="none"/>
+                            <!-- Arco de progreso -->
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" 
+                                  stroke="url(#gaugeGradient)" 
+                                  stroke-width="15" 
+                                  fill="none"
+                                  stroke-dasharray="${student.probability_pass * 2.51} 251"
+                                  stroke-linecap="round"/>
+                            <!-- Indicador -->
+                            <circle cx="${20 + (student.probability_pass * 1.6)}" 
+                                    cy="${100 - Math.sin(student.probability_pass * 0.0157) * 80}" 
+                                    r="8" 
+                                    fill="#1E293B"/>
+                        </svg>
+                        <div class="gauge-value">
+                            <span class="value">${student.probability_pass}%</span>
+                            <span class="label">Probabilidad de Aprobar</span>
+                        </div>
+                    </div>
+                    <div class="gauge-status ${this.getProbabilityClass(student.probability_pass)}">
+                        ${this.getRiskText(student.probability_pass)}
+                    </div>
+                </div>
+                
+                <!-- Métricas clave con visualización -->
+                <div class="key-metrics-grid">
+                    ${this.renderKeyMetricCard('Puntuación Media', student.average_score?.toFixed(2) || 'N/A', 
+                        '/10', this.getScoreClass(student.average_score), '📊')}
+                    ${this.renderKeyMetricCard('ELO Actual', student.current_elo, 
+                        `${analytics.monthlyEloChange >= 0 ? '+' : ''}${analytics.monthlyEloChange}`, 
+                        analytics.monthlyEloChange >= 0 ? 'success' : 'danger', '⚡')}
+                    ${this.renderKeyMetricCard('Participación', analytics.participationRate + '%', 
+                        `${student.total_simulations} simulacros`, null, '📈')}
+                    ${this.renderKeyMetricCard('Mejor Racha', student.longest_streak || 0, 
+                        'semanas consecutivas', null, '🔥')}
+                </div>
+                
+                <!-- Mini heatmap de rendimiento por tema -->
+                <div class="topics-performance-overview">
+                    <h4>Rendimiento por Temas</h4>
+                    <div class="mini-heatmap">
+                        ${this.renderMiniTopicsHeatmap(analytics)}
+                    </div>
+                </div>
+                
+                <!-- Comparación con cohorte -->
+                <div class="cohort-comparison">
+                    <h4>Comparación con Cohorte ${student.cohort}</h4>
+                    ${this.renderCohortComparison(student, analytics)}
+                </div>
+            </div>
+        `;
+    }
+    
+    renderKeyMetricCard(title, value, subtitle, statusClass, icon) {
+        return `
+            <div class="key-metric-card ${statusClass || ''}">
+                <div class="metric-icon-large">${icon}</div>
+                <div class="metric-content">
+                    <div class="metric-title">${title}</div>
+                    <div class="metric-value-large">${value}</div>
+                    <div class="metric-subtitle">${subtitle}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderInteractiveTimeline(results) {
+        if (results.length === 0) {
+            return '<div class="no-data-message">No hay simulacros registrados aún.</div>';
+        }
+        
+        return `
+            <div class="timeline-container">
+                <div class="timeline-controls">
+                    <button onclick="window.studentDetail.zoomTimeline('week')" class="btn-timeline active">Última Semana</button>
+                    <button onclick="window.studentDetail.zoomTimeline('month')" class="btn-timeline">Último Mes</button>
+                    <button onclick="window.studentDetail.zoomTimeline('all')" class="btn-timeline">Todo</button>
+                </div>
+                
+                <div class="timeline-track">
+                    ${results.slice(0, 20).map((result, index) => 
+                        this.renderTimelineCard(result, index, results)
+                    ).join('')}
+                </div>
+                
+                <!-- Mini gráfico de tendencia debajo -->
+                <div class="trend-chart-container">
+                    <canvas id="trendMiniChart" height="80"></canvas>
+                </div>
+                
+                <!-- Comparador de exámenes -->
+                <div class="exam-comparator-section">
+                    <h4>Comparar Exámenes</h4>
+                    <div class="comparator-controls">
+                        <select id="exam1" class="exam-select">
+                            ${results.map(r => 
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10</option>`
+                            ).join('')}
+                        </select>
+                        <span class="vs-label">vs</span>
+                        <select id="exam2" class="exam-select">
+                            ${results.map(r => 
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10</option>`
+                            ).join('')}
+                        </select>
+                        <button onclick="window.studentDetail.compareExams()" class="btn btn-sm">Comparar</button>
+                    </div>
+                    <div id="comparisonResult"></div>
+                </div>
+            </div>
+        `;
+    }
+    
+    renderTimelineCard(result, index, allResults) {
+        const prevResult = index < allResults.length - 1 ? allResults[index + 1] : null;
+        const improvement = prevResult ? result.score - prevResult.score : 0;
+        const percentile = this.calculatePercentile(result);
+        
+        return `
+            <div class="timeline-card ${this.getCardClass(result)}" 
+                 onclick="window.studentDetail.expandExamDetail('${result.id}')">
+                
+                <div class="timeline-date">
+                    ${this.formatDateShort(result.submitted_at)}
+                </div>
+                
+                <div class="timeline-content">
+                    <div class="score-visual">
+                        <div class="score-ring" style="--score: ${result.score * 10}">
+                            <span class="score-value">${result.score.toFixed(1)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="exam-details">
+                        <h4>RF${result.weekly_simulations?.week_number}</h4>
+                        <div class="quick-stats">
+                            <span class="stat ${improvement >= 0 ? 'positive' : 'negative'}">
+                                ${improvement >= 0 ? '↗' : '↘'} ${Math.abs(improvement).toFixed(1)}
+                            </span>
+                            <span class="stat">P${percentile}</span>
+                            <span class="stat">${result.time_taken ? Math.round(result.time_taken/60) + 'min' : ''}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="exam-insights">
+                        ${this.getQuickInsights(result)}
+                    </div>
+                </div>
+                
+                <!-- Detalle expandible -->
+                <div class="timeline-detail" id="detail-${result.id}" style="display: none;">
+                    ${this.renderExamFullDetail(result)}
+                </div>
+            </div>
+        `;
+    }
+    
+    renderPatternsGrid(analytics, results) {
+        const patterns = [
+            {
+                icon: '📅',
+                title: 'Mejor día',
+                value: analytics.bestDay || 'Por determinar',
+                insight: analytics.bestDay ? `Rinde mejor los ${analytics.bestDay}` : 'Datos insuficientes'
+            },
+            {
+                icon: '⏰',
+                title: 'Tiempo óptimo',
+                value: this.calculateOptimalTime(results) + ' min',
+                insight: 'Su mejor rendimiento es con este tiempo'
+            },
+            {
+                icon: '📈',
+                title: 'Tendencia',
+                value: this.getTrendText(analytics.scoreTrend),
+                insight: this.getTrendMessage(analytics.scoreTrend)
+            },
+            {
+                icon: '🎯',
+                title: 'Consistencia',
+                value: this.getConsistencyPercentage(analytics.consistency) + '%',
+                insight: analytics.consistency < 1.5 ? 'Muy estable' : 'Variable'
+            },
+            {
+                icon: '💪',
+                title: 'Temas fuertes',
+                value: this.getStrongestTopics(results).length || 0,
+                insight: this.getStrongestTopics(results).join(', ') || 'Por identificar'
+            },
+            {
+                icon: '⚠️',
+                title: 'Áreas de mejora',
+                value: analytics.worstTopics?.length || 0,
+                insight: analytics.worstTopics?.slice(0, 2).join(', ') || 'Sin debilidades claras'
+            }
+        ];
+        
+        return `
+            <div class="patterns-grid">
+                ${patterns.map(p => `
+                    <div class="pattern-card">
+                        <div class="pattern-icon">${p.icon}</div>
+                        <div class="pattern-content">
+                            <h4>${p.title}</h4>
+                            <div class="pattern-value">${p.value}</div>
+                            <p class="pattern-insight">${p.insight}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <!-- Análisis de patrones avanzado -->
+            <div class="advanced-patterns">
+                <h4>🔬 Análisis Avanzado</h4>
+                ${this.renderAdvancedPatterns(analytics, results)}
+            </div>
+        `;
+    }
+    
+    renderEvolcampusIntegrated(evolcampusData) {
+        const activities = evolcampusData?.activities || [];
+        
+        if (activities.length === 0) {
+            return `
+                <div class="evolcampus-empty">
+                    <p>No hay datos de Evolcampus disponibles.</p>
+                    <button class="btn btn-primary" onclick="window.studentDetail.syncEvolcampusForStudent('${this.currentStudent?.email}')">
+                        🔄 Sincronizar Evolcampus
+                    </button>
+                </div>
+            `;
+        }
+        
+        const groupedByTopic = this.groupActivitiesByTopic(activities);
+        const cleanedTopics = this.cleanTopicNames(groupedByTopic);
+        
+        return `
+            <div class="evolcampus-integrated">
+                <!-- Controles de filtro por tema -->
+                <div class="topic-filters">
+                    <label>Filtrar por tema:</label>
+                    <select id="topicFilter" onchange="window.studentDetail.filterByTopic(this.value)" class="topic-select">
+                        <option value="all">Todos los temas</option>
+                        ${Object.keys(cleanedTopics).map(topic => 
+                            `<option value="${topic}">${this.getTopicDisplayName(topic)}</option>`
+                        ).join('')}
+                    </select>
+                    
+                    <div class="view-toggles">
+                        <button onclick="window.studentDetail.setEvolView('cards')" class="view-btn active">
+                            <span class="icon">📇</span> Tarjetas
+                        </button>
+                        <button onclick="window.studentDetail.setEvolView('table')" class="view-btn">
+                            <span class="icon">📊</span> Tabla
+                        </button>
+                        <button onclick="window.studentDetail.setEvolView('heatmap')" class="view-btn">
+                            <span class="icon">🗺️</span> Mapa
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Vista principal de temas -->
+                <div id="evolcampusContent" class="evolcampus-content">
+                    ${this.renderTopicsView(cleanedTopics)}
+                </div>
+                
+                <!-- Resumen estadístico -->
+                <div class="evolcampus-stats-summary">
+                    ${this.renderEvolcampusStatsSummary(evolcampusData)}
+                </div>
+            </div>
+        `;
+    }
+    
+    renderActionPlan(student, analytics) {
+        const actions = this.generatePersonalizedActions(student, analytics);
+        
+        return `
+            <div class="action-plan">
+                <div class="plan-timeline">
+                    ${actions.map((action, index) => `
+                        <div class="action-item ${action.priority}" data-action-id="${action.id}">
+                            <div class="action-number">${index + 1}</div>
+                            <div class="action-content">
+                                <h4>${action.title}</h4>
+                                <p>${action.description}</p>
+                                <div class="action-meta">
+                                    <span class="deadline">
+                                        <span class="icon">📅</span> ${action.deadline}
+                                    </span>
+                                    <span class="impact">
+                                        <span class="icon">💪</span> Impacto: ${this.renderImpactStars(action.impact)}
+                                    </span>
+                                </div>
+                            </div>
+                            <button class="btn-action" onclick="window.studentDetail.markActionComplete('${action.id}')">
+                                ✓ Completar
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Seguimiento del plan -->
+                <div class="plan-progress">
+                    <h4>📊 Progreso del Plan</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${this.calculatePlanProgress(actions)}%"></div>
+                    </div>
+                    <p class="progress-text">${this.calculatePlanProgress(actions)}% completado</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ==================== MÉTODOS AUXILIARES NUEVOS ====================
+    
+    calculatePercentile(result) {
+        // Calcular percentil basado en la posición si está disponible
+        if (result.position && result.total_participants) {
+            return Math.round((1 - result.position / result.total_participants) * 100);
+        }
+        // Estimación basada en el score
+        return Math.round(result.score * 10);
+    }
+    
+    getCardClass(result) {
+        if (result.score >= 8) return 'excellent';
+        if (result.score >= 6.5) return 'good';
+        if (result.score >= 5) return 'warning';
+        return 'danger';
+    }
+    
+    formatDateShort(dateStr) {
+        const date = new Date(dateStr);
+        const options = { day: 'numeric', month: 'short' };
+        return date.toLocaleDateString('es-ES', options);
+    }
+    
+    getQuickInsights(result) {
+        const insights = [];
+        
+        if (result.correct_answers > result.wrong_answers * 2) {
+            insights.push('<span class="insight-pill positive">Buen dominio</span>');
+        }
+        if (result.blank_answers > 5) {
+            insights.push('<span class="insight-pill warning">Muchas en blanco</span>');
+        }
+        if (result.time_taken && result.time_taken < 2400) {
+            insights.push('<span class="insight-pill">Rápido</span>');
+        }
+        
+        return insights.join('');
+    }
+    
+    renderExamFullDetail(result) {
+        return `
+            <div class="exam-full-detail">
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h5>Respuestas</h5>
+                        <div class="answers-breakdown">
+                            <div class="answer-stat correct">✓ ${result.correct_answers}</div>
+                            <div class="answer-stat wrong">✗ ${result.wrong_answers}</div>
+                            <div class="answer-stat blank">○ ${result.blank_answers}</div>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h5>Rendimiento</h5>
+                        <p>Posición: ${result.position || 'N/A'}</p>
+                        <p>Tiempo: ${result.time_taken ? Math.round(result.time_taken/60) + ' min' : 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    calculateOptimalTime(results) {
+        const validTimes = results
+            .filter(r => r.time_taken && r.score >= 7)
+            .map(r => r.time_taken);
+        
+        if (validTimes.length === 0) return 45;
+        
+        const avgTime = validTimes.reduce((a, b) => a + b, 0) / validTimes.length;
+        return Math.round(avgTime / 60);
+    }
+    
+    getTrendText(trend) {
+        const trendMap = {
+            'up': 'Mejorando',
+            'down': 'Bajando',
+            'stable': 'Estable',
+            'neutral': 'Sin tendencia'
+        };
+        return trendMap[trend] || 'Por determinar';
+    }
+    
+    getTrendMessage(trend) {
+        const messages = {
+            'up': 'Excelente progreso, mantén el ritmo',
+            'down': 'Necesita atención y apoyo',
+            'stable': 'Rendimiento consistente',
+            'neutral': 'Continúa practicando'
+        };
+        return messages[trend] || 'Continúa practicando';
+    }
+    
+    getConsistencyPercentage(consistency) {
+        // Convertir desviación estándar a porcentaje de consistencia
+        if (!consistency || consistency === 0) return 100;
+        return Math.max(0, Math.round(100 - (consistency * 20)));
+    }
+    
+    getStrongestTopics(results) {
+        // Análisis simplificado de temas fuertes
+        const strongTopics = [];
+        // Por ahora retornamos un array vacío, pero aquí iría la lógica real
+        return strongTopics;
+    }
+    
+    renderAdvancedPatterns(analytics, results) {
+        return `
+            <div class="advanced-patterns-content">
+                <p>Análisis detallado basado en ${results.length} simulacros.</p>
+                <!-- Aquí irían visualizaciones más complejas -->
+            </div>
+        `;
+    }
+    
+    cleanTopicNames(groupedTopics) {
+        const cleaned = {};
+        
+        Object.entries(groupedTopics).forEach(([topic, activities]) => {
+            // Filtrar temas que son nombres de profesores
+            const cleanTopic = this.extractRealTopicName(topic);
+            if (cleanTopic && !this.isProfessorName(cleanTopic)) {
+                if (!cleaned[cleanTopic]) {
+                    cleaned[cleanTopic] = [];
+                }
+                cleaned[cleanTopic].push(...activities);
+            }
+        });
+        
+        return cleaned;
+    }
+    
+    extractRealTopicName(topic) {
+        // Extraer número de tema si existe
+        const match = topic.match(/tema\s*(\d+)/i);
+        if (match) {
+            return `T${match[1]}`;
+        }
+        
+        // Si ya es formato T#
+        if (topic.match(/^T\d+$/)) {
+            return topic;
+        }
+        
+        // Si es "GENERAL" o similar
+        if (topic.toUpperCase() === 'GENERAL' || topic.toUpperCase() === 'SIN CATEGORÍA') {
+            return 'GENERAL';
+        }
+        
+        return topic;
+    }
+    
+    isProfessorName(topic) {
+        // Lista de palabras que indican que es un nombre de profesor
+        const professorIndicators = [
+            'prof', 'profesor', 'dr', 'dra', 'lic', 'ing', 'mgtr', 
+            'msc', 'phd', 'maestro', 'maestra'
+        ];
+        
+        const lowerTopic = topic.toLowerCase();
+        
+        // Si contiene indicadores de profesor
+        if (professorIndicators.some(indicator => lowerTopic.includes(indicator))) {
+            return true;
+        }
+        
+        // Si parece un nombre completo (tiene espacios y no números)
+        if (lowerTopic.includes(' ') && !lowerTopic.match(/\d/) && !lowerTopic.includes('tema')) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    getTopicDisplayName(topic) {
+        if (topic === 'GENERAL') return '📚 Temas Generales';
+        if (topic.match(/^T\d+$/)) return `📖 Tema ${topic.substring(1)}`;
+        return `📁 ${topic}`;
+    }
+    
+    renderTopicsView(topics) {
+        return Object.entries(topics).map(([topic, activities]) => {
+            const stats = this.calculateTopicStats(activities);
+            
+            return `
+                <div class="topic-card" data-topic="${topic}">
+                    <div class="topic-card-header">
+                        <h4>${this.getTopicDisplayName(topic)}</h4>
+                        <div class="topic-stats-inline">
+                            <span class="stat-badge">${stats.completed}/${stats.total}</span>
+                            <span class="stat-badge ${this.getScoreClass(stats.avgScore)}">
+                                ${stats.avgScore.toFixed(1)}/10
+                            </span>
+                        </div>
+                    </div>
+                    <div class="topic-progress">
+                        <div class="progress-bar-thin">
+                            <div class="progress-fill" style="width: ${stats.completionRate}%"></div>
+                        </div>
+                    </div>
+                    <div class="topic-activities-preview">
+                        ${activities.slice(0, 3).map(a => `
+                            <div class="activity-mini">
+                                <span class="activity-name">${a.activity}</span>
+                                <span class="activity-score ${this.getScoreClassForTest(a.score)}">
+                                    ${a.score !== null ? a.score.toFixed(1) : '—'}
+                                </span>
+                            </div>
+                        `).join('')}
+                        ${activities.length > 3 ? `<div class="more-link">+${activities.length - 3} más...</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    calculateTopicStats(activities) {
+        const completed = activities.filter(a => a.done).length;
+        const withScores = activities.filter(a => a.score !== null);
+        const avgScore = withScores.length > 0 
+            ? withScores.reduce((sum, a) => sum + a.score, 0) / withScores.length 
+            : 0;
+        
+        return {
+            total: activities.length,
+            completed,
+            avgScore,
+            completionRate: activities.length > 0 ? (completed / activities.length * 100) : 0
+        };
+    }
+    
+    renderEvolcampusStatsSummary(evolcampusData) {
+        const stats = evolcampusData.stats || {};
+        
+        return `
+            <div class="stats-summary-grid">
+                <div class="summary-stat">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${stats.averageGrade || 0}</div>
+                        <div class="stat-label">Nota Media</div>
+                    </div>
+                </div>
+                <div class="summary-stat">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${stats.completionPercentage || 0}%</div>
+                        <div class="stat-label">Completado</div>
+                    </div>
+                </div>
+                <div class="summary-stat ${stats.zeroScoreActivities > 0 ? 'warning' : ''}">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${stats.zeroScoreActivities || 0}</div>
+                        <div class="stat-label">Con Nota 0</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    generatePersonalizedActions(student, analytics) {
+        const actions = [];
+        const probability = student.probability_pass || 50;
+        
+        // Acciones basadas en probabilidad de aprobar
+        if (probability < 40) {
+            actions.push({
+                id: 'urgent-meeting',
+                title: '🚨 Reunión urgente de evaluación',
+                description: 'Programar una sesión individual para evaluar situación y crear plan de recuperación',
+                deadline: 'Esta semana',
+                impact: 5,
+                priority: 'critical'
+            });
+        }
+        
+        // Acciones basadas en participación
+        if (analytics.participationRate < 50) {
+            actions.push({
+                id: 'increase-participation',
+                title: '📅 Aumentar participación en simulacros',
+                description: 'Establecer recordatorios y seguimiento semanal para asegurar participación',
+                deadline: 'Inmediato',
+                impact: 4,
+                priority: 'high'
+            });
+        }
+        
+        // Acciones basadas en tendencia
+        if (analytics.scoreTrend === 'down') {
+            actions.push({
+                id: 'reverse-trend',
+                title: '📉 Revertir tendencia negativa',
+                description: 'Identificar causas de la bajada de rendimiento y aplicar medidas correctivas',
+                deadline: 'Próximos 15 días',
+                impact: 4,
+                priority: 'high'
+            });
+        }
+        
+        // Acciones basadas en temas débiles
+        if (analytics.worstTopics && analytics.worstTopics.length > 0) {
+            actions.push({
+                id: 'reinforce-topics',
+                title: '📚 Reforzar temas débiles',
+                description: `Sesiones específicas para: ${analytics.worstTopics.slice(0, 3).join(', ')}`,
+                deadline: 'Próximo mes',
+                impact: 3,
+                priority: 'medium'
+            });
+        }
+        
+        // Acción general de seguimiento
+        actions.push({
+            id: 'regular-followup',
+            title: '👥 Seguimiento regular',
+            description: 'Mantener comunicación quincenal para monitorear progreso',
+            deadline: 'Continuo',
+            impact: 2,
+            priority: 'normal'
+        });
+        
+        return actions;
+    }
+    
+    renderImpactStars(impact) {
+        return '⭐'.repeat(impact);
+    }
+    
+    calculatePlanProgress(actions) {
+        // Por ahora retornamos 0, pero aquí iría la lógica real de progreso
+        return 0;
+    }
+    
+    renderMiniTopicsHeatmap(analytics) {
+        // Versión simplificada del heatmap de temas
+        return '<div class="mini-heatmap-placeholder">Heatmap de temas en desarrollo</div>';
+    }
+    
+    renderCohortComparison(student, analytics) {
+        return `
+            <div class="cohort-comparison-chart">
+                <div class="comparison-metric">
+                    <span class="metric-name">Tu estudiante</span>
+                    <div class="comparison-bar">
+                        <div class="bar-fill student" style="width: ${student.average_score * 10}%"></div>
+                    </div>
+                    <span class="metric-value">${student.average_score?.toFixed(1) || 'N/A'}</span>
+                </div>
+                <div class="comparison-metric">
+                    <span class="metric-name">Media cohorte</span>
+                    <div class="comparison-bar">
+                        <div class="bar-fill cohort" style="width: 65%"></div>
+                    </div>
+                    <span class="metric-value">6.5</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ==================== MÉTODOS DE INTERACCIÓN ====================
+    
+    expandExamDetail(examId) {
+        const detail = document.getElementById(`detail-${examId}`);
+        if (detail) {
+            detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+    
+    zoomTimeline(period) {
+        // Cambiar el zoom del timeline
+        document.querySelectorAll('.btn-timeline').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        // Aquí iría la lógica real de zoom
+    }
+    
+    compareExams() {
+        const exam1Id = document.getElementById('exam1').value;
+        const exam2Id = document.getElementById('exam2').value;
+        const resultDiv = document.getElementById('comparisonResult');
+        
+        // Aquí iría la lógica real de comparación
+        resultDiv.innerHTML = '<p>Comparación de exámenes en desarrollo...</p>';
+    }
+    
+    filterByTopic(topic) {
+        const cards = document.querySelectorAll('.topic-card');
+        
+        if (topic === 'all') {
+            cards.forEach(card => card.style.display = 'block');
+        } else {
+            cards.forEach(card => {
+                card.style.display = card.dataset.topic === topic ? 'block' : 'none';
+            });
+        }
+    }
+    
+    setEvolView(viewType) {
+        document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.closest('.view-btn').classList.add('active');
+        
+        // Aquí iría la lógica real de cambio de vista
+        const content = document.getElementById('evolcampusContent');
+        if (viewType === 'table') {
+            content.classList.add('table-view');
+        } else {
+            content.classList.remove('table-view');
+        }
+    }
+    
+    markActionComplete(actionId) {
+        const actionItem = document.querySelector(`[data-action-id="${actionId}"]`);
+        if (actionItem) {
+            actionItem.classList.add('completed');
+            this.dashboard.showNotification('success', '✅ Acción marcada como completada');
+        }
     }
 }

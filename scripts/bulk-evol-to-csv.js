@@ -175,6 +175,74 @@ class EvolcampusBulkProcessor {
     }
 
     /**
+     * Limpiar y normalizar el código del tema
+     */
+    cleanTopicCode(topicText) {
+        if (!topicText) return 'GENERAL';
+        
+        const text = topicText.toString().trim();
+        
+        // Lista de indicadores de que es un nombre de profesor
+        const professorIndicators = [
+            'prof', 'profesor', 'profa', 'profesora', 'dr', 'dra', 'lic', 
+            'ing', 'mgtr', 'msc', 'mba', 'phd', 'maestro', 'maestra',
+            'docente', 'catedrático', 'catedrática'
+        ];
+        
+        // Si el texto contiene algún indicador de profesor, ignorarlo
+        const lowerText = text.toLowerCase();
+        if (professorIndicators.some(indicator => lowerText.includes(indicator))) {
+            return 'GENERAL';
+        }
+        
+        // Si parece un nombre completo (tiene más de 2 palabras y no contiene números ni "tema")
+        const words = text.split(/\s+/);
+        if (words.length > 2 && !text.match(/\d/) && !lowerText.includes('tema')) {
+            // Probablemente es un nombre de persona
+            return 'GENERAL';
+        }
+        
+        // Extraer patrones de tema conocidos
+        // Patrón 1: "Tema X" o "TEMA X"
+        const temaMatch = text.match(/tema\s*(\d+)/i);
+        if (temaMatch) {
+            return `T${temaMatch[1]}`;
+        }
+        
+        // Patrón 2: "TX" donde X es un número
+        const tMatch = text.match(/\b(T\d+)\b/i);
+        if (tMatch) {
+            return tMatch[1].toUpperCase();
+        }
+        
+        // Patrón 3: Solo número (ej: "5" -> "T5")
+        if (text.match(/^\d+$/)) {
+            return `T${text}`;
+        }
+        
+        // Patrón 4: "Unidad X" o "Bloque X"
+        const unitMatch = text.match(/(?:unidad|bloque)\s*(\d+)/i);
+        if (unitMatch) {
+            return `T${unitMatch[1]}`;
+        }
+        
+        // Si no coincide con ningún patrón conocido, verificar si es un tema válido
+        // Lista de temas válidos que no son nombres de personas
+        const validTopics = ['general', 'repaso', 'simulacro', 'examen', 'test', 'evaluación'];
+        if (validTopics.some(topic => lowerText.includes(topic))) {
+            return text.toUpperCase();
+        }
+        
+        // Si tiene caracteres especiales raros o parece código, ignorar
+        if (text.match(/[^\w\s\-áéíóúñÁÉÍÓÚÑ]/)) {
+            return 'GENERAL';
+        }
+        
+        // Por defecto, si no podemos determinar qué es, usar GENERAL
+        return 'GENERAL';
+    }
+
+    /**
      * Extraer tests del Excel
      */
     extractTests(rows, studentInfo, fileName) {
@@ -225,19 +293,9 @@ class EvolcampusBulkProcessor {
             const score = parseFloat(row[columns.score]) || 0;
             const maxScore = parseFloat(row[columns.maxScore]) || CONFIG.defaultMaxScore;
             
-            // Extraer código del tema
-            let topicCode = 'GENERAL';
+            // Extraer y limpiar código del tema
             const topicText = row[columns.topic] || row[columns.subject] || '';
-            
-            // Intentar extraer "Tema X"
-            const temaMatch = topicText.match(/tema\s*(\d+)/i);
-            if (temaMatch) {
-                topicCode = `Tema ${temaMatch[1]}`;
-            } else if (topicText.match(/\b(T\d+)\b/i)) {
-                topicCode = topicText.match(/\b(T\d+)\b/i)[1].toUpperCase();
-            } else if (topicText) {
-                topicCode = topicText.trim();
-            }
+            const topicCode = this.cleanTopicCode(topicText);
             
             // IMPORTANTE: Incluir TODOS los tests, incluso con nota 0
             if (CONFIG.includeZeroScores || score > 0) {
