@@ -1190,6 +1190,7 @@ Un saludo,
         
         const activities = evolcampusData.activities || [];
         const enrollment = evolcampusData.enrollment;
+        const stats = evolcampusData.stats;
 
         /* ─────────  A. Cabecera de estadísticas mejorada  ───────── */
         if (enrollment) {
