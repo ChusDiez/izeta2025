@@ -373,6 +373,15 @@
     max-width: 100%; /* Asegurar que use todo el ancho disponible */
 }
 
+/* Hacer la sección más ancha */
+.journey-section.exam-timeline {
+    max-width: 100%;
+    margin-left: -2rem;
+    margin-right: -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
 .timeline-controls {
     display: flex;
     gap: 0.5rem;
@@ -403,22 +412,22 @@
 }
 
 .timeline-track {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Forzar 2 columnas */
-    gap: 1rem; /* Reducido de 1.25rem */
-    padding: 1rem; /* Reducido de 1.5rem */
-    max-height: 500px; /* Reducido de 600px */
-    overflow-y: auto;
+    display: flex;
+    flex-wrap: nowrap; /* Mantener en una línea horizontal */
+    gap: 1.5rem;
+    padding: 1.5rem;
+    max-height: 400px; /* Altura reducida pero funcional */
+    overflow-x: auto; /* Scroll horizontal */
+    overflow-y: hidden;
     background: #f8fafc;
     border-radius: 12px;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
-    min-width: 700px; /* Ancho mínimo para asegurar que se vean bien */
 }
 
 .timeline-track::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
+    height: 10px; /* Más alto para el scroll horizontal */
 }
 
 .timeline-track::-webkit-scrollbar-track {
@@ -436,16 +445,18 @@
 }
 
 .timeline-card {
-    min-width: 100%;
+    min-width: 350px; /* Ancho mínimo fijo para cada tarjeta */
+    max-width: 400px; /* Ancho máximo */
     background: white;
     border-radius: 12px;
-    padding: 1rem; /* Reducido de 1.5rem */
+    padding: 1.25rem; /* Ajustado para mejor balance */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     transition: all 0.3s;
     position: relative;
     border: 2px solid #e5e7eb;
     height: fit-content;
+    flex-shrink: 0; /* Evitar que se compriman */
 }
 
 .timeline-card:hover {
@@ -473,7 +484,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem; /* Reducido de 1rem */
+    margin-bottom: 0.75rem;
 }
 
 .timeline-header h4 {
@@ -492,7 +503,7 @@
 .timeline-content {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Reducido de 1rem */
+    gap: 0.75rem;
 }
 
 /* Score visual con anillo */
@@ -502,8 +513,8 @@
 }
 
 .score-ring {
-    width: 60px;
-    height: 60px;
+    width: 80px; /* Aumentado de 60px */
+    height: 80px; /* Aumentado de 60px */
     position: relative;
     background: conic-gradient(
         #3b82f6 0deg,
@@ -520,15 +531,15 @@
 .score-ring::before {
     content: '';
     position: absolute;
-    width: 48px;
-    height: 48px;
+    width: 64px; /* Aumentado proporcionalmente */
+    height: 64px; /* Aumentado proporcionalmente */
     background: white;
     border-radius: 50%;
 }
 
 .score-value {
     position: relative;
-    font-size: 1.125rem;
+    font-size: 1.5rem; /* Aumentado de 1.125rem */
     font-weight: 700;
     color: #1e293b;
     z-index: 1;
@@ -539,7 +550,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 0.25rem; /* Reducido de 0.5rem */
+    margin-top: 0.5rem;
 }
 
 .percentile-badge {
@@ -571,8 +582,8 @@
 .exam-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem; /* Reducido de 0.75rem */
-    margin-top: 0.5rem; /* Reducido de 1rem */
+    gap: 0.75rem;
+    margin-top: 0.75rem;
 }
 
 .exam-stat {
