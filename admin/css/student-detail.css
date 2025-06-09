@@ -402,11 +402,13 @@
 
 .timeline-track {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    padding: 1rem 0 2rem;
-    max-height: 400px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+    padding: 1.5rem;
+    max-height: 600px;
     overflow-y: auto;
+    background: #f8fafc;
+    border-radius: 12px;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
 }
@@ -431,17 +433,16 @@
 }
 
 .timeline-card {
-    min-width: 250px;
-    max-width: 320px;
+    min-width: 100%;
     background: white;
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     transition: all 0.3s;
-    scroll-snap-align: start;
     position: relative;
-    border: 2px solid transparent;
+    border: 2px solid #e5e7eb;
+    height: fit-content;
 }
 
 .timeline-card:hover {
@@ -1522,4 +1523,171 @@ textarea.form-control {
         margin-bottom: 1rem;
         page-break-inside: avoid;
     }
+}
+
+/* Comparación de exámenes */
+.exam-comparison {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.exam-comparison h5 {
+    margin-bottom: 1.5rem;
+    color: #1e293b;
+}
+
+.comparison-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.comparison-metric {
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.metric-header {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.metric-values {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.value-box {
+    text-align: center;
+    padding: 0.75rem 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    min-width: 80px;
+}
+
+.value-box strong {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.value-box span {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.value-box.success {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.value-box.danger {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.value-box small {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.trend-indicator {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.trend-indicator.positive {
+    color: #10b981;
+}
+
+.trend-indicator.negative {
+    color: #ef4444;
+}
+
+.above-cutoff {
+    color: #10b981;
+}
+
+.below-cutoff {
+    color: #ef4444;
+}
+
+.answers-mini {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    justify-content: center;
+}
+
+.answers-mini .correct {
+    color: #10b981;
+}
+
+.answers-mini .wrong {
+    color: #ef4444;
+}
+
+.answers-mini .blank {
+    color: #6b7280;
+}
+
+.comparison-insights {
+    background: #f0f9ff;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid #bfdbfe;
+}
+
+.comparison-insights h6 {
+    margin: 0 0 0.75rem 0;
+    color: #1e40af;
+}
+
+.comparison-insights ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.comparison-insights li {
+    margin-bottom: 0.5rem;
+    color: #475569;
+}
+
+.comparison-insights li.positive {
+    color: #059669;
+}
+
+.comparison-insights li.negative {
+    color: #dc2626;
+}
+
+.warning-message,
+.error-message {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+}
+
+.warning-message {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.error-message {
+    background: #fee2e2;
+    color: #991b1b;
 } 

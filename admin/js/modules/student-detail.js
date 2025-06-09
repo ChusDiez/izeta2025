@@ -2583,8 +2583,173 @@ Un saludo,
         const exam2Id = document.getElementById('exam2').value;
         const resultDiv = document.getElementById('comparisonResult');
         
-        // Aquí iría la lógica real de comparación
-        resultDiv.innerHTML = '<p>Comparación de exámenes en desarrollo...</p>';
+        if (!exam1Id || !exam2Id || exam1Id === exam2Id) {
+            resultDiv.innerHTML = '<p class="warning-message">Selecciona dos exámenes diferentes para comparar</p>';
+            return;
+        }
+        
+        // Obtener los datos de los exámenes
+        const results = this.currentStudent.results || [];
+        const exam1 = results.find(r => r.id === exam1Id);
+        const exam2 = results.find(r => r.id === exam2Id);
+        
+        if (!exam1 || !exam2) {
+            resultDiv.innerHTML = '<p class="error-message">Error al cargar los datos de los exámenes</p>';
+            return;
+        }
+        
+        // Calcular métricas comparativas
+        const scoreDiff = exam2.score - exam1.score;
+        const timeDiff = (exam2.time_taken || 0) - (exam1.time_taken || 0);
+        const blankDiff = (exam2.blank_answers || 0) - (exam1.blank_answers || 0);
+        
+        // Calcular percentiles relativos a la nota de corte (7.5)
+        const notaCorte = 7.5;
+        const percentil1 = this.calculatePercentileVsCorte(exam1.score, notaCorte);
+        const percentil2 = this.calculatePercentileVsCorte(exam2.score, notaCorte);
+        
+        resultDiv.innerHTML = `
+            <div class="exam-comparison">
+                <h5>📊 Comparación Detallada</h5>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-metric">
+                        <div class="metric-header">Nota</div>
+                        <div class="metric-values">
+                            <div class="value-box ${exam1.score >= notaCorte ? 'success' : 'danger'}">
+                                <strong>RF${exam1.weekly_simulations?.week_number}</strong>
+                                <span>${exam1.score.toFixed(1)}/10</span>
+                            </div>
+                            <div class="trend-indicator ${scoreDiff >= 0 ? 'positive' : 'negative'}">
+                                ${scoreDiff >= 0 ? '↗' : '↘'} ${Math.abs(scoreDiff).toFixed(1)}
+                            </div>
+                            <div class="value-box ${exam2.score >= notaCorte ? 'success' : 'danger'}">
+                                <strong>RF${exam2.weekly_simulations?.week_number}</strong>
+                                <span>${exam2.score.toFixed(1)}/10</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-metric">
+                        <div class="metric-header">Vs. Nota de Corte (7.5)</div>
+                        <div class="metric-values">
+                            <div class="value-box">
+                                <span class="${exam1.score >= notaCorte ? 'above-cutoff' : 'below-cutoff'}">
+                                    ${exam1.score >= notaCorte ? '+' : ''}${(exam1.score - notaCorte).toFixed(1)}
+                                </span>
+                                <small>P${percentil1}</small>
+                            </div>
+                            <div class="trend-indicator">→</div>
+                            <div class="value-box">
+                                <span class="${exam2.score >= notaCorte ? 'above-cutoff' : 'below-cutoff'}">
+                                    ${exam2.score >= notaCorte ? '+' : ''}${(exam2.score - notaCorte).toFixed(1)}
+                                </span>
+                                <small>P${percentil2}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-metric">
+                        <div class="metric-header">Respuestas</div>
+                        <div class="metric-values">
+                            <div class="value-box small">
+                                <div class="answers-mini">
+                                    <span class="correct">✓${exam1.correct_answers}</span>
+                                    <span class="wrong">✗${exam1.wrong_answers}</span>
+                                    <span class="blank">○${exam1.blank_answers}</span>
+                                </div>
+                            </div>
+                            <div class="trend-indicator ${blankDiff <= 0 ? 'positive' : 'negative'}">
+                                ${blankDiff <= 0 ? '✓' : '⚠️'}
+                            </div>
+                            <div class="value-box small">
+                                <div class="answers-mini">
+                                    <span class="correct">✓${exam2.correct_answers}</span>
+                                    <span class="wrong">✗${exam2.wrong_answers}</span>
+                                    <span class="blank">○${exam2.blank_answers}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${exam1.time_taken && exam2.time_taken ? `
+                        <div class="comparison-metric">
+                            <div class="metric-header">Tiempo</div>
+                            <div class="metric-values">
+                                <div class="value-box">
+                                    <span>${Math.round(exam1.time_taken/60)}min</span>
+                                </div>
+                                <div class="trend-indicator ${timeDiff < 0 ? 'positive' : 'negative'}">
+                                    ${timeDiff < 0 ? '⚡' : '🐌'} ${Math.abs(Math.round(timeDiff/60))}min
+                                </div>
+                                <div class="value-box">
+                                    <span>${Math.round(exam2.time_taken/60)}min</span>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="comparison-insights">
+                    <h6>💡 Análisis</h6>
+                    <ul>
+                        ${scoreDiff > 0 ? 
+                            `<li class="positive">✅ Mejora de ${scoreDiff.toFixed(1)} puntos</li>` :
+                            scoreDiff < 0 ?
+                            `<li class="negative">⚠️ Bajada de ${Math.abs(scoreDiff).toFixed(1)} puntos</li>` :
+                            `<li>→ Rendimiento estable</li>`
+                        }
+                        ${exam2.score >= notaCorte && exam1.score < notaCorte ?
+                            `<li class="positive">🎯 Ha superado la nota de corte</li>` :
+                            exam2.score < notaCorte && exam1.score >= notaCorte ?
+                            `<li class="negative">⚠️ Ha bajado por debajo de la nota de corte</li>` :
+                            ''
+                        }
+                        ${blankDiff < -2 ?
+                            `<li class="positive">✅ Menos preguntas en blanco (${Math.abs(blankDiff)} menos)</li>` :
+                            blankDiff > 2 ?
+                            `<li class="negative">⚠️ Más preguntas en blanco (+${blankDiff})</li>` :
+                            ''
+                        }
+                        ${timeDiff < -300 ?
+                            `<li class="positive">⚡ Más rápido (${Math.abs(Math.round(timeDiff/60))} min menos)</li>` :
+                            ''
+                        }
+                    </ul>
+                </div>
+            </div>
+        `;
+    }
+    
+    calculatePercentileVsCorte(score, corte) {
+        // Calcular percentil estimado basado en distribución normal
+        // Asumiendo media=7.0, desviación=1.5
+        const media = 7.0;
+        const desviacion = 1.5;
+        const z = (score - media) / desviacion;
+        
+        // Aproximación de la función de distribución normal
+        const percentil = Math.round(50 + 50 * this.erf(z / Math.sqrt(2)));
+        return Math.min(99, Math.max(1, percentil));
+    }
+    
+    // Función de error para cálculo de percentil
+    erf(x) {
+        // Aproximación de la función de error
+        const a1 =  0.254829592;
+        const a2 = -0.284496736;
+        const a3 =  1.421413741;
+        const a4 = -1.453152027;
+        const a5 =  1.061405429;
+        const p  =  0.3275911;
+        
+        const sign = x >= 0 ? 1 : -1;
+        x = Math.abs(x);
+        
+        const t = 1.0 / (1.0 + p * x);
+        const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+        
+        return sign * y;
     }
     
     filterByTopic(topic) {
