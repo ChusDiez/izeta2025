@@ -392,6 +392,13 @@
     display: flex;
     gap: 0;                /* sin separación extra */
     align-items: flex-start;
+    flex-wrap: wrap;          /* permite que el título quede en la fila superior */
+}
+
+/* El título debe ocupar el 100 % de ancho antes de los controles y el carril */
+.journey-section.exam-timeline .section-title {
+    flex: 0 0 100%;
+    margin-bottom: 1rem;      /* separación visual */
 }
 
 .timeline-controls {
@@ -453,6 +460,7 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch; /* smoother horizontal scrolling on mobile */
     overflow: visible;      /* permitir que el borde redondeado sobresalga si es necesario */
+    margin-right: -1rem;      /* extiende el fondo gris hasta el comparador */
 }
 
 .timeline-track::-webkit-scrollbar {
