@@ -452,7 +452,7 @@
     gap: 1rem;
     padding: 1rem 1rem 1rem 0;   /* 1 rem arriba/der/abajo, 0 rem izq */
     margin-left: 0;       /* ya no necesitamos compensación extra */
-    margin-right: -2rem;          /* extiende la banda gris 2 rem hacia la derecha */
+    margin-right: -4rem;          /* extiende 2 rem adicionales */
     /* max-height: 200px; eliminado para evitar conflictos */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
@@ -863,6 +863,7 @@
     padding: 1.5rem;
     background: #f8fafc;
     border-radius: 12px;
+    flex: 0 0 300px;   /* un poco más de espacio para los select */
 }
 
 .exam-comparator-section h4 {
@@ -884,6 +885,8 @@
     border-radius: 8px;
     background: white;
     font-size: 0.875rem;
+    width: 150px;      /* botones más anchos para ver el nombre del RF */
+    min-width: 150px;
 }
 
 .vs-label {
@@ -1885,14 +1888,14 @@ textarea.form-control {
 /* timeline-track ocupa todo el espacio entre botones y comparador */
 .timeline-track {
     flex: 1 1 auto !important;
-    margin-right: -2rem !important;   /* extiende el fondo gris 2 rem bajo el comparador */
+    margin-right: -4rem !important;   /* mismo extra 2 rem */
     max-height: none !important;      /* permite que las tarjetas expandidas no se recorten */
     overflow-y: visible !important;   /* deja que sobresalgan hacia abajo si crecen */
 }
 
 /* Comparador a la derecha, ancho fijo */
 .exam-comparator-section {
-    flex: 0 0 250px;              /* ajusta si necesitas más/menos ancho */
+    flex: 0 0 300px;              /* un poco más de espacio para los select */
 }
 
 /* Asegurar título arriba sin solaparse */
