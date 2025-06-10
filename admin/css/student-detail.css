@@ -1843,12 +1843,30 @@ textarea.form-control {
     color: #991b1b;
 } 
 
-/* ==================== FIX GAP IZQUIERDO EN TIMELINE ==================== */
-/* Forzar que la .timeline-container del bloque exam-timeline NO use el
-   grid que impone dashboard.css (display:grid con columnas minmax(220px,1fr)),
-   que introduce un hueco antes del .timeline-track.                     */
+/* ==================== FIX GAP IZQUIERDO + ALINEACIÓN COMPLETA ==================== */
+/* Convertir timeline-container en fila flex sin separación alguna.  */
 .journey-section.exam-timeline > .timeline-container {
-    display: flex !important;     /* quita el grid y elimina la columna fantasma */
-    padding-left: 0 !important;   /* sin relleno interno */
-    margin-left: 0 !important;    /* sin margen adicional */
+    display: flex !important;     /* anula cualquier grid previo               */
+    flex: 1 1 auto !important;     /* ocupa todo el ancho que quede             */
+    gap: 0 !important;            /* sin columnas fantasma                      */
+    padding-left: 0 !important;   /* sin relleno interno                        */
+    margin-left: 0 !important;    /* pegado a la barra de filtros               */
+}
+
+/* timeline-track ocupa todo el espacio entre botones y comparador */
+.timeline-track {
+    flex: 1 1 auto !important;
+    margin-right: 0 !important;   /* elimina cualquier gap a la derecha         */
+}
+
+/* Comparador a la derecha, ancho fijo */
+.exam-comparator-section {
+    flex: 0 0 250px;              /* ajusta si necesitas más/menos ancho */
+}
+
+/* Asegurar título arriba sin solaparse */
+.journey-section.exam-timeline .section-title {
+    flex: 0 0 100%;
+    margin-bottom: 1rem;
+    align-self: flex-start;
 }
