@@ -59,6 +59,9 @@ export default class StudentDetailModule {
     renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts, evolcampusData) {
         return `
             <div class="student-detail-page">
+                <!-- Cargar estilos adicionales del timeline mejorado -->
+                <link rel="stylesheet" href="../admin/css/timeline-enhanced.css">
+                
                 <!-- Header compacto con acciones -->
                 <div class="student-header-compact">
                     <div class="header-nav">
@@ -2073,67 +2076,109 @@ Un saludo,
         const trendClass = improvement > 0.5 ? 'up' : improvement < -0.5 ? 'down' : 'stable';
         const trendIcon = improvement > 0.5 ? '↗' : improvement < -0.5 ? '↘' : '→';
         
+        // Calcular nivel de performance
+        const performanceLevel = this.getPerformanceLevel(result.score, notaCorteP80);
+        
         return `
-            <div class="timeline-card ${this.getCardClass(result)}" data-exam-id="${result.id}" data-date="${result.submitted_at}">
-                ${improvement !== 0 ? `
-                    <div class="timeline-trend-indicator ${trendClass}">${trendIcon}</div>
-                ` : ''}
+            <div class="timeline-card ${this.getCardClass(result)}" 
+                 data-exam-id="${result.id}" 
+                 data-date="${result.submitted_at}"
+                 data-performance="${performanceLevel}">
                 
                 <div class="timeline-header">
-                    <h4>RF${result.weekly_simulations?.week_number || '?'}</h4>
-                    <span class="timeline-date">${this.formatDateShort(result.submitted_at)}</span>
-                    <span class="expand-indicator">▼</span>
+                    <div class="exam-title">
+                        <h4>RF${result.weekly_simulations?.week_number || '?'}</h4>
+                        <span class="timeline-date">${this.formatDateShort(result.submitted_at)}</span>
+                    </div>
+                    ${improvement !== 0 ? `
+                        <div class="timeline-trend-badge ${trendClass}">
+                            <span class="trend-icon">${trendIcon}</span>
+                            <span class="trend-value">${improvement >= 0 ? '+' : ''}${improvement.toFixed(1)}</span>
+                        </div>
+                    ` : ''}
                 </div>
                 
                 <div class="timeline-content">
-                    <div class="score-visual">
-                        <div class="score-ring" style="--score: ${result.score * 10}">
-                            <span class="score-value">${result.score.toFixed(1)}</span>
+                    <div class="score-section">
+                        <div class="score-visual">
+                            <div class="score-ring" style="--score: ${result.score * 10}">
+                                <span class="score-value">${result.score.toFixed(1)}</span>
+                            </div>
+                            <div class="score-label">Nota</div>
                         </div>
-                        <div class="percentile-info">
-                            <span class="percentile-badge">P${percentile}</span>
-                            <span class="cutoff-info ${vsCorte >= 0 ? 'above' : 'below'}">
-                                ${vsCorte >= 0 ? '✓' : '✗'} P80: ${notaCorteP80.toFixed(1)}
-                            </span>
+                        
+                        <div class="performance-indicators">
+                            <div class="indicator percentile">
+                                <span class="indicator-label">Percentil</span>
+                                <span class="indicator-value">P${percentile}</span>
+                            </div>
+                            <div class="indicator cutoff ${vsCorte >= 0 ? 'passed' : 'failed'}">
+                                <span class="indicator-label">vs P80</span>
+                                <span class="indicator-value">${vsCorte >= 0 ? '+' : ''}${vsCorte.toFixed(1)}</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="exam-stats-grid">
-                        <div class="exam-stat">
-                            <span class="stat-label">Respuestas</span>
-                            <div class="stat-values">
-                                <span class="correct">✓ ${result.correct_answers || 0}</span>
-                                <span class="wrong">✗ ${result.wrong_answers || 0}</span>
-                                <span class="blank">○ ${result.blank_answers || 0}</span>
+                    <div class="exam-details">
+                        <div class="detail-row answers">
+                            <span class="detail-label">Respuestas</span>
+                            <div class="answers-bar">
+                                <div class="answer-segment correct" style="width: ${(result.correct_answers/105)*100}%" 
+                                     title="${result.correct_answers} correctas">
+                                    <span>${result.correct_answers}</span>
+                                </div>
+                                <div class="answer-segment wrong" style="width: ${(result.wrong_answers/105)*100}%" 
+                                     title="${result.wrong_answers} incorrectas">
+                                    <span>${result.wrong_answers}</span>
+                                </div>
+                                <div class="answer-segment blank" style="width: ${(result.blank_answers/105)*100}%" 
+                                     title="${result.blank_answers} en blanco">
+                                    <span>${result.blank_answers}</span>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="exam-stat">
-                            <span class="stat-label">Mejora</span>
-                            <span class="stat ${improvement >= 0 ? 'positive' : 'negative'}">
-                                ${improvement >= 0 ? '↗' : '↘'} ${Math.abs(improvement).toFixed(1)}
-                            </span>
-                        </div>
-                        
-                        <div class="exam-stat">
-                            <span class="stat-label">Vs. Corte</span>
-                            <span class="stat ${vsCorte >= 0 ? 'positive' : 'negative'}">
-                                ${vsCorte >= 0 ? '+' : ''}${vsCorte.toFixed(1)}
-                            </span>
-                        </div>
-                        
                         ${result.time_taken ? `
-                            <div class="exam-stat">
-                                <span class="stat-label">Tiempo</span>
-                                <span class="stat">${Math.round(result.time_taken/60)}min</span>
+                            <div class="detail-row time">
+                                <span class="detail-label">Tiempo</span>
+                                <div class="time-indicator">
+                                    <div class="time-bar" style="width: ${Math.min(100, (result.time_taken/2700)*100)}%"></div>
+                                    <span class="time-value">${Math.round(result.time_taken/60)}min</span>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        ${result.position ? `
+                            <div class="detail-row position">
+                                <span class="detail-label">Posición</span>
+                                <span class="position-value">${result.position}°/${result.total_participants || '?'}</span>
                             </div>
                         ` : ''}
                     </div>
                     
-                    ${result.is_saturday_live ? '<div class="saturday-badge">🔴 Sábado en directo</div>' : ''}
+                    ${result.is_saturday_live ? `
+                        <div class="special-badges">
+                            <span class="saturday-badge">🔴 Sábado en directo</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="expand-hint">
+                        <span class="expand-indicator">▼</span>
+                    </div>
                 </div>
+                
+                <!-- Hint para comparación -->
+                <div class="compare-hint">Doble click para comparar</div>
             </div>
         `;
+    }
+    
+    getPerformanceLevel(score, cutoff) {
+        const diff = score - cutoff;
+        if (diff >= 2) return 'excellent';
+        if (diff >= 0) return 'good';
+        if (diff >= -1) return 'warning';
+        return 'poor';
     }
     
     // Nuevas funciones para el timeline mejorado
@@ -2176,23 +2221,51 @@ Un saludo,
         let html = '';
         let currentMonth = null;
         let monthOffset = 0;
+        let cardCount = 0;
+        const maxCardsToShow = 50;
         
-        results.slice(0, 50).forEach((result, index) => {
+        // Ordenar resultados por fecha (más recientes primero)
+        const sortedResults = results.slice(0, maxCardsToShow);
+        
+        sortedResults.forEach((result, index) => {
             const date = new Date(result.submitted_at);
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             
-            // Añadir marcador de mes si es necesario
+            // Añadir separador de mes si es necesario
             if (currentMonth !== monthKey) {
                 currentMonth = monthKey;
                 const monthData = resultsWithMonths[monthKey];
-                if (monthData) {
-                    html += `<div class="timeline-month-marker" style="left: ${monthOffset}px">${monthData.displayName}</div>`;
+                if (monthData && cardCount > 0) {
+                    // Añadir separador de período
+                    html += `<div class="timeline-period-separator">
+                        <span>${monthData.displayName}</span>
+                    </div>`;
                 }
             }
             
-            html += this.renderTimelineCard(result, index, results);
-            monthOffset += 160; // Ancho de la tarjeta + gap
+            // Determinar si es un milestone (nota >= 8.5 o mejora significativa)
+            const prevResult = index < sortedResults.length - 1 ? sortedResults[index + 1] : null;
+            const improvement = prevResult ? result.score - prevResult.score : 0;
+            const isMilestone = result.score >= 8.5 || improvement >= 2;
+            
+            const cardHtml = this.renderTimelineCard(result, index, sortedResults);
+            
+            // Añadir clase milestone si aplica
+            if (isMilestone) {
+                html += cardHtml.replace('class="timeline-card', 'class="timeline-card milestone');
+            } else {
+                html += cardHtml;
+            }
+            
+            cardCount++;
         });
+        
+        // Añadir mensaje si hay más resultados
+        if (results.length > maxCardsToShow) {
+            html += `<div class="timeline-more-indicator">
+                <p>Mostrando los últimos ${maxCardsToShow} de ${results.length} simulacros</p>
+            </div>`;
+        }
         
         return html;
     }
@@ -2219,22 +2292,89 @@ Un saludo,
             const updateCompareButton = () => {
                 compareBtn.disabled = !exam1Select.value || !exam2Select.value || 
                                      exam1Select.value === exam2Select.value;
+                
+                // Actualizar visualización de tarjetas seleccionadas
+                this.updateSelectedCards(exam1Select.value, exam2Select.value);
             };
             
             exam1Select.addEventListener('change', updateCompareButton);
             exam2Select.addEventListener('change', updateCompareButton);
         }
         
+        // Permitir selección directa desde las tarjetas
+        this.enableCardSelection();
+        
         // Scroll suave al exam más reciente
         setTimeout(() => {
             track.scrollLeft = 0;
         }, 100);
     }
-
+    
+    enableCardSelection() {
+        const cards = document.querySelectorAll('.timeline-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                const examId = card.dataset.examId;
+                
+                // Seleccionar para comparación
+                const exam1Select = document.getElementById('exam1');
+                const exam2Select = document.getElementById('exam2');
+                
+                if (!exam1Select.value) {
+                    exam1Select.value = examId;
+                    exam1Select.dispatchEvent(new Event('change'));
+                } else if (!exam2Select.value && exam2Select.value !== examId) {
+                    exam2Select.value = examId;
+                    exam2Select.dispatchEvent(new Event('change'));
+                } else {
+                    // Reset y seleccionar este como primero
+                    exam1Select.value = examId;
+                    exam2Select.value = '';
+                    exam1Select.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+    }
+    
+    updateSelectedCards(exam1Id, exam2Id) {
+        // Quitar clase y badges de todas las tarjetas
+        document.querySelectorAll('.timeline-card').forEach(card => {
+            card.classList.remove('comparing', 'compare-first', 'compare-second');
+            // Eliminar badges existentes
+            const badge = card.querySelector('.compare-badge');
+            if (badge) badge.remove();
+        });
+        
+        // Añadir clase y badge a las tarjetas seleccionadas
+        if (exam1Id) {
+            const card1 = document.querySelector(`[data-exam-id="${exam1Id}"]`);
+            if (card1) {
+                card1.classList.add('comparing', 'compare-first');
+                const badge1 = document.createElement('div');
+                badge1.className = 'compare-badge';
+                badge1.textContent = '1';
+                card1.appendChild(badge1);
+            }
+        }
+        
+        if (exam2Id) {
+            const card2 = document.querySelector(`[data-exam-id="${exam2Id}"]`);
+            if (card2) {
+                card2.classList.add('comparing', 'compare-second');
+                const badge2 = document.createElement('div');
+                badge2.className = 'compare-badge';
+                badge2.textContent = '2';
+                card2.appendChild(badge2);
+            }
+        }
+    }
     
     toggleCompactView(event) {
         const track = document.getElementById('timelineTrack');
         const viewToggleText = document.getElementById('viewToggleText');
+        const container = document.querySelector('.timeline-container');
         
         if (!track) return;
         
@@ -2247,12 +2387,39 @@ Un saludo,
             document.querySelectorAll('.timeline-card').forEach(card => {
                 card.classList.add('expanded');
             });
+            // Cambiar a vista vertical si hay muchos exámenes
+            const cardCount = track.querySelectorAll('.timeline-card').length;
+            if (cardCount > 5) {
+                container.classList.add('vertical-timeline');
+                this.renderVerticalConnections();
+            }
         } else {
             track.classList.add('compact-view');
             viewToggleText.textContent = 'Expandida';
+            container.classList.remove('vertical-timeline');
             // Colapsar todas las tarjetas
             this.collapseAllTimelineCards();
+            // Limpiar conexiones verticales
+            this.clearVerticalConnections();
         }
+    }
+    
+    renderVerticalConnections() {
+        const track = document.getElementById('timelineTrack');
+        const cards = track.querySelectorAll('.timeline-card');
+        
+        // Añadir líneas de conexión entre tarjetas
+        cards.forEach((card, index) => {
+            if (index < cards.length - 1) {
+                const connection = document.createElement('div');
+                connection.className = 'vertical-connection';
+                card.appendChild(connection);
+            }
+        });
+    }
+    
+    clearVerticalConnections() {
+        document.querySelectorAll('.vertical-connection').forEach(conn => conn.remove());
     }
     
     renderPatternsGrid(analytics, results) {
