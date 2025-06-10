@@ -431,7 +431,7 @@
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
     background: #f8fafc;
-    border-radius: 12px;
+    border-radius: 0 12px 12px 0;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
     scroll-snap-type: x mandatory;
