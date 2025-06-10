@@ -381,9 +381,9 @@
 /* Hacer la sección más ancha */
 .journey-section.exam-timeline {
     max-width: 100%;
-    margin-left: -0.2rem;
+    margin-left: -2rem;   /* cancela el padding de 2 rem de .student-journey */
     margin-right: -1rem; /* ampliar la zona visible del timeline 1rem extra a cada lado */
-    padding-left: 0.2rem;   /* acercar el carril al borde de los botones */
+    padding-left: 0;      /* sin relleno extra: la banda gris tocará la columna de botones */
     padding-right: 2rem;
 }
 
@@ -426,7 +426,7 @@
     flex-wrap: nowrap; /* Mantener en una línea horizontal */
     gap: 1rem;
     padding: 1.5rem 1.5rem 1.5rem 0;   /* sin padding izquierdo */
-    margin-left: -0.5rem;   /* cubre el pequeño gap de 0.5rem */
+    margin-left: 0;       /* ya no necesitamos compensación extra */
     max-height: 200px; /* más compacto */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
