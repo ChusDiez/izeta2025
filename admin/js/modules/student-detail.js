@@ -1991,21 +1991,45 @@ Un saludo,
             `;
         }
         
-        // Después de renderizar, necesitamos colapsar todas las tarjetas
-        setTimeout(() => this.collapseAllTimelineCards(), 0);
+        // Organizar resultados por período
+        const currentPeriod = this.getCurrentPeriod();
+        const resultsWithMonths = this.groupResultsByMonth(results);
+        
+        // Después de renderizar, necesitamos colapsar todas las tarjetas y configurar el scroll
+        setTimeout(() => {
+            this.collapseAllTimelineCards();
+            this.setupTimelineInteractions();
+            this.renderTrendMiniChart(results);
+        }, 0);
         
         return `
             <div class="timeline-container">
                 <div class="timeline-controls">
-                    <button onclick="window.studentDetail.zoomTimeline('week')" class="btn-timeline active">Última Semana</button>
-                    <button onclick="window.studentDetail.zoomTimeline('month')" class="btn-timeline">Último Mes</button>
-                    <button onclick="window.studentDetail.zoomTimeline('all')" class="btn-timeline">Todo</button>
+                    <div class="timeline-period-indicator">${currentPeriod}</div>
+                    <button onclick="window.studentDetail.zoomTimeline('week')" class="btn-timeline active">
+                        <span>Última</span>
+                        <span>Semana</span>
+                    </button>
+                    <button onclick="window.studentDetail.zoomTimeline('month')" class="btn-timeline">
+                        <span>Último</span>
+                        <span>Mes</span>
+                    </button>
+                    <button onclick="window.studentDetail.zoomTimeline('quarter')" class="btn-timeline">
+                        <span>Último</span>
+                        <span>Trimestre</span>
+                    </button>
+                    <button onclick="window.studentDetail.zoomTimeline('all')" class="btn-timeline">
+                        <span>Todo el</span>
+                        <span>Historial</span>
+                    </button>
+                    <button onclick="window.studentDetail.toggleCompactView()" class="btn-timeline">
+                        <span>Vista</span>
+                        <span id="viewToggleText">Compacta</span>
+                    </button>
                 </div>
                 
-                <div class="timeline-track">
-                    ${results.slice(0, 20).map((result, index) => 
-                        this.renderTimelineCard(result, index, results)
-                    ).join('')}
+                <div class="timeline-track" id="timelineTrack">
+                    ${this.renderTimelineWithMarkers(results, resultsWithMonths)}
                 </div>
                 
                 <!-- Mini gráfico de tendencia debajo -->
@@ -2013,22 +2037,26 @@ Un saludo,
                     <canvas id="trendMiniChart" height="80"></canvas>
                 </div>
                 
-                <!-- Comparador de exámenes -->
+                <!-- Comparador de exámenes mejorado -->
                 <div class="exam-comparator-section">
-                    <h4>Comparar Exámenes</h4>
+                    <h4>📊 Comparar Exámenes</h4>
                     <div class="comparator-controls">
                         <select id="exam1" class="exam-select">
+                            <option value="">Selecciona...</option>
                             ${results.map(r => 
-                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10</option>`
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 (${this.formatDateShort(r.submitted_at)})</option>`
                             ).join('')}
                         </select>
                         <span class="vs-label">vs</span>
                         <select id="exam2" class="exam-select">
+                            <option value="">Selecciona...</option>
                             ${results.map(r => 
-                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10</option>`
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 (${this.formatDateShort(r.submitted_at)})</option>`
                             ).join('')}
                         </select>
-                        <button onclick="window.studentDetail.compareExams()" class="btn btn-sm">Comparar</button>
+                        <button onclick="window.studentDetail.compareExams()" class="btn btn-sm" disabled id="compareBtn">
+                            Comparar
+                        </button>
                     </div>
                     <div id="comparisonResult"></div>
                 </div>
@@ -2046,8 +2074,15 @@ Un saludo,
         const notaCorteP80 = simulationStats.p80 || 7.5;
         const vsCorte = result.score - notaCorteP80;
         
+        // Determinar tendencia
+        const trendClass = improvement > 0.5 ? 'up' : improvement < -0.5 ? 'down' : 'stable';
+        const trendIcon = improvement > 0.5 ? '↗' : improvement < -0.5 ? '↘' : '→';
+        
         return `
-            <div class="timeline-card ${this.getCardClass(result)}">
+            <div class="timeline-card ${this.getCardClass(result)}" data-exam-id="${result.id}" data-date="${result.submitted_at}">
+                ${improvement !== 0 ? `
+                    <div class="timeline-trend-indicator ${trendClass}">${trendIcon}</div>
+                ` : ''}
                 
                 <div class="timeline-header">
                     <h4>RF${result.weekly_simulations?.week_number || '?'}</h4>
@@ -2104,6 +2139,163 @@ Un saludo,
                 </div>
             </div>
         `;
+    }
+    
+    // Nuevas funciones para el timeline mejorado
+    getCurrentPeriod() {
+        const now = new Date();
+        const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        return `${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+    
+    groupResultsByMonth(results) {
+        const grouped = {};
+        
+        results.forEach(result => {
+            const date = new Date(result.submitted_at);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!grouped[monthKey]) {
+                grouped[monthKey] = {
+                    results: [],
+                    month: date.getMonth(),
+                    year: date.getFullYear(),
+                    displayName: this.getMonthDisplayName(date)
+                };
+            }
+            
+            grouped[monthKey].results.push(result);
+        });
+        
+        return grouped;
+    }
+    
+    getMonthDisplayName(date) {
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                       'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        return `${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+    
+    renderTimelineWithMarkers(results, resultsWithMonths) {
+        let html = '';
+        let currentMonth = null;
+        let monthOffset = 0;
+        
+        results.slice(0, 50).forEach((result, index) => {
+            const date = new Date(result.submitted_at);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            // Añadir marcador de mes si es necesario
+            if (currentMonth !== monthKey) {
+                currentMonth = monthKey;
+                const monthData = resultsWithMonths[monthKey];
+                if (monthData) {
+                    html += `<div class="timeline-month-marker" style="left: ${monthOffset}px">${monthData.displayName}</div>`;
+                }
+            }
+            
+            html += this.renderTimelineCard(result, index, results);
+            monthOffset += 160; // Ancho de la tarjeta + gap
+        });
+        
+        return html;
+    }
+    
+    setupTimelineInteractions() {
+        const track = document.getElementById('timelineTrack');
+        if (!track) return;
+        
+        // Habilitar navegación con teclado
+        track.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                track.scrollLeft -= 160;
+            } else if (e.key === 'ArrowRight') {
+                track.scrollLeft += 160;
+            }
+        });
+        
+        // Habilitar selección de comparación
+        const exam1Select = document.getElementById('exam1');
+        const exam2Select = document.getElementById('exam2');
+        const compareBtn = document.getElementById('compareBtn');
+        
+        if (exam1Select && exam2Select && compareBtn) {
+            const updateCompareButton = () => {
+                compareBtn.disabled = !exam1Select.value || !exam2Select.value || 
+                                     exam1Select.value === exam2Select.value;
+            };
+            
+            exam1Select.addEventListener('change', updateCompareButton);
+            exam2Select.addEventListener('change', updateCompareButton);
+        }
+        
+        // Scroll suave al exam más reciente
+        setTimeout(() => {
+            track.scrollLeft = 0;
+        }, 100);
+    }
+    
+    renderTrendMiniChart(results) {
+        const canvas = document.getElementById('trendMiniChart');
+        if (!canvas || !window.Chart) return;
+        
+        const ctx = canvas.getContext('2d');
+        const scores = results.slice(0, 20).reverse().map(r => r.score);
+        const labels = results.slice(0, 20).reverse().map(r => `RF${r.weekly_simulations?.week_number || '?'}`);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Puntuación',
+                    data: scores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        ticks: { stepSize: 2 }
+                    }
+                }
+            }
+        });
+    }
+    
+    toggleCompactView() {
+        const track = document.getElementById('timelineTrack');
+        const viewToggleText = document.getElementById('viewToggleText');
+        
+        if (!track) return;
+        
+        const isCompact = track.classList.contains('compact-view');
+        
+        if (isCompact) {
+            track.classList.remove('compact-view');
+            viewToggleText.textContent = 'Compacta';
+            // Expandir todas las tarjetas
+            document.querySelectorAll('.timeline-card').forEach(card => {
+                card.classList.add('expanded');
+            });
+        } else {
+            track.classList.add('compact-view');
+            viewToggleText.textContent = 'Expandida';
+            // Colapsar todas las tarjetas
+            this.collapseAllTimelineCards();
+        }
     }
     
     renderPatternsGrid(analytics, results) {
@@ -2285,6 +2477,12 @@ Un saludo,
         const date = new Date(dateStr);
         const options = { day: 'numeric', month: 'short' };
         return date.toLocaleDateString('es-ES', options);
+    }
+    
+    // Para uso interno - formato parseable
+    formatDateForParsing(dateStr) {
+        const date = new Date(dateStr);
+        return date.toISOString();
     }
     
     getQuickInsights(result) {
@@ -2636,8 +2834,51 @@ Un saludo,
     zoomTimeline(period) {
         // Cambiar el zoom del timeline
         document.querySelectorAll('.btn-timeline').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-        // Aquí iría la lógica real de zoom
+        event.target.closest('.btn-timeline').classList.add('active');
+        
+        const track = document.getElementById('timelineTrack');
+        const allCards = track.querySelectorAll('.timeline-card');
+        const now = new Date();
+        
+        allCards.forEach(card => {
+            // Obtener la fecha del atributo data-date
+            const examDateStr = card.getAttribute('data-date');
+            const examDate = examDateStr ? new Date(examDateStr) : new Date();
+            let show = false;
+            
+            switch(period) {
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    show = examDate >= weekAgo;
+                    break;
+                case 'month':
+                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    show = examDate >= monthAgo;
+                    break;
+                case 'quarter':
+                    const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                    show = examDate >= quarterAgo;
+                    break;
+                case 'all':
+                    show = true;
+                    break;
+            }
+            
+            card.style.display = show ? 'flex' : 'none';
+        });
+        
+        // Actualizar marcadores de mes
+        this.updateMonthMarkers(period);
+        
+        // Scroll al inicio
+        track.scrollLeft = 0;
+    }
+    
+    updateMonthMarkers(period) {
+        const markers = document.querySelectorAll('.timeline-month-marker');
+        markers.forEach(marker => {
+            marker.style.display = period === 'all' || period === 'quarter' ? 'block' : 'none';
+        });
     }
     
     compareExams() {

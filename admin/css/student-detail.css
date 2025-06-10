@@ -399,6 +399,7 @@
     margin-bottom: 1rem;
 }
 
+/* Controles mejorados del timeline */
 .timeline-controls {
     display: flex;
     gap: 0.5rem;
@@ -417,6 +418,22 @@
     flex: 1 1 auto;
 }
 
+/* Indicador de período actual */
+.timeline-period-indicator {
+    position: absolute;
+    top: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e40af;
+    color: white;
+    padding: 0.375rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+}
+
 .btn-timeline {
     padding: 0.25rem 0.5rem;
     border: 1px solid #e5e7eb;
@@ -428,41 +445,87 @@
     cursor: pointer;
     transition: all 0.2s;
     width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.btn-timeline:hover::before {
+    left: 100%;
 }
 
 .btn-timeline:hover {
     border-color: #3b82f6;
     color: #3b82f6;
+    transform: translateX(2px);
 }
 
 .btn-timeline.active {
     background: #3b82f6;
     color: white;
     border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
+/* Timeline track mejorado con indicadores visuales */
 .timeline-track {
     display: flex;
-    flex-wrap: nowrap; /* Mantener en una línea horizontal */
+    flex-wrap: nowrap;
     gap: 1rem;
-    padding: 1rem 4rem 1rem 0;   /* 1 rem arriba, 4 rem der, 1 rem abajo, 0 rem izq */
-    margin-left: 0;       /* ya no necesitamos compensación extra */
-    /* reserva 4 rem dentro sin empujar el comparador */
-    /* max-height: 200px; eliminado para evitar conflictos */
-    overflow-x: auto; /* Scroll horizontal */
+    padding: 1rem 4rem 1rem 0;
+    margin-left: 0;
+    overflow-x: auto;
     overflow-y: hidden;
     background: #f8fafc;
     border-radius: 12px;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch; /* smoother horizontal scrolling on mobile */
-    overflow: visible;      /* permitir que el borde redondeado sobresalga si es necesario */
+    -webkit-overflow-scrolling: touch;
+    overflow: visible;
+    position: relative;
+}
+
+/* Línea de progreso continua */
+.timeline-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #3b82f6 50%, #e5e7eb 100%);
+    z-index: 0;
+    opacity: 0.3;
+}
+
+/* Indicadores de mes/período */
+.timeline-month-marker {
+    position: absolute;
+    top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    background: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 2;
 }
 
 .timeline-track::-webkit-scrollbar {
     width: 8px;
-    height: 10px; /* Más alto para el scroll horizontal */
+    height: 10px;
 }
 
 .timeline-track::-webkit-scrollbar-track {
@@ -479,24 +542,40 @@
     background: #94a3b8;
 }
 
+/* Timeline cards con diseño mejorado */
 .timeline-card {
-    min-width: 140px; /* Ancho mínimo fijo para cada tarjeta */
-    max-width: 160px; /* Ancho máximo */
+    min-width: 140px;
+    max-width: 160px;
     background: white;
     border-radius: 12px;
-    padding: 1.25rem; /* Ajustado para mejor balance */
+    padding: 1.25rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     transition: all 0.3s;
     position: relative;
     border: 2px solid #e5e7eb;
     height: fit-content;
-    flex-shrink: 0; /* Evitar que se compriman */
-    /* lock width so borders don't push siblings over each other */
+    flex-shrink: 0;
     flex: 0 0 160px;
     max-width: 160px;
     scroll-snap-align: start;
-    z-index: 0;            /* base stacking */
+    z-index: 1;
+}
+
+/* Indicador de conexión entre exámenes */
+.timeline-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -1rem;
+    width: 1rem;
+    height: 2px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.timeline-card:last-child::after {
+    display: none;
 }
 
 .timeline-card:hover {
@@ -505,12 +584,65 @@
     z-index: 10;
 }
 
-/* --- Expansión horizontal de las tarjetas --- */
+/* Estados visuales mejorados */
+.timeline-card.excellent {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.timeline-card.good {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.timeline-card.warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.timeline-card.danger {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+}
+
+/* Indicador de mejora/empeoramiento */
+.timeline-trend-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.timeline-trend-indicator.up {
+    color: #10b981;
+    border: 2px solid #10b981;
+}
+
+.timeline-trend-indicator.down {
+    color: #ef4444;
+    border: 2px solid #ef4444;
+}
+
+.timeline-trend-indicator.stable {
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+}
+
+/* Expansión horizontal de las tarjetas */
 .timeline-card.expanded {
-    flex: 0 0 260px;      /* ancho ampliado */
+    flex: 0 0 260px;
     max-width: 260px;
     display: grid;
-    grid-template-columns: 1fr;   /* fallback móvil */
+    grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
     gap: 0.5rem;
 }
@@ -533,62 +665,61 @@
     }
 }
 
-/* ----------  MODO COLAPSADO / EXPANDIDO  ---------- */
-/* Por defecto se muestra sólo el anillo + cabecera.
-   Al añadir la clase .expanded se revelan todos los detalles. */
+/* Modo colapsado/expandido mejorado */
+.timeline-card:not(.expanded) {
+    flex: 0 0 100px;
+    max-width: 100px;
+    padding-bottom: 0.75rem;
+}
 
- .timeline-card:not(.expanded) {
-     /* ancho más angosto en estado colapsado */
-     flex: 0 0 100px;
-     max-width: 100px;
-     padding-bottom: 0.75rem;
- }
- 
- /* Ocultar detalles en estado colapsado */
- .timeline-card:not(.expanded) .exam-stats-grid,
- .timeline-card:not(.expanded) .saturday-badge,
- .timeline-card:not(.expanded) .timeline-detail,
- .timeline-card:not(.expanded) .percentile-info {
-     display: none;
- }
- 
- /* Hacer el score visual más compacto cuando está colapsado */
- .timeline-card:not(.expanded) .score-visual {
-     margin: 0.5rem auto;
- }
- 
- .timeline-card:not(.expanded) .score-ring {
-     width: 45px;
-     height: 45px;
-     font-size: 1.25rem;
- }
+.timeline-card:not(.expanded) .exam-stats-grid,
+.timeline-card:not(.expanded) .saturday-badge,
+.timeline-card:not(.expanded) .timeline-detail,
+.timeline-card:not(.expanded) .percentile-info {
+    display: none;
+}
+
+.timeline-card:not(.expanded) .score-visual {
+    margin: 0.5rem auto;
+}
+
+.timeline-card:not(.expanded) .score-ring {
+    width: 45px;
+    height: 45px;
+    font-size: 1.25rem;
+}
 
 .timeline-card:not(.expanded) .score-value {
     font-size: 1.125rem;
 }
- 
- /* ----------  INDICADOR DE EXPANSIÓN  ---------- */
- .timeline-card {
-     cursor: pointer;
- }
- 
- .expand-indicator {
-     position: absolute;
-     top: 0.5rem;
-     right: 0.5rem;
-     font-size: 0.75rem;
-     color: #94a3b8;
-     transition: transform 0.3s ease;
- }
- 
- .timeline-card.expanded .expand-indicator {
-     transform: rotate(180deg);
- }
- 
- /* Asegurar que el header tenga position relative para el indicador */
- .timeline-header {
-     position: relative;
- }
+
+/* Indicador de expansión mejorado */
+.timeline-card {
+    cursor: pointer;
+}
+
+.expand-indicator {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    transition: transform 0.3s ease;
+    opacity: 0;
+}
+
+.timeline-card:hover .expand-indicator {
+    opacity: 1;
+}
+
+.timeline-card.expanded .expand-indicator {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+.timeline-header {
+    position: relative;
+}
 
 .timeline-card.excellent {
     border-color: #10b981;
@@ -1550,15 +1681,27 @@ textarea.form-control {
 .no-data-card {
     text-align: center;
     padding: 3rem 2rem;
-    background: #f8fafc;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     border-radius: 12px;
     border: 2px dashed #e5e7eb;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
 }
 
 .no-data-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
 .no-data-card h4 {
@@ -1570,6 +1713,52 @@ textarea.form-control {
 .no-data-card p {
     color: #64748b;
     margin: 0;
+}
+
+/* Estilos adicionales para el comparador cuando muestra resultados */
+#comparisonResult .comparison-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+#comparisonResult .metric-values {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+#comparisonResult .trend-indicator {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Timeline scrollbar mejorado */
+.timeline-track {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.timeline-track::-webkit-scrollbar {
+    height: 8px;
+}
+
+.timeline-track::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.timeline-track::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.timeline-track::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(90deg, #94a3b8 0%, #64748b 100%);
 }
 
 /* ==================== MEDIA QUERIES ==================== */
@@ -1617,8 +1806,31 @@ textarea.form-control {
     }
     
     .timeline-track {
-        grid-template-columns: 1fr;
-        max-height: none;
+        padding-right: 1rem;
+        gap: 0.75rem;
+    }
+    
+    .timeline-card {
+        min-width: 120px;
+        max-width: 140px;
+        flex: 0 0 140px;
+    }
+    
+    .timeline-controls {
+        flex-direction: row;
+        width: 100%;
+        flex: 0 0 auto;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+    }
+    
+    .timeline-controls .btn-timeline {
+        flex: 0 0 auto;
+        min-width: 80px;
+    }
+    
+    .timeline-period-indicator {
+        display: none;
     }
     
     .timeline-card {
@@ -1868,7 +2080,7 @@ textarea.form-control {
     color: #991b1b;
 } 
 
-/* ==================== FIXES PARA CONFLICTOS CON DASHBOARD.CSS ==================== */
+/* ==================== FIXES PARA CONFLICTOS ==================== */
 /* 
  * Estilos usan mayor especificidad (.student-detail-page) 
  * para sobrescribir los estilos genéricos de dashboard.css sin usar !important
@@ -2046,4 +2258,150 @@ textarea.form-control {
         flex: 1 1 auto;
         width: 100%;
     }
+}
+
+/* Vista compacta del timeline */
+.timeline-track.compact-view .timeline-card {
+    flex: 0 0 80px;
+    max-width: 80px;
+    min-width: 80px;
+    padding: 0.75rem;
+}
+
+.timeline-track.compact-view .timeline-card .timeline-header h4 {
+    font-size: 0.875rem;
+}
+
+.timeline-track.compact-view .timeline-card .timeline-date {
+    display: none;
+}
+
+.timeline-track.compact-view .timeline-card .score-ring {
+    width: 40px;
+    height: 40px;
+}
+
+.timeline-track.compact-view .timeline-card .score-value {
+    font-size: 0.875rem;
+}
+
+.timeline-track.compact-view .timeline-card .expand-indicator,
+.timeline-track.compact-view .timeline-card .exam-stats-grid,
+.timeline-track.compact-view .timeline-card .percentile-info,
+.timeline-track.compact-view .timeline-card .saturday-badge {
+    display: none;
+}
+
+/* Animaciones para el timeline */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.timeline-card {
+    animation: slideInFromLeft 0.3s ease;
+    animation-fill-mode: both;
+}
+
+.timeline-card:nth-child(1) { animation-delay: 0.05s; }
+.timeline-card:nth-child(2) { animation-delay: 0.1s; }
+.timeline-card:nth-child(3) { animation-delay: 0.15s; }
+.timeline-card:nth-child(4) { animation-delay: 0.2s; }
+.timeline-card:nth-child(5) { animation-delay: 0.25s; }
+
+/* Trend mini chart container */
+.trend-chart-container {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    height: 100px;
+}
+
+/* Navegación con teclado */
+.timeline-track:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Hover effects mejorados */
+.timeline-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.timeline-card:hover::before {
+    opacity: 1;
+}
+
+/* Indicador de posición actual */
+.timeline-card.current-exam {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Mejoras para el comparador */
+.exam-comparator-section {
+    transition: all 0.3s ease;
+}
+
+.exam-comparator-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.comparator-controls {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.exam-select {
+    transition: all 0.2s;
+}
+
+.exam-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#compareBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#compareBtn:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Estados de colores del timeline */
+.timeline-card.excellent::after {
+    background: #10b981;
+}
+
+.timeline-card.good::after {
+    background: #3b82f6;
+}
+
+.timeline-card.warning::after {
+    background: #f59e0b;
+}
+
+.timeline-card.danger::after {
+    background: #ef4444;
 }
