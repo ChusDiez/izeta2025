@@ -1892,9 +1892,15 @@ textarea.form-control {
 
 /* Comparador a la derecha, ancho fijo */
 .exam-comparator-section {
-    flex: 0 0 250px;              /* ajusta si necesitas más/menos ancho */
+    flex: 0 0 320px !important;   /* ancho más amplio y con !important para ganar la cascada */
     position: relative;
     z-index: 3;
+}
+
+/* Botones/select del comparador más anchos */
+.exam-comparator-section .exam-select {
+    width: 180px !important;
+    min-width: 180px !important;
 }
 
 /* Asegurar título arriba sin solaparse */
