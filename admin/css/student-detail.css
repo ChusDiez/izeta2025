@@ -381,8 +381,8 @@
 /* Hacer la sección más ancha */
 .journey-section.exam-timeline {
     max-width: 100%;
-    margin-left: -3rem;
-    margin-right: -3rem; /* ampliar la zona visible del timeline 1rem extra a cada lado */
+    margin-left: -1rem;
+    margin-right: -1rem; /* ampliar la zona visible del timeline 1rem extra a cada lado */
     padding-left: 1rem;   /* acercar el carril al borde de los botones */
     padding-right: 2rem;
 }
