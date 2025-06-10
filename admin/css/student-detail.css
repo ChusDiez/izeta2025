@@ -387,6 +387,22 @@
     padding-right: 2rem;
 }
 
+/* --- Layout row: botones + carril --- */
+.journey-section.exam-timeline {
+    display: flex;
+    gap: 0;                /* sin separación extra */
+    align-items: flex-start;
+}
+
+.timeline-controls {
+    flex: 0 0 72px;        /* ancho fijo de la columna de botones */
+    margin-right: 0;       /* sin margen adicional */
+}
+
+.timeline-container {
+    flex: 1 1 auto;        /* el carril ocupa todo el espacio restante */
+}
+
 .timeline-controls {
     display: flex;
     gap: 0.5rem;
@@ -425,7 +441,7 @@
     display: flex;
     flex-wrap: nowrap; /* Mantener en una línea horizontal */
     gap: 1rem;
-    padding: 1.5rem 1.5rem 1.5rem 0;   /* sin padding izquierdo */
+    padding: 1rem 1rem 1rem 0;   /* 1 rem arriba/der/abajo, 0 rem izq */
     margin-left: 0;       /* ya no necesitamos compensación extra */
     max-height: 200px; /* más compacto */
     overflow-x: auto; /* Scroll horizontal */
@@ -436,6 +452,7 @@
     scrollbar-color: #cbd5e1 #f1f5f9;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch; /* smoother horizontal scrolling on mobile */
+    overflow: visible;      /* permitir que el borde redondeado sobresalga si es necesario */
 }
 
 .timeline-track::-webkit-scrollbar {
