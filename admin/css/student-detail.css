@@ -418,6 +418,8 @@
     align-items: center;        /* centrar los botones */
     width: 72px;                /* más estrecho: ~⅓ del ancho anterior */
     min-width: 72px;
+    position: relative;
+    z-index: 2;
 }
 
 .btn-timeline {
@@ -454,13 +456,12 @@
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
     background: #f8fafc;
-    border-radius: 0 12px 12px 0;
+    border-radius: 12px;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch; /* smoother horizontal scrolling on mobile */
     overflow: visible;      /* permitir que el borde redondeado sobresalga si es necesario */
-    margin-right: -1rem;      /* extiende el fondo gris hasta el comparador */
 }
 
 .timeline-track::-webkit-scrollbar {
@@ -1848,8 +1849,7 @@ textarea.form-control {
 .journey-section.exam-timeline > .timeline-container {
     display: flex !important;     /* anula cualquier grid previo               */
     flex: 1 1 auto !important;     /* ocupa todo el ancho que quede             */
-    gap: 0 !important;            /* sin columnas fantasma                      */
-    padding-left: 0 !important;   /* sin relleno interno                        */
+    gap: 1rem !important;            /* sin columnas fantasma                      */
     margin-left: 0 !important;    /* pegado a la barra de filtros               */
 }
 
