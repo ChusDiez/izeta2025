@@ -452,6 +452,7 @@
     gap: 1rem;
     padding: 1rem 1rem 1rem 0;   /* 1 rem arriba/der/abajo, 0 rem izq */
     margin-left: 0;       /* ya no necesitamos compensación extra */
+    margin-right: -2rem;          /* extiende la banda gris 2 rem hacia la derecha */
     max-height: 200px; /* más compacto */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
@@ -507,6 +508,34 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     z-index: 10;
+}
+
+/* --- Expansión horizontal de las tarjetas --- */
+.timeline-card.expanded {
+    flex: 0 0 260px;      /* ancho ampliado */
+    max-width: 260px;
+    display: grid;
+    grid-template-columns: 1fr;   /* fallback móvil */
+    grid-template-rows: auto 1fr;
+    gap: 0.5rem;
+}
+
+/* En pantallas ≥ 768 px mostrar detalles a la derecha del anillo */
+@media (min-width: 768px) {
+    .timeline-card.expanded {
+        grid-template-columns: 120px 1fr;
+        grid-template-rows: auto;
+    }
+
+    .timeline-card.expanded .score-visual {
+        grid-row: span 2;
+    }
+
+    .timeline-card.expanded .exam-stats-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
 }
 
 /* ----------  MODO COLAPSADO / EXPANDIDO  ---------- */
