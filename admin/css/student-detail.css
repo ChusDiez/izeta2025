@@ -1834,3 +1834,13 @@ textarea.form-control {
     background: #fee2e2;
     color: #991b1b;
 } 
+
+/* ==================== FIX GAP IZQUIERDO EN TIMELINE ==================== */
+/* Forzar que la .timeline-container del bloque exam-timeline NO use el
+   grid que impone dashboard.css (display:grid con columnas minmax(220px,1fr)),
+   que introduce un hueco antes del .timeline-track.                     */
+.journey-section.exam-timeline > .timeline-container {
+    display: flex !important;     /* quita el grid y elimina la columna fantasma */
+    padding-left: 0 !important;   /* sin relleno interno */
+    margin-left: 0 !important;    /* sin margen adicional */
+}
