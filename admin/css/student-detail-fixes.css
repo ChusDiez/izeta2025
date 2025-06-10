@@ -1,0 +1,237 @@
+/* =====================================================
+   STUDENT DETAIL FIXES - Resuelve conflictos de CSS
+   ===================================================== */
+
+/* Reset de estilos conflictivos de dashboard.css */
+.student-detail-page {
+    /* Variables específicas del módulo */
+    --sd-timeline-gap: 1rem;
+    --sd-card-padding: 1.25rem;
+    --sd-border-radius: 12px;
+}
+
+/* ==================== TIMELINE FIXES ==================== */
+
+/* Fix principal: Sobrescribir grid de dashboard.css con flex */
+.student-detail-page .journey-section.exam-timeline .timeline-container {
+    /* Reset del grid de dashboard.css */
+    display: flex;
+    grid-template-columns: unset;
+    
+    /* Estilos específicos */
+    flex: 1 1 auto;
+    gap: var(--sd-timeline-gap);
+    margin-left: 0;
+    margin-top: 0;
+}
+
+/* Timeline track sin !important */
+.student-detail-page .timeline-track {
+    /* Propiedades específicas con mayor especificidad */
+    flex: 1 1 auto;
+    padding-right: 4rem;
+    max-height: none;
+    overflow-y: visible;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    padding: 1rem 4rem 1rem 0;
+    margin-left: 0;
+    overflow-x: auto;
+    background: #f8fafc;
+    border-radius: var(--sd-border-radius);
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Timeline cards - sobrescribir estilos genéricos */
+.student-detail-page .timeline-card {
+    /* Reset de .card de dashboard.css */
+    padding: var(--sd-card-padding);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
+    /* Estilos específicos */
+    min-width: 140px;
+    max-width: 160px;
+    background: white;
+    border-radius: var(--sd-border-radius);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    border: 2px solid #e5e7eb;
+    height: fit-content;
+    flex-shrink: 0;
+    flex: 0 0 160px;
+    scroll-snap-align: start;
+    z-index: 0;
+}
+
+/* Estados de timeline card */
+.student-detail-page .timeline-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* Timeline card expandida */
+.student-detail-page .timeline-card.expanded {
+    flex: 0 0 260px;
+    max-width: 260px;
+}
+
+/* Timeline card colapsada */
+.student-detail-page .timeline-card:not(.expanded) {
+    flex: 0 0 100px;
+    max-width: 100px;
+    padding-bottom: 0.75rem;
+}
+
+/* Comparador con ancho fijo */
+.student-detail-page .exam-comparator-section {
+    flex: 0 0 320px;
+    position: relative;
+    z-index: 3;
+    margin-top: 0;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: var(--sd-border-radius);
+}
+
+/* ==================== BOTONES Y CONTROLES ==================== */
+
+/* Sobrescribir .btn genérico de dashboard */
+.student-detail-page .btn {
+    /* Mantener estilos base pero con especificidad */
+    transition: all 0.2s;
+}
+
+/* Botones específicos del timeline */
+.student-detail-page .btn-timeline {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.student-detail-page .btn-timeline:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: white;
+}
+
+.student-detail-page .btn-timeline.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* ==================== MODALES ==================== */
+
+/* Modal específico de email */
+.student-detail-page .modal {
+    /* Usar especificidad para sobrescribir dashboard.css */
+    backdrop-filter: blur(4px);
+}
+
+.student-detail-page .modal-content {
+    max-width: 600px;
+    animation: slideUp 0.3s ease;
+}
+
+/* ==================== BADGES Y TAGS ==================== */
+
+/* Badges específicos */
+.student-detail-page .tag {
+    /* Sobrescribir .badge de dashboard si es necesario */
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* ==================== SECCIONES JOURNEY ==================== */
+
+/* Journey sections con mayor especificidad */
+.student-detail-page .journey-section {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    animation: fadeInUp 0.3s ease;
+}
+
+/* Section específica del timeline */
+.student-detail-page .journey-section.exam-timeline {
+    max-width: 100%;
+    margin-left: -2rem;
+    margin-right: -1rem;
+    padding-left: 0;
+    padding-right: 2rem;
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* ==================== EVOLCAMPUS FIXES ==================== */
+
+/* Topic cards - evitar conflictos con .card genérico */
+.student-detail-page .topic-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--sd-border-radius);
+    padding: 1.5rem;
+    transition: all 0.2s;
+}
+
+/* Test cards */
+.student-detail-page .test-card {
+    /* Estilos específicos sin conflictos */
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+/* ==================== RESPONSIVE FIXES ==================== */
+
+@media (max-width: 768px) {
+    .student-detail-page .journey-section.exam-timeline {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        padding: 1rem;
+    }
+    
+    .student-detail-page .timeline-container {
+        flex-direction: column;
+    }
+    
+    .student-detail-page .timeline-track {
+        padding-right: 1rem;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    
+    .student-detail-page .exam-comparator-section {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+}
+
+/* ==================== UTILIDADES DE DEBUG ==================== */
+
+/* Para desarrollo: mostrar conflictos */
+.debug-css-conflicts {
+    .timeline-container { outline: 2px solid red; }
+    .timeline-track { outline: 2px solid blue; }
+    .timeline-card { outline: 2px solid green; }
+} 

@@ -372,67 +372,61 @@
 
 /* ==================== TIMELINE INTERACTIVO ==================== */
 
+/* NOTA: Se han consolidado las definiciones duplicadas en student-detail-fixes.css */
+
 .timeline-container {
     position: relative;
     width: 100%;
-    max-width: 100%; /* Asegurar que use todo el ancho disponible */
+    max-width: 100%;
 }
 
-/* Hacer la sección más ancha */
+/* Layout principal del timeline */
 .journey-section.exam-timeline {
     max-width: 100%;
-    margin-left: -2rem;   /* cancela el padding de 2 rem de .student-journey */
-    margin-right: -1rem; /* ampliar la zona visible del timeline 1rem extra a cada lado */
-    padding-left: 0;      /* sin relleno extra: la banda gris tocará la columna de botones */
+    margin-left: -2rem;
+    margin-right: -1rem;
+    padding-left: 0;
     padding-right: 2rem;
-}
-
-/* --- Layout row: botones + carril --- */
-.journey-section.exam-timeline {
     display: flex;
-    gap: 0;                /* sin separación extra */
+    gap: 0;
     align-items: flex-start;
-    flex-wrap: wrap;          /* permite que el título quede en la fila superior */
+    flex-wrap: wrap;
 }
 
-/* El título debe ocupar el 100 % de ancho antes de los controles y el carril */
 .journey-section.exam-timeline .section-title {
     flex: 0 0 100%;
-    margin-bottom: 1rem;      /* separación visual */
-}
-
-.timeline-controls {
-    flex: 0 0 72px;        /* ancho fijo de la columna de botones */
-    margin-right: 0;       /* sin margen adicional */
-}
-
-.timeline-container {
-    flex: 1 1 auto;        /* el carril ocupa todo el espacio restante */
+    margin-bottom: 1rem;
 }
 
 .timeline-controls {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
-    flex-direction: column;     /* siempre en columna */
-    align-items: center;        /* centrar los botones */
-    width: 72px;                /* más estrecho: ~⅓ del ancho anterior */
+    flex-direction: column;
+    align-items: center;
+    width: 72px;
     min-width: 72px;
     position: relative;
     z-index: 2;
+    flex: 0 0 72px;
+    margin-right: 0;
+}
+
+.timeline-container {
+    flex: 1 1 auto;
 }
 
 .btn-timeline {
-    padding: 0.25rem 0.5rem; /* botones más pequeños */
+    padding: 0.25rem 0.5rem;
     border: 1px solid #e5e7eb;
     background: white;
     border-radius: 8px;
-    font-size: 0.75rem;      /* tipografía más compacta */
+    font-size: 0.75rem;
     font-weight: 500;
     color: #64748b;
     cursor: pointer;
     transition: all 0.2s;
-    width: 100%;             /* ocupar toda la columna estrecha */
+    width: 100%;
 }
 
 .btn-timeline:hover {
@@ -450,9 +444,9 @@
     display: flex;
     flex-wrap: nowrap; /* Mantener en una línea horizontal */
     gap: 1rem;
-    padding: 1rem 4rem 1rem 0;   /* 1 rem arriba, 4 rem der, 1 rem abajo, 0 rem izq */
+    padding: 1rem 4rem 1rem 0;   /* 1 rem arriba, 4 rem der, 1 rem abajo, 0 rem izq */
     margin-left: 0;       /* ya no necesitamos compensación extra */
-    /* reserva 4 rem dentro sin empujar el comparador */
+    /* reserva 4 rem dentro sin empujar el comparador */
     /* max-height: 200px; eliminado para evitar conflictos */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
@@ -497,7 +491,7 @@
     border: 2px solid #e5e7eb;
     height: fit-content;
     flex-shrink: 0; /* Evitar que se compriman */
-    /* lock width so borders don’t push siblings over each other */
+    /* lock width so borders don't push siblings over each other */
     flex: 0 0 160px;
     max-width: 160px;
     scroll-snap-align: start;
@@ -520,7 +514,7 @@
     gap: 0.5rem;
 }
 
-/* En pantallas ≥ 768 px mostrar detalles a la derecha del anillo */
+/* En pantallas ≥ 768 px mostrar detalles a la derecha del anillo */
 @media (min-width: 768px) {
     .timeline-card.expanded {
         grid-template-columns: 120px 1fr;
@@ -1874,38 +1868,12 @@ textarea.form-control {
 } 
 
 /* ==================== FIX GAP IZQUIERDO + ALINEACIÓN COMPLETA ==================== */
-/* Convertir timeline-container en fila flex sin separación alguna.  */
-.journey-section.exam-timeline > .timeline-container {
-    display: flex !important;     /* anula cualquier grid previo               */
-    flex: 1 1 auto !important;     /* ocupa todo el ancho que quede             */
-    gap: 1rem !important;            /* sin columnas fantasma                      */
-    margin-left: 0 !important;    /* pegado a la barra de filtros               */
-}
-
-/* timeline-track ocupa todo el espacio entre botones y comparador */
-.timeline-track {
-    flex: 1 1 auto !important;
-    padding-right: 4rem !important;          /* reserva 4 rem dentro sin empujar el comparador */
-    max-height: none !important;      /* permite que las tarjetas expandidas no se recorten */
-    overflow-y: visible !important;   /* deja que sobresalgan hacia abajo si crecen */
-}
-
-/* Comparador a la derecha, ancho fijo */
-.exam-comparator-section {
-    flex: 0 0 320px !important;   /* ancho más amplio y con !important para ganar la cascada */
-    position: relative;
-    z-index: 3;
-}
-
-/* Botones/select del comparador más anchos */
-.exam-comparator-section .exam-select {
-    width: 180px !important;
-    min-width: 180px !important;
-}
-
-/* Asegurar título arriba sin solaparse */
-.journey-section.exam-timeline .section-title {
-    flex: 0 0 100%;
-    margin-bottom: 1rem;
-    align-self: flex-start;
-}
+/* 
+ * NOTA IMPORTANTE: Estos estilos con !important se han movido a:
+ * student-detail-fixes.css
+ * 
+ * Ahora utilizan mayor especificidad (.student-detail-page) en lugar de !important
+ * para resolver conflictos con dashboard.css de manera más limpia.
+ * 
+ * Si necesitas modificar el layout del timeline, edita student-detail-fixes.css
+ */
