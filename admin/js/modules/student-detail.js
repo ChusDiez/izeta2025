@@ -1999,7 +1999,6 @@ Un saludo,
         setTimeout(() => {
             this.collapseAllTimelineCards();
             this.setupTimelineInteractions();
-            this.renderTrendMiniChart(results);
         }, 0);
         
         return `
@@ -2032,29 +2031,24 @@ Un saludo,
                     ${this.renderTimelineWithMarkers(results, resultsWithMonths)}
                 </div>
                 
-                <!-- Mini gráfico de tendencia debajo -->
-                <div class="trend-chart-container">
-                    <canvas id="trendMiniChart" height="80"></canvas>
-                </div>
-                
                 <!-- Comparador de exámenes mejorado -->
                 <div class="exam-comparator-section">
                     <h4>📊 Comparar Exámenes</h4>
                     <div class="comparator-controls">
                         <select id="exam1" class="exam-select">
-                            <option value="">Selecciona...</option>
+                            <option value="">Selecciona primer examen...</option>
                             ${results.map(r => 
-                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 (${this.formatDateShort(r.submitted_at)})</option>`
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 - ${this.formatDateShort(r.submitted_at)}</option>`
                             ).join('')}
                         </select>
-                        <span class="vs-label">vs</span>
+                        <span class="vs-label">VS</span>
                         <select id="exam2" class="exam-select">
-                            <option value="">Selecciona...</option>
+                            <option value="">Selecciona segundo examen...</option>
                             ${results.map(r => 
-                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 (${this.formatDateShort(r.submitted_at)})</option>`
+                                `<option value="${r.id}">RF${r.weekly_simulations?.week_number} - ${r.score.toFixed(1)}/10 - ${this.formatDateShort(r.submitted_at)}</option>`
                             ).join('')}
                         </select>
-                        <button onclick="window.studentDetail.compareExams()" class="btn btn-sm" disabled id="compareBtn">
+                        <button onclick="window.studentDetail.compareExams()" disabled id="compareBtn">
                             Comparar
                         </button>
                     </div>
@@ -2235,45 +2229,7 @@ Un saludo,
             track.scrollLeft = 0;
         }, 100);
     }
-    
-    renderTrendMiniChart(results) {
-        const canvas = document.getElementById('trendMiniChart');
-        if (!canvas || !window.Chart) return;
-        
-        const ctx = canvas.getContext('2d');
-        const scores = results.slice(0, 20).reverse().map(r => r.score);
-        const labels = results.slice(0, 20).reverse().map(r => `RF${r.weekly_simulations?.week_number || '?'}`);
-        
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Puntuación',
-                    data: scores,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointHoverRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10,
-                        ticks: { stepSize: 2 }
-                    }
-                }
-            }
-        });
-    }
+
     
     toggleCompactView() {
         const track = document.getElementById('timelineTrack');
