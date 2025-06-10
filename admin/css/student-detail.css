@@ -427,7 +427,7 @@
     gap: 1rem;
     padding: 1.5rem 1.5rem 1.5rem 0;   /* sin padding izquierdo */
     margin-left: -0.5rem;   /* cubre el pequeño gap de 0.5rem */
-    max-height: 280px; /* más compacto */
+    max-height: 200px; /* más compacto */
     overflow-x: auto; /* Scroll horizontal */
     overflow-y: hidden;
     background: #f8fafc;
@@ -458,8 +458,8 @@
 }
 
 .timeline-card {
-    min-width: 300px; /* Ancho mínimo fijo para cada tarjeta */
-    max-width: 340px; /* Ancho máximo */
+    min-width: 200px; /* Ancho mínimo fijo para cada tarjeta */
+    max-width: 240px; /* Ancho máximo */
     background: white;
     border-radius: 12px;
     padding: 1.25rem; /* Ajustado para mejor balance */
