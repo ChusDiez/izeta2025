@@ -36,6 +36,7 @@ export default class StudentDetailModule {
             // Cargar datos del estudiante
             const { student, results, analytics, eloHistory, medals, alerts, evolcampusData } = await this.loadStudentData(studentId);
             this.currentStudent = student;
+            this.currentStudent.results = results; // Guardar results para el comparador
             
             // Renderizar dashboard
             container.innerHTML = this.renderStudentDashboard(student, results, analytics, eloHistory, medals, alerts, evolcampusData);
@@ -2005,23 +2006,23 @@ Un saludo,
             <div class="timeline-container">
                 <div class="timeline-controls">
                     <div class="timeline-period-indicator">${currentPeriod}</div>
-                    <button onclick="window.studentDetail.zoomTimeline('week')" class="btn-timeline active">
-                        <span>Última</span>
-                        <span>Semana</span>
-                    </button>
-                    <button onclick="window.studentDetail.zoomTimeline('month')" class="btn-timeline">
-                        <span>Último</span>
-                        <span>Mes</span>
-                    </button>
-                    <button onclick="window.studentDetail.zoomTimeline('quarter')" class="btn-timeline">
-                        <span>Último</span>
-                        <span>Trimestre</span>
-                    </button>
-                    <button onclick="window.studentDetail.zoomTimeline('all')" class="btn-timeline">
-                        <span>Todo el</span>
-                        <span>Historial</span>
-                    </button>
-                    <button onclick="window.studentDetail.toggleCompactView()" class="btn-timeline">
+                                            <button onclick="window.studentDetail.zoomTimeline(event, 'week')" class="btn-timeline active">
+                            <span>Última</span>
+                            <span>Semana</span>
+                        </button>
+                        <button onclick="window.studentDetail.zoomTimeline(event, 'month')" class="btn-timeline">
+                            <span>Último</span>
+                            <span>Mes</span>
+                        </button>
+                        <button onclick="window.studentDetail.zoomTimeline(event, 'quarter')" class="btn-timeline">
+                            <span>Último</span>
+                            <span>Trimestre</span>
+                        </button>
+                        <button onclick="window.studentDetail.zoomTimeline(event, 'all')" class="btn-timeline">
+                            <span>Todo el</span>
+                            <span>Historial</span>
+                        </button>
+                        <button onclick="window.studentDetail.toggleCompactView(event)" class="btn-timeline">
                         <span>Vista</span>
                         <span id="viewToggleText">Compacta</span>
                     </button>
@@ -2231,7 +2232,7 @@ Un saludo,
     }
 
     
-    toggleCompactView() {
+    toggleCompactView(event) {
         const track = document.getElementById('timelineTrack');
         const viewToggleText = document.getElementById('viewToggleText');
         
@@ -2787,7 +2788,7 @@ Un saludo,
         }
     }
     
-    zoomTimeline(period) {
+    zoomTimeline(event, period) {
         // Cambiar el zoom del timeline
         document.querySelectorAll('.btn-timeline').forEach(btn => btn.classList.remove('active'));
         event.target.closest('.btn-timeline').classList.add('active');
@@ -2879,14 +2880,14 @@ Un saludo,
                     <div class="comparison-metric">
                         <div class="metric-header">Nota</div>
                         <div class="metric-values">
-                            <div class="value-box ${exam1.score >= notaCorte ? 'success' : 'danger'}">
+                            <div class="value-box ${exam1.score >= notaCorte1 ? 'success' : 'danger'}">
                                 <strong>RF${exam1.weekly_simulations?.week_number}</strong>
                                 <span>${exam1.score.toFixed(1)}/10</span>
                             </div>
                             <div class="trend-indicator ${scoreDiff >= 0 ? 'positive' : 'negative'}">
                                 ${scoreDiff >= 0 ? '↗' : '↘'} ${Math.abs(scoreDiff).toFixed(1)}
                             </div>
-                            <div class="value-box ${exam2.score >= notaCorte ? 'success' : 'danger'}">
+                            <div class="value-box ${exam2.score >= notaCorte2 ? 'success' : 'danger'}">
                                 <strong>RF${exam2.weekly_simulations?.week_number}</strong>
                                 <span>${exam2.score.toFixed(1)}/10</span>
                             </div>
@@ -2962,9 +2963,9 @@ Un saludo,
                             `<li class="negative">⚠️ Bajada de ${Math.abs(scoreDiff).toFixed(1)} puntos</li>` :
                             `<li>→ Rendimiento estable</li>`
                         }
-                        ${exam2.score >= notaCorte && exam1.score < notaCorte ?
+                        ${exam2.score >= notaCorte2 && exam1.score < notaCorte1 ?
                             `<li class="positive">🎯 Ha superado la nota de corte</li>` :
-                            exam2.score < notaCorte && exam1.score >= notaCorte ?
+                            exam2.score < notaCorte2 && exam1.score >= notaCorte1 ?
                             `<li class="negative">⚠️ Ha bajado por debajo de la nota de corte</li>` :
                             ''
                         }
