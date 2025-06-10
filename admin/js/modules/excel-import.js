@@ -8,7 +8,7 @@ export default class ExcelImportModule {
     
     getBaseFileSlug(fileName) {
         return fileName
-            .replace(/\.xlsx?$/i, '')
+            .replace(/\.(xlsx?|csv)$/i, '')
             .replace(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z_/, '')
             .replace(/-\d{8}-\d{6}$/, '')
             .toLowerCase();
