@@ -657,7 +657,7 @@
         transform: scale(1.1);
         box-shadow: 0 6px 12px rgba(0,0,0,0.3);
     }
-    
+        
         /* En móvil, mostrar 2x2 en lugar de scroll horizontal */
         @media (max-width: 768px) {
             .achievements-track {
@@ -903,6 +903,19 @@ async function loadWeeklyRanking() {
             document.getElementById('weeklyRanking').innerHTML = 
                 '<p style="text-align: center; padding: 2rem;">No hay simulacros disponibles</p>';
             return;
+        }
+
+        // 🔄 Sincronizar cabecera y texto informativo con el simulacro cargado
+        const infoText = `RF${simulationToLoad.week_number} - Semana del ${formatDate(simulationToLoad.start_date)}`;
+        const weeklyInfoElem = document.getElementById('weeklyInfo');
+        if (weeklyInfoElem) {
+            weeklyInfoElem.innerHTML = (simulationToLoad.status !== 'active')
+                ? `${infoText} <span class="historical-indicator">📚 Histórico</span>`
+                : infoText;
+        }
+        const headerSubtitleElem = document.getElementById('headerSubtitle');
+        if (headerSubtitleElem && simulationToLoad.status === 'active') {
+            headerSubtitleElem.textContent = `Semana ${simulationToLoad.week_number} - Sistema IP + Ranking Semanal`;
         }
 
         // Obtener resultados del simulacro seleccionado
