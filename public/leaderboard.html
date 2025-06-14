@@ -944,6 +944,9 @@ async function loadWeeklyRanking() {
         // IMPORTANTE: Pasar el simulacro correcto a renderWeeklyRanking
         renderWeeklyRanking(data, simulationToLoad);
 
+        // Recalcular logros para esta semana
+        await loadAchievements();
+
     } catch (error) {
         console.error('Error cargando ranking semanal:', error);
         document.getElementById('weeklyRanking').innerHTML = 
