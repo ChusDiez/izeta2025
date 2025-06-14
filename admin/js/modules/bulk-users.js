@@ -832,7 +832,6 @@ maria.garcia@email.com,María García,36h"></textarea>
                                 current_streak: 0,
                                 longest_streak: 0,
                                 probability_pass: 50,
-                                risk_level: 'unknown',
                                 created_at: new Date().toISOString()
                             });
                         
